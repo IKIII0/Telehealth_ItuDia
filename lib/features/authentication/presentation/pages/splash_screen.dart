@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Splash Screen - Halaman pembuka aplikasi
-/// Menampilkan logo dan nama aplikasi dengan animasi
+/// Splash Screen - Halaman pembuka aplikasi.
+///
+/// Menampilkan logo dan nama aplikasi dengan animasi, lalu berpindah ke
+/// halaman login setelah jeda singkat.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -18,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
@@ -40,12 +42,15 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Navigate to login after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    });
+    _navigateToLogin();
+  }
+
+  Future<void> _navigateToLogin() async {
+    await Future<void>.delayed(const Duration(seconds: 3));
+    if (!mounted) {
+      return;
+    }
+    await Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -56,16 +61,19 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hsl = HSLColor.fromColor(scheme.primary);
+    final darkerPrimary = hsl
+        .withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0))
+        .toColor();
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF2196F3),
-              const Color(0xFF1976D2),
-            ],
+            colors: [scheme.primary, darkerPrimary],
           ),
         ),
         child: Center(
@@ -88,49 +96,51 @@ class _SplashScreenState extends State<SplashScreen>
                           borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.medical_services,
                           size: 70,
-                          color: Color(0xFF2196F3),
+                          color: scheme.primary,
                         ),
                       ),
                       const SizedBox(height: 30),
-                      
+
                       // App Name
-                      const Text(
+                      Text(
                         'Telehealth',
                         style: TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: scheme.onPrimary,
                           letterSpacing: 1.5,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      
+
                       // Tagline
-                      const Text(
+                      Text(
                         'Kesehatan di Genggaman Anda',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white70,
+                          color: scheme.onPrimary.withValues(alpha: 0.8),
                           letterSpacing: 0.5,
                         ),
                       ),
                       const SizedBox(height: 50),
-                      
+
                       // Loading Indicator
-                      const SizedBox(
+                      SizedBox(
                         width: 40,
                         height: 40,
                         child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            scheme.onPrimary,
+                          ),
                           strokeWidth: 3,
                         ),
                       ),

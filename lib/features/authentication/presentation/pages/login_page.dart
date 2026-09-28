@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:telehealth_app/core/widgets/app_dialogs.dart';
+import 'package:telehealth_app/data/repositories/simulated_api.dart';
 
-/// Login Page - Halaman untuk login pengguna
-/// Form dengan email dan password validation
+/// Pola sederhana untuk memastikan format email terlihat wajar.
+final RegExp _emailPattern = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
+
+/// Login Page - Halaman untuk login pengguna.
+///
+/// Ini demo UI tanpa backend: setiap input yang valid secara format diterima
+/// dan langsung diarahkan ke dashboard.
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -15,15 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _rememberMe = false;
-
-  // Data dummy untuk testing
-  final List<Map<String, String>> _dummyUsers = [
-    {'email': 'user@example.com', 'password': 'password123'},
-    {'email': 'patient@test.com', 'password': 'test123'},
-    {'email': 'admin@telehealth.com', 'password': 'admin123'},
-    {'email': 'ItuDia@gmail.com', 'password': 'PokoknyaItu'},
-    // {'email': 'ItuDia@gmail.com', 'password': 'PokoknyaItu'},
-  ];
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -32,117 +31,116 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      final email = _emailController.text;
-      final password = _passwordController.text;
+  Future<void> _handleLogin() async {
+    if (_submitting) {
+      return;
+    }
 
-      // Check dummy credentials
-      final user = _dummyUsers.firstWhere(
-        (u) => u['email'] == email && u['password'] == password,
-        orElse: () => {},
-      );
+    final form = _formKey.currentState;
+    if (form == null || !form.validate()) {
+      return;
+    }
 
-      if (user.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login berhasil!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email atau password salah!'),
-            backgroundColor: Colors.red,
-          ),
-        );
+    setState(() => _submitting = true);
+    try {
+      await SimulatedApi.run(() => true);
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, 'Login berhasil');
+      await Navigator.pushReplacementNamed(context, '/dashboard');
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, 'Login gagal. Silakan coba lagi.', success: false);
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
       }
     }
   }
 
+  void _handleForgotPassword() {
+    showAppSnack(context, 'Fitur lupa password akan segera hadir');
+  }
+
+  void _goToRegister() {
+    Navigator.pushNamed(context, '/register');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 40),
-                
-                // Logo
                 Center(
                   child: Container(
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2196F3).withOpacity(0.1),
+                      color: scheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.medical_services,
                       size: 50,
-                      color: Color(0xFF2196F3),
+                      color: scheme.primary,
                     ),
                   ),
                 ),
                 const SizedBox(height: 30),
-                
-                // Title
-                const Text(
+                Text(
                   'Selamat Datang',
-                  style: TextStyle(
-                    fontSize: 28,
+                  style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Masuk untuk melanjutkan',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 40),
-                
-                // Email Field
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
                     labelText: 'Email',
                     hintText: 'Masukkan email Anda',
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
+                    prefixIcon: Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    final email = value?.trim() ?? '';
+                    if (email.isEmpty) {
                       return 'Email tidak boleh kosong';
                     }
-                    if (!value.contains('@')) {
-                      return 'Email tidak valid';
+                    if (!_emailPattern.hasMatch(email)) {
+                      return 'Format email tidak valid';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 20),
-                
-                // Password Field
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _handleLogin(),
                   decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: 'Masukkan password Anda',
@@ -159,25 +157,19 @@ class _LoginPageState extends State<LoginPage> {
                         });
                       },
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    final password = value ?? '';
+                    if (password.isEmpty) {
                       return 'Password tidak boleh kosong';
                     }
-                    if (value.length < 6) {
+                    if (password.length < 6) {
                       return 'Password minimal 6 karakter';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-                
-                // Remember Me & Forgot Password
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -195,81 +187,83 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                     TextButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Fitur lupa password akan segera hadir'),
-                          ),
-                        );
-                      },
+                      onPressed: _handleForgotPassword,
                       child: const Text('Lupa Password?'),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
-                
-                // Login Button
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2196F3),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                    child: const Text(
-                      'Masuk',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    onPressed: _submitting ? null : _handleLogin,
+                    child: _submitting
+                        ? SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: scheme.primary,
+                            ),
+                          )
+                        : const Text('Masuk'),
                   ),
                 ),
                 const SizedBox(height: 24),
-                
-                // Divider
                 Row(
                   children: [
-                    Expanded(child: Divider(color: Colors.grey[300])),
+                    const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'atau',
-                        style: TextStyle(color: Colors.grey[600]),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                    Expanded(child: Divider(color: Colors.grey[300])),
+                    const Expanded(child: Divider()),
                   ],
                 ),
                 const SizedBox(height: 24),
-                
-                // Register Link
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text('Belum punya akun? '),
                       TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/register');
-                        },
-                        child: const Text(
-                          'Daftar Sekarang',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        onPressed: _goToRegister,
+                        child: const Text('Daftar Sekarang'),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: scheme.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline, size: 20, color: scheme.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Demo UI tanpa backend: gunakan email dan password '
+                          'apa pun yang valid untuk masuk.',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
