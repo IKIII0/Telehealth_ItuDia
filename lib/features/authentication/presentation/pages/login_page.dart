@@ -21,6 +21,8 @@ class _LoginPageState extends State<LoginPage> {
     {'email': 'user@example.com', 'password': 'password123'},
     {'email': 'patient@test.com', 'password': 'test123'},
     {'email': 'admin@telehealth.com', 'password': 'admin123'},
+    {'email': 'ItuDia@gmail.com', 'password': 'PokoknyaItu'},
+    // {'email': 'ItuDia@gmail.com', 'password': 'PokoknyaItu'},
   ];
 
   @override
@@ -268,37 +270,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
-                // Demo Credentials Info
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue[200]!),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: const [
-                          Icon(Icons.info_outline, color: Color(0xFF2196F3), size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'Demo Login:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2196F3),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text('Email: user@example.com'),
-                      const Text('Password: password123'),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
