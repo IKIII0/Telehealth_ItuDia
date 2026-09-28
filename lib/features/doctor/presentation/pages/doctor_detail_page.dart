@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:telehealth_app/core/widgets/app_dialogs.dart';
+import 'package:telehealth_app/data/models/doctor.dart';
 
 class DoctorDetailPage extends StatelessWidget {
-  final Map<String, dynamic> doctor;
+  final Doctor doctor;
 
   const DoctorDetailPage({super.key, required this.doctor});
 
@@ -17,13 +19,27 @@ class DoctorDetailPage extends StatelessWidget {
     return result.toString();
   }
 
+  // ── appointment ────────────────────────────────────────────────────────────
+
+  Future<void> _bookAppointment(BuildContext context) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Buat Janji Konsultasi',
+      message: 'Ajukan jadwal konsultasi dengan ${doctor.name}?',
+      confirmLabel: 'Ajukan',
+      cancelLabel: 'Batal',
+      destructive: false,
+    );
+    if (!confirmed || !context.mounted) return;
+    showAppSnack(context, 'Jadwal konsultasi berhasil diajukan');
+  }
+
   // ── build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final Color accentColor =
-        doctor['avatarColor'] as Color? ?? const Color(0xFF2196F3);
-    final int consultPrice = doctor['price'] as int? ?? 0;
+    final Color accentColor = doctor.avatarColor;
+    final int consultPrice = doctor.price;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -70,7 +86,7 @@ class DoctorDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        doctor['name'] as String? ?? '',
+                        doctor.name,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -80,7 +96,7 @@ class DoctorDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        doctor['specialization'] as String? ?? '',
+                        doctor.specialization,
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.85),
                           fontSize: 13,
@@ -152,14 +168,14 @@ class DoctorDetailPage extends StatelessWidget {
           _StatItem(
             icon: Icons.star_rounded,
             iconColor: Colors.amber,
-            value: (doctor['rating'] as double? ?? 0.0).toStringAsFixed(1),
+            value: doctor.rating.toStringAsFixed(1),
             label: 'Rating',
           ),
           _VertDivider(),
           _StatItem(
             icon: Icons.work_rounded,
             iconColor: accentColor,
-            value: '${doctor['experience'] ?? 0} Thn',
+            value: '${doctor.experience} Thn',
             label: 'Pengalaman',
           ),
           _VertDivider(),
@@ -202,7 +218,7 @@ class DoctorDetailPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            doctor['bio'] as String? ?? 'Dokter berpengalaman dan terpercaya.',
+            doctor.bio,
             style: const TextStyle(
               fontSize: 14,
               height: 1.65,
@@ -214,22 +230,21 @@ class DoctorDetailPage extends StatelessWidget {
             icon: Icons.local_hospital_rounded,
             color: Colors.red[400]!,
             label: 'Rumah Sakit',
-            value: doctor['hospital'] as String? ?? '-',
+            value: doctor.hospital,
           ),
           const SizedBox(height: 10),
           _InfoRow(
             icon: Icons.school_rounded,
             color: Colors.blue[400]!,
             label: 'Pendidikan',
-            value: doctor['education'] as String? ?? '-',
+            value: doctor.education,
           ),
           const SizedBox(height: 10),
           _InfoRow(
             icon: Icons.verified_rounded,
             color: Colors.green[400]!,
             label: 'No. STR',
-            value:
-                'STR-2024-${((doctor['experience'] as int? ?? 1) * 1357).toString()}',
+            value: 'STR-2024-${doctor.experience * 1357}',
           ),
         ],
       ),
@@ -481,14 +496,7 @@ class DoctorDetailPage extends StatelessWidget {
           Expanded(
             flex: 2,
             child: ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Fitur buat janji akan segera hadir'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
+              onPressed: () => _bookAppointment(context),
               icon: const Icon(Icons.calendar_month_rounded, size: 18),
               label: const Text('Buat Janji'),
               style: ElevatedButton.styleFrom(
