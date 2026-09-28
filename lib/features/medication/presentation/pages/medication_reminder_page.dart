@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:telehealth_app/core/widgets/app_dialogs.dart';
-import 'package:telehealth_app/core/widgets/async_state.dart';
-import 'package:telehealth_app/data/models/doctor.dart';
-import 'package:telehealth_app/data/models/medication.dart';
-import 'package:telehealth_app/data/repositories/doctor_repository.dart';
-import 'package:telehealth_app/data/repositories/medication_repository.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/data/models/doctor.dart';
+import 'package:Telehealth/data/models/medication.dart';
+import 'package:Telehealth/data/repositories/doctor_repository.dart';
+import 'package:Telehealth/data/repositories/medication_repository.dart';
 
 class MedicationReminderPage extends StatefulWidget {
   const MedicationReminderPage({super.key});

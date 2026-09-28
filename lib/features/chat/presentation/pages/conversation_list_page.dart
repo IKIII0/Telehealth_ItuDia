@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:telehealth_app/core/widgets/app_dialogs.dart';
-import 'package:telehealth_app/core/widgets/async_state.dart';
-import 'package:telehealth_app/data/models/conversation.dart';
-import 'package:telehealth_app/data/repositories/conversation_repository.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/data/models/conversation.dart';
+import 'package:Telehealth/data/repositories/conversation_repository.dart';
 
 class ConversationListPage extends StatefulWidget {
   const ConversationListPage({super.key});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:telehealth_app/core/widgets/async_state.dart';
-import 'package:telehealth_app/data/models/doctor.dart';
-import 'package:telehealth_app/data/repositories/doctor_repository.dart';
+import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/data/models/doctor.dart';
+import 'package:Telehealth/data/repositories/doctor_repository.dart';
 
 import 'doctor_detail_page.dart';
 
