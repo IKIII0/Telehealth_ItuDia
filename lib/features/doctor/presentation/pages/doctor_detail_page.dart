@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:telehealth_app/core/widgets/app_dialogs.dart';
-import 'package:telehealth_app/data/models/doctor.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/data/models/doctor.dart';
 
 class DoctorDetailPage extends StatelessWidget {
   final Doctor doctor;
