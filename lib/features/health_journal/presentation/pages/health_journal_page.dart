@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'package:telehealth_app/core/widgets/app_dialogs.dart';
+import 'package:telehealth_app/core/widgets/async_state.dart';
+import 'package:telehealth_app/data/models/journal.dart';
+import 'package:telehealth_app/data/repositories/journal_repository.dart';
+
+import 'package:telehealth_app/features/health_journal/presentation/pages/add_journal_entry_page.dart';
+
 class HealthJournalPage extends StatefulWidget {
   const HealthJournalPage({super.key});
 
@@ -9,40 +16,23 @@ class HealthJournalPage extends StatefulWidget {
 
 class _HealthJournalPageState extends State<HealthJournalPage>
     with SingleTickerProviderStateMixin {
+  /// Tab tetap untuk tiga metrik utama; datanya diambil dari repository dan
+  /// difilter berdasarkan `categoryId`.
+  static const List<String> _tabCategoryIds = ['cat1', 'cat2', 'cat3'];
+
   late TabController _tabController;
 
-  // ── Dummy data ──────────────────────────────────────────────────────────────
-  final List<Map<String, dynamic>> _bp = [
-    {'date': '20 Sep', 'sys': 120, 'dia': 80,  'status': 'Normal',    'note': 'Setelah istirahat'},
-    {'date': '21 Sep', 'sys': 135, 'dia': 88,  'status': 'Perhatian', 'note': 'Setelah olahraga'},
-    {'date': '22 Sep', 'sys': 118, 'dia': 78,  'status': 'Normal',    'note': 'Pagi hari'},
-    {'date': '23 Sep', 'sys': 122, 'dia': 82,  'status': 'Normal',    'note': 'Sebelum makan'},
-    {'date': '24 Sep', 'sys': 140, 'dia': 90,  'status': 'Perhatian', 'note': 'Stres kerja'},
-    {'date': '25 Sep', 'sys': 119, 'dia': 79,  'status': 'Normal',    'note': 'Setelah meditasi'},
-  ];
-
-  final List<Map<String, dynamic>> _bs = [
-    {'date': '20 Sep', 'value': 95,  'status': 'Normal',    'note': 'Puasa pagi'},
-    {'date': '21 Sep', 'value': 140, 'status': 'Perhatian', 'note': '2 jam setelah makan'},
-    {'date': '22 Sep', 'value': 98,  'status': 'Normal',    'note': 'Puasa pagi'},
-    {'date': '23 Sep', 'value': 105, 'status': 'Normal',    'note': 'Sebelum sarapan'},
-    {'date': '24 Sep', 'value': 155, 'status': 'Perhatian', 'note': 'Setelah makan besar'},
-    {'date': '25 Sep', 'value': 92,  'status': 'Normal',    'note': 'Puasa pagi'},
-  ];
-
-  final List<Map<String, dynamic>> _wt = [
-    {'date': '20 Sep', 'value': 65.5, 'status': 'Normal', 'note': 'Pagi hari'},
-    {'date': '21 Sep', 'value': 65.8, 'status': 'Normal', 'note': 'Setelah makan'},
-    {'date': '22 Sep', 'value': 65.2, 'status': 'Normal', 'note': 'Setelah olahraga'},
-    {'date': '23 Sep', 'value': 65.6, 'status': 'Normal', 'note': 'Pagi hari'},
-    {'date': '24 Sep', 'value': 66.0, 'status': 'Normal', 'note': 'Malam hari'},
-    {'date': '25 Sep', 'value': 65.4, 'status': 'Normal', 'note': 'Pagi hari'},
-  ];
+  // ── State ───────────────────────────────────────────────────────────────────
+  bool _loading = true;
+  String? _error;
+  List<JournalEntry> _entries = <JournalEntry>[];
+  List<JournalCategory> _categories = <JournalCategory>[];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: _tabCategoryIds.length, vsync: this);
+    _load();
   }
 
   @override
@@ -51,74 +41,155 @@ class _HealthJournalPageState extends State<HealthJournalPage>
     super.dispose();
   }
 
+  // ── Data loading ────────────────────────────────────────────────────────────
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final entriesFuture = JournalRepository.instance.fetchEntries();
+      final categoriesFuture = JournalRepository.instance.fetchCategories();
+      final entries = await entriesFuture;
+      final categories = await categoriesFuture;
+      if (!mounted) return;
+      setState(() {
+        _entries = entries;
+        _categories = categories;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  JournalCategory _categoryFor(String id) {
+    for (final c in _categories) {
+      if (c.id == id) return c;
+    }
+    return JournalRepository.instance.categoryById(id);
+  }
+
+  List<JournalEntry> _entriesFor(String categoryId) {
+    final list = _entries.where((e) => e.categoryId == categoryId).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    return list;
+  }
+
+  Future<void> _openForm({JournalEntry? entry}) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => AddJournalEntryPage(entry: entry)),
+    );
+    if (result == true && mounted) {
+      await _load();
+    }
+  }
+
+  Future<void> _deleteEntry(JournalEntry entry) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Hapus Catatan',
+      message:
+          'Yakin ingin menghapus catatan ini? Tindakan ini tidak dapat dibatalkan.',
+    );
+    if (!confirmed || !mounted) return;
+
+    try {
+      await JournalRepository.instance.delete(entry.id);
+      if (!mounted) return;
+      showAppSnack(context, 'Catatan dihapus');
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnack(context, 'Gagal menghapus catatan', success: false);
+    }
+  }
+
+  // ── Build ───────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        title: const Text('Jurnal Kesehatan',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Jurnal Kesehatan'),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
+          indicatorColor: scheme.onPrimary,
           indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white60,
-          labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          tabs: const [
-            Tab(text: 'Tek. Darah'),
-            Tab(text: 'Gula Darah'),
-            Tab(text: 'Berat Badan'),
-          ],
+          labelColor: scheme.onPrimary,
+          unselectedLabelColor: scheme.onPrimary.withValues(alpha: 0.6),
+          labelStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+          tabs: _tabCategoryIds.map((id) => Tab(text: _tabLabel(id))).toList(),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.blue.shade700,
-        onPressed: () {
-          Navigator.pushNamed(context, '/journal/add');
-        },
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Tambah', style: TextStyle(color: Colors.white)),
+        onPressed: _openForm,
+        icon: const Icon(Icons.add),
+        label: const Text('Tambah'),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildBpTab(),
-          _buildBsTab(),
-          _buildWtTab(),
-        ],
-      ),
+      body: _buildBody(),
     );
   }
 
-  // ── Blood Pressure Tab ──────────────────────────────────────────────────────
-  Widget _buildBpTab() {
+  Widget _buildBody() {
+    if (_loading) {
+      return const LoadingView(message: 'Memuat data jurnal...');
+    }
+    if (_error != null) {
+      return ErrorView(message: _error!, onRetry: _load);
+    }
+    return TabBarView(
+      controller: _tabController,
+      children: _tabCategoryIds.map(_buildCategoryTab).toList(),
+    );
+  }
+
+  Widget _buildCategoryTab(String categoryId) {
+    final category = _categoryFor(categoryId);
+    final entries = _entriesFor(categoryId);
+
+    if (entries.isEmpty) {
+      return EmptyView(
+        icon: Icons.assignment_outlined,
+        title: 'Belum ada catatan',
+        message: 'Tambahkan catatan ${category.name} pertama Anda.',
+        actionLabel: 'Tambah Catatan',
+        onAction: _openForm,
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('Grafik Tekanan Darah (mmHg)'),
+          _sectionTitle('Grafik ${category.name} (${category.unit})'),
           const SizedBox(height: 8),
-          _buildBpChart(),
+          category.isPressure
+              ? _pressureChart(entries)
+              : _valueChart(entries, category),
           const SizedBox(height: 20),
           _sectionTitle('Riwayat Entri'),
           const SizedBox(height: 8),
-          ..._bp.map((e) => _bpCard(e)),
+          ...entries.reversed.map((e) => _entryCard(e, category)),
           const SizedBox(height: 80),
         ],
       ),
     );
   }
 
-  Widget _buildBpChart() {
+  // ── Charts ──────────────────────────────────────────────────────────────────
+  Widget _pressureChart(List<JournalEntry> entries) {
     const maxH = 130.0;
     const maxV = 160.0;
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: Column(
@@ -134,9 +205,11 @@ class _HealthJournalPageState extends State<HealthJournalPage>
             const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: _bp.map((e) {
-                final sH = ((e['sys'] as num) / maxV) * maxH;
-                final dH = ((e['dia'] as num) / maxV) * maxH;
+              children: entries.map((e) {
+                final sys = (e.systolic ?? e.value.toInt()).toDouble();
+                final dia = (e.diastolic ?? 0).toDouble();
+                final sH = (sys / maxV).clamp(0.0, 1.0) * maxH;
+                final dH = (dia / maxV).clamp(0.0, 1.0) * maxH;
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -147,31 +220,17 @@ class _HealthJournalPageState extends State<HealthJournalPage>
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 11,
-                              height: sH,
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade400,
-                                borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(4)),
-                              ),
-                            ),
+                            _bar(11, sH, Colors.red.shade400),
                             const SizedBox(width: 2),
-                            Container(
-                              width: 11,
-                              height: dH,
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade400,
-                                borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(4)),
-                              ),
-                            ),
+                            _bar(11, dH, Colors.blue.shade400),
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(e['date'] as String,
-                            style: const TextStyle(fontSize: 9),
-                            textAlign: TextAlign.center),
+                        Text(
+                          _shortDate(e.date),
+                          style: const TextStyle(fontSize: 9),
+                          textAlign: TextAlign.center,
+                        ),
                       ],
                     ),
                   ),
@@ -184,109 +243,32 @@ class _HealthJournalPageState extends State<HealthJournalPage>
     );
   }
 
-  Widget _bpCard(Map<String, dynamic> e) {
-    final ok = e['status'] == 'Normal';
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: ok ? Colors.green.shade100 : Colors.orange.shade100,
-          child: Icon(Icons.favorite,
-              color: ok ? Colors.green.shade600 : Colors.orange.shade600,
-              size: 20),
-        ),
-        title: Text('${e['sys']}/${e['dia']} mmHg',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        subtitle: Text(e['note'] as String,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(e['date'] as String,
-                style: const TextStyle(fontSize: 11, color: Colors.grey)),
-            const SizedBox(height: 4),
-            _statusChip(e['status'] as String, ok),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Blood Sugar Tab ─────────────────────────────────────────────────────────
-  Widget _buildBsTab() {
-    final vals = _bs.map((e) => (e['value'] as int).toDouble()).toList();
+  Widget _valueChart(List<JournalEntry> entries, JournalCategory category) {
+    final vals = entries.map((e) => e.value).toList();
     final maxV = vals.reduce((a, b) => a > b ? a : b);
     final minV = vals.reduce((a, b) => a < b ? a : b);
+    final pad = category.id == 'cat3' ? 0.3 : 20.0;
     final range = maxV - minV;
-    final heights = vals.map((v) => (v - minV + 20) / (range + 20)).toList();
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionTitle('Grafik Gula Darah (mg/dL)'),
-          const SizedBox(height: 8),
-          _barChart(
-            heights: heights,
-            valueLabels: vals.map((v) => v.toInt().toString()).toList(),
-            dateLabels: _bs.map((e) => e['date'] as String).toList(),
-            color: Colors.orange.shade400,
-          ),
-          const SizedBox(height: 20),
-          _sectionTitle('Riwayat Entri'),
-          const SizedBox(height: 8),
-          ..._bs.map((e) => _genericCard(e, '${e['value']} mg/dL', Icons.water_drop)),
-          const SizedBox(height: 80),
-        ],
-      ),
+    final heights = vals.map((v) => (v - minV + pad) / (range + pad)).toList();
+    final decimals = category.id == 'cat3';
+    return _barChart(
+      heights: heights,
+      valueLabels: vals
+          .map((v) => decimals ? v.toStringAsFixed(1) : v.toInt().toString())
+          .toList(),
+      dateLabels: entries.map((e) => _shortDate(e.date)).toList(),
+      color: _categoryColor(category.id),
     );
   }
 
-  // ── Weight Tab ──────────────────────────────────────────────────────────────
-  Widget _buildWtTab() {
-    final vals = _wt.map((e) => e['value'] as double).toList();
-    final maxV = vals.reduce((a, b) => a > b ? a : b);
-    final minV = vals.reduce((a, b) => a < b ? a : b);
-    final range = maxV - minV;
-    final heights = vals.map((v) => (v - minV + 0.3) / (range + 0.3)).toList();
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionTitle('Grafik Berat Badan (kg)'),
-          const SizedBox(height: 8),
-          _barChart(
-            heights: heights,
-            valueLabels: vals.map((v) => v.toStringAsFixed(1)).toList(),
-            dateLabels: _wt.map((e) => e['date'] as String).toList(),
-            color: Colors.purple.shade400,
-          ),
-          const SizedBox(height: 20),
-          _sectionTitle('Riwayat Entri'),
-          const SizedBox(height: 8),
-          ..._wt.map((e) => _genericCard(e, '${e['value']} kg', Icons.monitor_weight)),
-          const SizedBox(height: 80),
-        ],
-      ),
-    );
-  }
-
-  // ── Bar chart (custom, no external package) ─────────────────────────────────
   Widget _barChart({
-    required List<double> heights,       // 0.0 – 1.0
+    required List<double> heights, // 0.0 – 1.0
     required List<String> valueLabels,
     required List<String> dateLabels,
     required Color color,
     double maxBarH = 130,
   }) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
         child: Row(
@@ -299,22 +281,29 @@ class _HealthJournalPageState extends State<HealthJournalPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text(valueLabels[i],
-                        style: const TextStyle(
-                            fontSize: 9, fontWeight: FontWeight.w600)),
+                    Text(
+                      valueLabels[i],
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 3),
                     Container(
                       height: h,
                       decoration: BoxDecoration(
                         color: color,
-                        borderRadius:
-                            const BorderRadius.vertical(top: Radius.circular(5)),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(5),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(dateLabels[i],
-                        style: const TextStyle(fontSize: 9),
-                        textAlign: TextAlign.center),
+                    Text(
+                      dateLabels[i],
+                      style: const TextStyle(fontSize: 9),
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ),
               ),
@@ -325,67 +314,204 @@ class _HealthJournalPageState extends State<HealthJournalPage>
     );
   }
 
-  // ── Generic entry card ──────────────────────────────────────────────────────
-  Widget _genericCard(Map<String, dynamic> e, String valueText, IconData icon) {
-    final ok = e['status'] == 'Normal';
+  Widget _bar(double width, double height, Color color) => Container(
+    width: width,
+    height: height,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+    ),
+  );
+
+  // ── Entry card with Edit / Delete ───────────────────────────────────────────
+  Widget _entryCard(JournalEntry e, JournalCategory category) {
+    final scheme = Theme.of(context).colorScheme;
+    final ok = e.status == 'Normal';
+    final valueText = category.isPressure
+        ? '${e.systolic ?? e.value.toInt()}/${e.diastolic ?? '-'} ${category.unit}'
+        : '${_formatValue(e.value, category)} ${category.unit}';
+    final icon = category.isPressure
+        ? Icons.favorite
+        : _categoryIcon(category.id);
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: ok ? Colors.green.shade100 : Colors.orange.shade100,
-          child: Icon(icon,
-              color: ok ? Colors.green.shade600 : Colors.orange.shade600,
-              size: 20),
-        ),
-        title: Text(valueText,
-            style:
-                const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        subtitle: Text(e['note'] as String,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 8, 4),
+        child: Column(
           children: [
-            Text(e['date'] as String,
-                style: const TextStyle(fontSize: 11, color: Colors.grey)),
-            const SizedBox(height: 4),
-            _statusChip(e['status'] as String, ok),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundColor: ok
+                      ? Colors.green.shade100
+                      : Colors.orange.shade100,
+                  child: Icon(
+                    icon,
+                    color: ok ? Colors.green.shade600 : Colors.orange.shade600,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        valueText,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      if (e.note.trim().isNotEmpty)
+                        Text(
+                          e.note,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _formatDate(e.date),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _statusChip(e.status, ok),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _openForm(entry: e),
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: const Text('Edit'),
+                  style: TextButton.styleFrom(foregroundColor: scheme.primary),
+                ),
+                TextButton.icon(
+                  onPressed: () => _deleteEntry(e),
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: const Text('Hapus'),
+                  style: TextButton.styleFrom(foregroundColor: scheme.error),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  // ── Shared helpers ──────────────────────────────────────────────────────────
-  Widget _sectionTitle(String t) => Text(t,
-      style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.bold,
-          color: Colors.grey.shade800));
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  String _tabLabel(String id) {
+    switch (id) {
+      case 'cat1':
+        return 'Tek. Darah';
+      case 'cat2':
+        return 'Gula Darah';
+      case 'cat3':
+        return 'Berat Badan';
+      default:
+        return _categoryFor(id).name;
+    }
+  }
 
-  Widget _legendDot(Color color, String label) => Row(children: [
-        Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 12)),
-      ]);
+  Color _categoryColor(String id) {
+    switch (id) {
+      case 'cat1':
+        return Colors.red.shade400;
+      case 'cat2':
+        return Colors.orange.shade400;
+      case 'cat3':
+        return Colors.purple.shade400;
+      default:
+        return Theme.of(context).colorScheme.primary;
+    }
+  }
+
+  IconData _categoryIcon(String id) {
+    switch (id) {
+      case 'cat2':
+        return Icons.water_drop;
+      case 'cat3':
+        return Icons.monitor_weight;
+      case 'cat4':
+        return Icons.thermostat;
+      case 'cat5':
+        return Icons.monitor_heart;
+      default:
+        return Icons.insights;
+    }
+  }
+
+  String _formatValue(double v, JournalCategory category) =>
+      category.id == 'cat3' ? v.toStringAsFixed(1) : v.toInt().toString();
+
+  String _formatDate(DateTime d) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
+    return '${d.day.toString().padLeft(2, '0')} ${months[d.month - 1]} ${d.year}';
+  }
+
+  String _shortDate(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+
+  Widget _sectionTitle(String t) => Text(
+    t,
+    style: TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.bold,
+      color: Colors.grey.shade800,
+    ),
+  );
+
+  Widget _legendDot(Color color, String label) => Row(
+    children: [
+      Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+      const SizedBox(width: 4),
+      Text(label, style: const TextStyle(fontSize: 12)),
+    ],
+  );
 
   Widget _statusChip(String status, bool ok) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: ok ? Colors.green.shade100 : Colors.orange.shade100,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          status,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: ok ? Colors.green.shade700 : Colors.orange.shade700,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    decoration: BoxDecoration(
+      color: ok ? Colors.green.shade100 : Colors.orange.shade100,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Text(
+      status,
+      style: TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        color: ok ? Colors.green.shade700 : Colors.orange.shade700,
+      ),
+    ),
+  );
 }

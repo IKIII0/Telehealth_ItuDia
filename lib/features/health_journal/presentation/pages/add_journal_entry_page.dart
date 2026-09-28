@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
+import 'package:telehealth_app/core/widgets/app_dialogs.dart';
+import 'package:telehealth_app/data/models/journal.dart';
+import 'package:telehealth_app/data/repositories/journal_repository.dart';
+
 class AddJournalEntryPage extends StatefulWidget {
-  const AddJournalEntryPage({super.key});
+  const AddJournalEntryPage({super.key, this.entry});
+
+  /// Bila tidak null, form berjalan dalam mode edit.
+  final JournalEntry? entry;
 
   @override
   State<AddJournalEntryPage> createState() => _AddJournalEntryPageState();
@@ -10,23 +17,50 @@ class AddJournalEntryPage extends StatefulWidget {
 class _AddJournalEntryPageState extends State<AddJournalEntryPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // ── Form state ──────────────────────────────────────────────────────────────
-  String _type = 'Tekanan Darah';
-  static const List<String> _types = [
-    'Tekanan Darah',
-    'Gula Darah',
-    'Berat Badan',
-    'Suhu Tubuh',
-    'Detak Jantung',
-  ];
+  late final List<JournalCategory> _categories;
+  late String _categoryId;
 
-  final _sysCtrl    = TextEditingController();
-  final _diaCtrl    = TextEditingController();
-  final _valueCtrl  = TextEditingController();
-  final _noteCtrl   = TextEditingController();
+  final _sysCtrl = TextEditingController();
+  final _diaCtrl = TextEditingController();
+  final _valueCtrl = TextEditingController();
+  final _noteCtrl = TextEditingController();
 
-  DateTime   _date = DateTime.now();
-  TimeOfDay  _time = TimeOfDay.now();
+  late DateTime _date;
+  late TimeOfDay _time;
+  bool _submitting = false;
+
+  bool get _isEditing => widget.entry != null;
+
+  JournalCategory get _category {
+    for (final c in _categories) {
+      if (c.id == _categoryId) return c;
+    }
+    return _categories.first;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _categories = JournalRepository.instance.categories;
+
+    final entry = widget.entry;
+    _categoryId = entry?.categoryId ?? _categories.first.id;
+
+    if (entry != null) {
+      _date = entry.date;
+      _time = TimeOfDay.fromDateTime(entry.date);
+      _noteCtrl.text = entry.note;
+      if (_category.isPressure) {
+        _sysCtrl.text = (entry.systolic ?? entry.value.toInt()).toString();
+        _diaCtrl.text = (entry.diastolic ?? 0).toString();
+      } else {
+        _valueCtrl.text = _formatInitial(entry.value);
+      }
+    } else {
+      _date = DateTime.now();
+      _time = TimeOfDay.now();
+    }
+  }
 
   @override
   void dispose() {
@@ -38,30 +72,51 @@ class _AddJournalEntryPageState extends State<AddJournalEntryPage> {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
-  String get _unit {
-    switch (_type) {
-      case 'Gula Darah':    return 'mg/dL';
-      case 'Berat Badan':   return 'kg';
-      case 'Suhu Tubuh':    return '°C';
-      case 'Detak Jantung': return 'BPM';
-      default:              return '';
-    }
-  }
+  String _formatInitial(double v) =>
+      v == v.roundToDouble() ? v.toInt().toString() : v.toString();
 
-  String get _fieldLabel {
-    switch (_type) {
-      case 'Gula Darah':    return 'Nilai Gula Darah';
-      case 'Berat Badan':   return 'Berat Badan';
-      case 'Suhu Tubuh':    return 'Suhu Tubuh';
-      case 'Detak Jantung': return 'Detak Jantung';
-      default:              return 'Nilai';
-    }
-  }
+  String _formatNumber(num v) =>
+      v == v.roundToDouble() ? v.toInt().toString() : v.toString();
 
   String get _dateStr =>
       '${_date.day.toString().padLeft(2, '0')}/${_date.month.toString().padLeft(2, '0')}/${_date.year}';
 
   String _timeStr(BuildContext context) => _time.format(context);
+
+  /// Rentang nilai wajar per kategori untuk validasi.
+  (double, double) _valueRange(JournalCategory c) {
+    switch (c.id) {
+      case 'cat1':
+        return (60, 260);
+      case 'cat2':
+        return (20, 600);
+      case 'cat3':
+        return (20, 300);
+      case 'cat4':
+        return (30, 45);
+      case 'cat5':
+        return (30, 250);
+      default:
+        return (0, double.infinity);
+    }
+  }
+
+  String _computeStatus(JournalCategory c, double value, {int? sys, int? dia}) {
+    switch (c.id) {
+      case 'cat1':
+        final s = sys ?? value.toInt();
+        final d = dia ?? 0;
+        return (s > 130 || d > 85) ? 'Perhatian' : 'Normal';
+      case 'cat2':
+        return value > 140 ? 'Perhatian' : 'Normal';
+      case 'cat4':
+        return (value < 36 || value > 37.5) ? 'Perhatian' : 'Normal';
+      case 'cat5':
+        return (value < 60 || value > 100) ? 'Perhatian' : 'Normal';
+      default:
+        return 'Normal';
+    }
+  }
 
   // ── Pickers ─────────────────────────────────────────────────────────────────
   Future<void> _pickDate() async {
@@ -70,52 +125,89 @@ class _AddJournalEntryPageState extends State<AddJournalEntryPage> {
       initialDate: _date,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      builder: (ctx, child) => Theme(
-        data: ThemeData(
-          colorScheme: ColorScheme.light(primary: Colors.blue.shade700),
-        ),
-        child: child!,
-      ),
     );
     if (picked != null) setState(() => _date = picked);
   }
 
   Future<void> _pickTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _time,
-      builder: (ctx, child) => Theme(
-        data: ThemeData(
-          colorScheme: ColorScheme.light(primary: Colors.blue.shade700),
-        ),
-        child: child!,
-      ),
-    );
+    final picked = await showTimePicker(context: context, initialTime: _time);
     if (picked != null) setState(() => _time = picked);
   }
 
   // ── Save ─────────────────────────────────────────────────────────────────────
-  void _save() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Catatan berhasil disimpan!'),
-          backgroundColor: Colors.green.shade600,
-        ),
+  Future<void> _save() async {
+    if (_submitting) return;
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _submitting = true);
+
+    final category = _category;
+    final int? sys = category.isPressure
+        ? int.tryParse(_sysCtrl.text.trim())
+        : null;
+    final int? dia = category.isPressure
+        ? int.tryParse(_diaCtrl.text.trim())
+        : null;
+    final double value = category.isPressure
+        ? (sys ?? 0).toDouble()
+        : double.parse(_valueCtrl.text.trim());
+    final status = _computeStatus(category, value, sys: sys, dia: dia);
+    final date = DateTime(
+      _date.year,
+      _date.month,
+      _date.day,
+      _time.hour,
+      _time.minute,
+    );
+    final note = _noteCtrl.text.trim();
+
+    try {
+      if (_isEditing) {
+        await JournalRepository.instance.update(
+          JournalEntry(
+            id: widget.entry!.id,
+            categoryId: category.id,
+            value: value,
+            date: date,
+            status: status,
+            systolic: sys,
+            diastolic: dia,
+            note: note,
+          ),
+        );
+      } else {
+        await JournalRepository.instance.create(
+          JournalEntry(
+            id: '',
+            categoryId: category.id,
+            value: value,
+            date: date,
+            status: status,
+            systolic: sys,
+            diastolic: dia,
+            note: note,
+          ),
+        );
+      }
+      if (!mounted) return;
+      showAppSnack(context, 'Catatan berhasil disimpan');
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      showAppSnack(
+        context,
+        'Gagal menyimpan catatan, coba lagi',
+        success: false,
       );
-      Navigator.of(context).pop();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        title: const Text('Tambah Catatan',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(_isEditing ? 'Edit Catatan' : 'Tambah Catatan'),
       ),
       body: Form(
         key: _formKey,
@@ -124,17 +216,17 @@ class _AddJournalEntryPageState extends State<AddJournalEntryPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Tipe catatan ───────────────────────────────────────────────
-              _label('Tipe Catatan'),
+              // ── Kategori ───────────────────────────────────────────────────
+              _label('Kategori Catatan'),
               const SizedBox(height: 8),
               _dropdownField(),
 
               const SizedBox(height: 20),
 
-              // ── Input nilai ────────────────────────────────────────────────
+              // ── Nilai pengukuran ───────────────────────────────────────────
               _label('Nilai Pengukuran'),
               const SizedBox(height: 8),
-              if (_type == 'Tekanan Darah') _bpFields() else _singleField(),
+              if (_category.isPressure) _bpFields() else _singleField(),
 
               const SizedBox(height: 20),
 
@@ -143,9 +235,21 @@ class _AddJournalEntryPageState extends State<AddJournalEntryPage> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(child: _datePicker(context)),
+                  Expanded(
+                    child: _pickerTile(
+                      icon: Icons.calendar_today,
+                      text: _dateStr,
+                      onTap: _submitting ? null : _pickDate,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: _timePicker(context)),
+                  Expanded(
+                    child: _pickerTile(
+                      icon: Icons.access_time,
+                      text: _timeStr(context),
+                      onTap: _submitting ? null : _pickTime,
+                    ),
+                  ),
                 ],
               ),
 
@@ -157,19 +261,17 @@ class _AddJournalEntryPageState extends State<AddJournalEntryPage> {
               TextFormField(
                 controller: _noteCtrl,
                 maxLines: 3,
-                decoration: InputDecoration(
-                  hintText:
-                      'Kondisi saat pengukuran, aktivitas sebelumnya, dll.',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        BorderSide(color: Colors.blue.shade700, width: 2),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
+                enabled: !_submitting,
+                decoration: _dec(
+                  'Kondisi saat pengukuran, aktivitas sebelumnya, dll.',
+                  Icons.notes_outlined,
                 ),
+                validator: (v) {
+                  if ((v ?? '').length > 200) {
+                    return 'Catatan maksimal 200 karakter';
+                  }
+                  return null;
+                },
               ),
 
               const SizedBox(height: 28),
@@ -193,39 +295,49 @@ class _AddJournalEntryPageState extends State<AddJournalEntryPage> {
   // ── Widget builders ──────────────────────────────────────────────────────────
   Widget _dropdownField() {
     return DropdownButtonFormField<String>(
-      value: _type,
-      decoration: _dec('Pilih tipe catatan', Icons.category_outlined),
-      items: _types
-          .map((t) => DropdownMenuItem(
-                value: t,
-                child: Text(t, style: const TextStyle(fontSize: 14)),
-              ))
+      initialValue: _categoryId,
+      decoration: _dec('Pilih kategori catatan', Icons.category_outlined),
+      items: _categories
+          .map(
+            (c) => DropdownMenuItem(
+              value: c.id,
+              child: Text(c.name, style: const TextStyle(fontSize: 14)),
+            ),
+          )
           .toList(),
-      onChanged: (v) {
-        setState(() {
-          _type = v!;
-          _valueCtrl.clear();
-          _sysCtrl.clear();
-          _diaCtrl.clear();
-        });
-      },
-      validator: (v) => v == null ? 'Pilih tipe catatan' : null,
+      onChanged: _submitting
+          ? null
+          : (v) {
+              setState(() {
+                _categoryId = v!;
+                _valueCtrl.clear();
+                _sysCtrl.clear();
+                _diaCtrl.clear();
+              });
+            },
+      validator: (v) => v == null ? 'Pilih kategori catatan' : null,
     );
   }
 
   Widget _bpFields() {
+    final unit = _category.unit;
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: TextFormField(
             controller: _sysCtrl,
             keyboardType: TextInputType.number,
-            decoration: _dec('Sistolik (mmHg)', Icons.arrow_upward),
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-              if (int.tryParse(v.trim()) == null) return 'Angka saja';
-              return null;
-            },
+            enabled: !_submitting,
+            decoration: _dec('Sistolik ($unit)', Icons.arrow_upward),
+            validator: (v) => _validateNumber(
+              v,
+              label: 'Sistolik',
+              min: 60,
+              max: 260,
+              unit: unit,
+              integer: true,
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -233,10 +345,23 @@ class _AddJournalEntryPageState extends State<AddJournalEntryPage> {
           child: TextFormField(
             controller: _diaCtrl,
             keyboardType: TextInputType.number,
-            decoration: _dec('Diastolik (mmHg)', Icons.arrow_downward),
+            enabled: !_submitting,
+            decoration: _dec('Diastolik ($unit)', Icons.arrow_downward),
             validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-              if (int.tryParse(v.trim()) == null) return 'Angka saja';
+              final base = _validateNumber(
+                v,
+                label: 'Diastolik',
+                min: 30,
+                max: 200,
+                unit: unit,
+                integer: true,
+              );
+              if (base != null) return base;
+              final dia = int.tryParse(v!.trim());
+              final sys = int.tryParse(_sysCtrl.text.trim());
+              if (dia != null && sys != null && dia >= sys) {
+                return 'Diastolik harus lebih kecil';
+              }
               return null;
             },
           ),
@@ -246,115 +371,100 @@ class _AddJournalEntryPageState extends State<AddJournalEntryPage> {
   }
 
   Widget _singleField() {
+    final c = _category;
+    final range = _valueRange(c);
     return TextFormField(
       controller: _valueCtrl,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: _dec('$_fieldLabel ($_unit)', Icons.straighten),
-      validator: (v) {
-        if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-        if (double.tryParse(v.trim()) == null) return 'Masukkan angka yang valid';
-        return null;
-      },
-    );
-  }
-
-  Widget _datePicker(BuildContext context) {
-    return GestureDetector(
-      onTap: _pickDate,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade400),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.calendar_today,
-                color: Colors.blue.shade600, size: 18),
-            const SizedBox(width: 8),
-            Text(_dateStr,
-                style: const TextStyle(fontSize: 14, color: Colors.black87)),
-          ],
-        ),
+      enabled: !_submitting,
+      decoration: _dec('${c.name} (${c.unit})', Icons.straighten),
+      validator: (v) => _validateNumber(
+        v,
+        label: c.name,
+        min: range.$1,
+        max: range.$2,
+        unit: c.unit,
       ),
     );
   }
 
-  Widget _timePicker(BuildContext context) {
-    return GestureDetector(
-      onTap: _pickTime,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade400),
+  String? _validateNumber(
+    String? v, {
+    required String label,
+    required double min,
+    required double max,
+    required String unit,
+    bool integer = false,
+  }) {
+    final text = (v ?? '').trim();
+    if (text.isEmpty) return '$label wajib diisi';
+    final parsed = integer ? int.tryParse(text) : double.tryParse(text);
+    if (parsed == null) {
+      return integer ? 'Masukkan angka bulat' : 'Masukkan angka yang valid';
+    }
+    final value = parsed.toDouble();
+    if (value < min || value > max) {
+      return '$label harus ${_formatNumber(min)} - ${_formatNumber(max)} $unit';
+    }
+    return null;
+  }
+
+  Widget _pickerTile({
+    required IconData icon,
+    required String text,
+    required VoidCallback? onTap,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: scheme.primary),
         ),
-        child: Row(
-          children: [
-            Icon(Icons.access_time, color: Colors.blue.shade600, size: 18),
-            const SizedBox(width: 8),
-            Text(_timeStr(context),
-                style: const TextStyle(fontSize: 14, color: Colors.black87)),
-          ],
-        ),
+        child: Text(text, style: const TextStyle(fontSize: 14)),
       ),
     );
   }
 
   Widget _cancelBtn(BuildContext context) {
     return OutlinedButton(
-      onPressed: () => Navigator.of(context).pop(),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        side: BorderSide(color: Colors.blue.shade700),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      child: Text('Batal',
-          style: TextStyle(
-              color: Colors.blue.shade700,
-              fontSize: 15,
-              fontWeight: FontWeight.w600)),
+      onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+      child: const Text('Batal'),
     );
   }
 
   Widget _saveBtn() {
     return ElevatedButton(
-      onPressed: _save,
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        backgroundColor: Colors.blue.shade700,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 2,
-      ),
-      child: const Text('Simpan',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.bold)),
+      onPressed: _submitting ? null : _save,
+      child: _submitting
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Text(_isEditing ? 'Simpan Perubahan' : 'Simpan'),
     );
   }
 
   Widget _label(String text) => Text(
-        text,
-        style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700),
-      );
+    text,
+    style: TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      color: Colors.grey.shade700,
+    ),
+  );
 
-  InputDecoration _dec(String hint, IconData icon) => InputDecoration(
-        hintText: hint,
-        prefixIcon: Icon(icon, color: Colors.blue.shade600),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      );
+  InputDecoration _dec(String hint, IconData icon) {
+    final scheme = Theme.of(context).colorScheme;
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: Icon(icon, color: scheme.primary),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: scheme.primary, width: 2),
+      ),
+    );
+  }
 }
