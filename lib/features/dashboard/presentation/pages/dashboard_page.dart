@@ -78,7 +78,7 @@ class _DashboardPageState extends State<DashboardPage> {
     Appointment(
       id: 'apt1',
       doctorId: 'doc1',
-      doctorName: 'Dr. Ahmad Fauzi, Sp.JP',
+      doctorName: 'Dr. Rifki Al Sauqy, Sp.JP',
       specialization: 'Spesialis Jantung',
       date: '28 Sep 2026',
       time: '09:00',
@@ -86,7 +86,7 @@ class _DashboardPageState extends State<DashboardPage> {
     Appointment(
       id: 'apt2',
       doctorId: 'doc2',
-      doctorName: 'Dr. Siti Rahma, Sp.A',
+      doctorName: 'Dr. Yehezkiel Sitanggang, Sp.A',
       specialization: 'Spesialis Anak',
       date: '30 Sep 2026',
       time: '14:30',
@@ -94,7 +94,7 @@ class _DashboardPageState extends State<DashboardPage> {
     Appointment(
       id: 'apt3',
       doctorId: 'doc5',
-      doctorName: 'Dr. Rizky Pratama, Sp.PD',
+      doctorName: 'Dr. Farhan Prasetyo, Sp.PD',
       specialization: 'Spesialis Penyakit Dalam',
       date: '02 Okt 2026',
       time: '11:00',
@@ -153,7 +153,7 @@ class _DashboardPageState extends State<DashboardPage> {
               style: TextStyle(fontSize: 13, color: Colors.white70),
             ),
             Text(
-              'John Doe!',
+              'ItuDia!',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
