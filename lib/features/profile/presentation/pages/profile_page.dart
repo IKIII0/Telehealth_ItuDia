@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:telehealth_app/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
