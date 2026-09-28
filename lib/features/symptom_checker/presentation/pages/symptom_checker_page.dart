@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:telehealth_app/core/widgets/app_dialogs.dart';
-import 'package:telehealth_app/core/widgets/async_state.dart';
-import 'package:telehealth_app/data/repositories/simulated_api.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/data/repositories/simulated_api.dart';
 
 class SymptomCheckerPage extends StatefulWidget {
   const SymptomCheckerPage({super.key});
