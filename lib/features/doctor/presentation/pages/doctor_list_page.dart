@@ -102,6 +102,7 @@ class _DoctorListPageState extends State<DoctorListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
@@ -109,7 +110,7 @@ class _DoctorListPageState extends State<DoctorListPage> {
           'Dokter',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF2196F3),
+        backgroundColor: scheme.primary,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
@@ -123,7 +124,7 @@ class _DoctorListPageState extends State<DoctorListPage> {
         children: [
           // ── Search Bar ──────────────────────────────────────────────────
           Container(
-            color: const Color(0xFF2196F3),
+            color: scheme.primary,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: TextField(
               controller: _searchController,
@@ -178,13 +179,11 @@ class _DoctorListPageState extends State<DoctorListPage> {
                       selected: isSelected,
                       onSelected: (_) =>
                           setState(() => _selectedFilter = filter),
-                      selectedColor: const Color(0xFF2196F3),
+                      selectedColor: scheme.primary,
                       checkmarkColor: Colors.white,
                       backgroundColor: Colors.grey[100],
                       side: BorderSide(
-                        color: isSelected
-                            ? const Color(0xFF2196F3)
-                            : Colors.grey[300]!,
+                        color: isSelected ? scheme.primary : Colors.grey[300]!,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
@@ -450,8 +449,8 @@ class _DoctorCard extends StatelessWidget {
                             ),
                             Text(
                               'Rp ${formatPrice(doctor.price)}',
-                              style: const TextStyle(
-                                color: Color(0xFF2196F3),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -469,7 +468,9 @@ class _DoctorCard extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: onTap,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2196F3),
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),

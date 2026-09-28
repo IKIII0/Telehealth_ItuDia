@@ -38,7 +38,7 @@ class DoctorDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accentColor = doctor.avatarColor;
+    final Color accentColor = Theme.of(context).colorScheme.primary;
     final int consultPrice = doctor.price;
 
     return Scaffold(
@@ -127,7 +127,7 @@ class DoctorDetailPage extends StatelessWidget {
 
                 // Layanan & Harga
                 _SectionTitle(title: 'Layanan & Harga'),
-                _buildServicesCard(consultPrice),
+                _buildServicesCard(context, consultPrice),
 
                 // Ulasan Pasien
                 _SectionTitle(title: 'Ulasan Pasien'),
@@ -274,7 +274,7 @@ class DoctorDetailPage extends StatelessWidget {
 
   // ── Services Card ──────────────────────────────────────────────────────────
 
-  Widget _buildServicesCard(int basePrice) {
+  Widget _buildServicesCard(BuildContext context, int basePrice) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
@@ -292,7 +292,7 @@ class DoctorDetailPage extends StatelessWidget {
         children: [
           _ServiceTile(
             icon: Icons.video_call_rounded,
-            color: Colors.blue,
+            color: Theme.of(context).colorScheme.primary,
             title: 'Konsultasi Online',
             subtitle: 'Chat & Video Call langsung dengan dokter',
             price: basePrice,
@@ -592,7 +592,9 @@ class _ScheduleCard extends StatelessWidget {
       width: 68,
       margin: const EdgeInsets.only(right: 10),
       decoration: BoxDecoration(
-        color: active ? const Color(0xFF2196F3) : Colors.grey[100],
+        color: active
+            ? Theme.of(context).colorScheme.primary
+            : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
