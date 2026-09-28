@@ -41,8 +41,7 @@ class DoctorDetailPage extends StatelessWidget {
                 onPressed: () {},
               ),
               IconButton(
-                icon:
-                    const Icon(Icons.bookmark_border, color: Colors.white),
+                icon: const Icon(Icons.bookmark_border, color: Colors.white),
                 onPressed: () {},
               ),
             ],
@@ -63,8 +62,11 @@ class DoctorDetailPage extends StatelessWidget {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: Colors.white.withOpacity(0.25),
-                        child: const Icon(Icons.person,
-                            size: 54, color: Colors.white),
+                        child: const Icon(
+                          Icons.person,
+                          size: 54,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -123,7 +125,7 @@ class DoctorDetailPage extends StatelessWidget {
       ),
 
       // ── Sticky Bottom Bar ────────────────────────────────────────────────
-      bottomNavigationBar: _buildBottomBar(accentColor, consultPrice),
+      bottomNavigationBar: _buildBottomBar(context, accentColor, consultPrice),
     );
   }
 
@@ -200,10 +202,12 @@ class DoctorDetailPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            doctor['bio'] as String? ??
-                'Dokter berpengalaman dan terpercaya.',
+            doctor['bio'] as String? ?? 'Dokter berpengalaman dan terpercaya.',
             style: const TextStyle(
-                fontSize: 14, height: 1.65, color: Colors.black87),
+              fontSize: 14,
+              height: 1.65,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 14),
           _InfoRow(
@@ -376,7 +380,9 @@ class DoctorDetailPage extends StatelessWidget {
                       Text(
                         review['name'] as String,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 14),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
                       ),
                       Row(
                         children: List.generate(5, (i) {
@@ -394,8 +400,7 @@ class DoctorDetailPage extends StatelessWidget {
                 ),
                 Text(
                   review['date'] as String,
-                  style:
-                      const TextStyle(color: Colors.grey, fontSize: 11),
+                  style: const TextStyle(color: Colors.grey, fontSize: 11),
                 ),
               ],
             ),
@@ -403,7 +408,10 @@ class DoctorDetailPage extends StatelessWidget {
             Text(
               review['comment'] as String,
               style: const TextStyle(
-                  fontSize: 13, height: 1.5, color: Colors.black87),
+                fontSize: 13,
+                height: 1.5,
+                color: Colors.black87,
+              ),
             ),
           ],
         ),
@@ -413,7 +421,7 @@ class DoctorDetailPage extends StatelessWidget {
 
   // ── Bottom Bar ─────────────────────────────────────────────────────────────
 
-  Widget _buildBottomBar(Color accentColor, int price) {
+  Widget _buildBottomBar(BuildContext context, Color accentColor, int price) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       decoration: BoxDecoration(
@@ -433,8 +441,10 @@ class DoctorDetailPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Konsultasi Online',
-                  style: TextStyle(color: Colors.grey, fontSize: 11)),
+              const Text(
+                'Konsultasi Online',
+                style: TextStyle(color: Colors.grey, fontSize: 11),
+              ),
               Text(
                 'Rp ${_formatPrice(price)}',
                 style: TextStyle(
@@ -459,7 +469,8 @@ class DoctorDetailPage extends StatelessWidget {
                 side: BorderSide(color: accentColor),
                 foregroundColor: accentColor,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 13),
               ),
             ),
@@ -485,7 +496,8 @@ class DoctorDetailPage extends StatelessWidget {
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 13),
               ),
             ),
@@ -509,9 +521,10 @@ class _SectionTitle extends StatelessWidget {
       child: Text(
         title,
         style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87),
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
       ),
     );
   }
@@ -537,11 +550,11 @@ class _StatItem extends StatelessWidget {
       children: [
         Icon(icon, color: iconColor, size: 24),
         const SizedBox(height: 4),
-        Text(value,
-            style:
-                const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        Text(label,
-            style: const TextStyle(color: Colors.grey, fontSize: 11)),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11)),
       ],
     );
   }
@@ -571,8 +584,7 @@ class _ScheduleCard extends StatelessWidget {
       width: 68,
       margin: const EdgeInsets.only(right: 10),
       decoration: BoxDecoration(
-        color:
-            active ? const Color(0xFF2196F3) : Colors.grey[100],
+        color: active ? const Color(0xFF2196F3) : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -593,9 +605,7 @@ class _ScheduleCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               height: 1.4,
-              color: active
-                  ? Colors.white.withOpacity(0.9)
-                  : Colors.grey[400],
+              color: active ? Colors.white.withOpacity(0.9) : Colors.grey[400],
             ),
           ),
         ],
@@ -624,8 +634,7 @@ class _ServiceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -634,15 +643,21 @@ class _ServiceTile extends StatelessWidget {
         ),
         child: Icon(icon, color: color, size: 22),
       ),
-      title: Text(title,
-          style: const TextStyle(
-              fontWeight: FontWeight.w600, fontSize: 14)),
-      subtitle: Text(subtitle,
-          style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(fontSize: 12, color: Colors.grey),
+      ),
       trailing: Text(
         'Rp ${formatPrice(price)}',
         style: TextStyle(
-            color: color, fontWeight: FontWeight.bold, fontSize: 13),
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
       ),
     );
   }
@@ -679,13 +694,18 @@ class _InfoRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style:
-                      const TextStyle(color: Colors.grey, fontSize: 11)),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.grey, fontSize: 11),
+              ),
               const SizedBox(height: 2),
-              Text(value,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w500, fontSize: 13)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
+              ),
             ],
           ),
         ),
