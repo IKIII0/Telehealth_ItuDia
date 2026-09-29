@@ -10,4 +10,7 @@
     <color name="splash_gradient_bottom">#254362</color>
     <color name="splash_logo_background">#FFFFFF</color>
     <color name="splash_logo_color">#36618E</color>
+
+    <!-- Background adaptive app icon: putih, sesuai kotak logo pada splash. -->
+    <color name="ic_launcher_background">#FFFFFF</color>
 </resources>
