@@ -153,7 +153,7 @@ class _DashboardPageState extends State<DashboardPage> {
               style: TextStyle(fontSize: 13, color: Colors.white70),
             ),
             Text(
-              'ItuDia!',
+              'RiFaEl!',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
