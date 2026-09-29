@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:telehealth_app/core/widgets/app_dialogs.dart';
-import 'package:telehealth_app/data/repositories/simulated_api.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/data/repositories/simulated_api.dart';
 
 /// Pola sederhana untuk memastikan format email terlihat wajar.
 final RegExp _emailPattern = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
@@ -240,30 +240,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: scheme.primaryContainer.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: scheme.primary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.info_outline, size: 20, color: scheme.primary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Demo UI tanpa backend: gunakan email dan password '
-                          'apa pun yang valid untuk masuk.',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),

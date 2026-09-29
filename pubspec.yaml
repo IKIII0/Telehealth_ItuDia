@@ -1,6 +1,6 @@
-name: telehealth_app
+name: Telehealth
 description: "Telehealth Remote Monitoring — aplikasi pemantauan kesehatan jarak jauh untuk pasien, dokter, dan keluarga."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
