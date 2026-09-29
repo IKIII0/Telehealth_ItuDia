@@ -13,13 +13,13 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   // ── Info pengguna (dapat diubah lewat dialog edit) ──────────────────────────
-  String _name = 'John Doe';
-  String _email = 'john.doe@example.com';
+  String _name = 'ItuDia';
+  String _email = 'ItuDia@gmail.com';
   String _phone = '+62 812 3456 7890';
   static const String _birthDate = '15 Januari 1995';
-  static const String _gender = 'Laki-laki';
+  static const String _gender = '-';
   static const String _address = 'Jl. Sudirman No. 123, Jakarta Pusat';
-  static const String _bloodType = 'A+';
+  static const String _bloodType = '-';
 
   // ── Preferensi ──────────────────────────────────────────────────────────────
   bool _notifEnabled = true;
