@@ -14,7 +14,7 @@ class DoctorRepository {
   final List<Doctor> _doctors = [
     const Doctor(
       id: 'doc1',
-      name: 'Dr. Ahmad Fauzi, Sp.JP',
+      name: 'Dr. Rifki Al Sauqy, Sp.JP',
       specialization: 'Spesialis Jantung',
       experience: 12,
       rating: 4.9,
@@ -28,7 +28,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc2',
-      name: 'Dr. Siti Rahma, Sp.A',
+      name: 'Dr. Yehezkiel Sitanggang, Sp.A',
       specialization: 'Spesialis Anak',
       experience: 8,
       rating: 4.8,
@@ -42,7 +42,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc3',
-      name: 'Dr. Budi Santoso',
+      name: 'Dr. Farhan Prasetyo',
       specialization: 'Dokter Umum',
       experience: 5,
       rating: 4.6,
@@ -56,7 +56,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc4',
-      name: 'Dr. Dewi Kusuma, Sp.KK',
+      name: 'Dr. Pocut Qanitah, Sp.KK',
       specialization: 'Spesialis Kulit',
       experience: 10,
       rating: 4.7,
@@ -70,7 +70,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc5',
-      name: 'Dr. Rizky Pratama, Sp.PD',
+      name: 'Dr. Daffa Afdhillah, Sp.PD',
       specialization: 'Spesialis Penyakit Dalam',
       experience: 9,
       rating: 4.8,
@@ -84,7 +84,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc6',
-      name: 'Dr. Maya Indah',
+      name: 'Dr. Arkaan Ramdhan',
       specialization: 'Dokter Umum',
       experience: 6,
       rating: 4.7,
@@ -98,7 +98,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc7',
-      name: 'Dr. Reza Fauzan, Sp.KJ',
+      name: 'Dr. Cristian, Sp.KJ',
       specialization: 'Psikiatri',
       experience: 8,
       rating: 4.8,
@@ -112,7 +112,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc8',
-      name: 'Dr. Laila Nurfitri, Sp.DVE',
+      name: 'Dr. William Bevan, Sp.DVE',
       specialization: 'Dermatologi',
       experience: 6,
       rating: 4.7,
