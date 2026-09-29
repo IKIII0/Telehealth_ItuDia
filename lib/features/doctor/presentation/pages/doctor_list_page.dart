@@ -464,7 +464,7 @@ class _DoctorCard extends StatelessWidget {
                     // Detail button
                     SizedBox(
                       width: double.infinity,
-                      height: 36,
+                      height: 42,
                       child: ElevatedButton(
                         onPressed: onTap,
                         style: ElevatedButton.styleFrom(
@@ -472,6 +472,7 @@ class _DoctorCard extends StatelessWidget {
                             context,
                           ).colorScheme.primary,
                           elevation: 0,
+                          padding: EdgeInsets.zero,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
