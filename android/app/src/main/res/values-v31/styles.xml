@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native splash untuk Android 12+ (SplashScreen API).
+     Hanya background color + logo, tanpa teks/animasi tambahan.
+     Durasi dikendalikan sistem; tidak ada delay buatan. -->
+<resources>
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+    </style>
+</resources>
