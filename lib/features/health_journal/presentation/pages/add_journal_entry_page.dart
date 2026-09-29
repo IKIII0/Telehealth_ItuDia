@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:telehealth_app/core/widgets/app_dialogs.dart';
-import 'package:telehealth_app/data/models/journal.dart';
-import 'package:telehealth_app/data/repositories/journal_repository.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/data/models/journal.dart';
+import 'package:Telehealth/data/repositories/journal_repository.dart';
 
 class AddJournalEntryPage extends StatefulWidget {
   const AddJournalEntryPage({super.key, this.entry});

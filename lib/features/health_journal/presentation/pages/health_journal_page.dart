@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:telehealth_app/core/widgets/app_dialogs.dart';
-import 'package:telehealth_app/core/widgets/async_state.dart';
-import 'package:telehealth_app/data/models/journal.dart';
-import 'package:telehealth_app/data/repositories/journal_repository.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/data/models/journal.dart';
+import 'package:Telehealth/data/repositories/journal_repository.dart';
 
-import 'package:telehealth_app/features/health_journal/presentation/pages/add_journal_entry_page.dart';
+import 'package:Telehealth/features/health_journal/presentation/pages/add_journal_entry_page.dart';
 
 class HealthJournalPage extends StatefulWidget {
   const HealthJournalPage({super.key});

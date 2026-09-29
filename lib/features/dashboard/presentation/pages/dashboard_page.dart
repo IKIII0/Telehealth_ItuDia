@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:telehealth_app/core/widgets/app_dialogs.dart';
-import 'package:telehealth_app/core/widgets/async_state.dart';
-import 'package:telehealth_app/data/models/appointment.dart';
-import 'package:telehealth_app/data/models/doctor.dart';
-import 'package:telehealth_app/data/repositories/doctor_repository.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/data/models/appointment.dart';
+import 'package:Telehealth/data/models/doctor.dart';
+import 'package:Telehealth/data/repositories/doctor_repository.dart';
+import 'package:Telehealth/lib/features/profile/presentation/pages/profile_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -186,6 +187,7 @@ class _DashboardPageState extends State<DashboardPage> {
               radius: 16,
               backgroundColor: Colors.white24,
               child: Icon(Icons.person, color: Colors.white, size: 20),
+              onTap: () => _go('/profile'),
             ),
           ),
         ],
