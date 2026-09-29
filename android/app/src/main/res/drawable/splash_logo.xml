@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Logo splash native: kotak putih membulat 120x120 (radius 30) berisi
+     ikon Icons.medical_services ukuran 70, warna scheme.primary.
+     Path ikon diambil persis dari Material Icons (medical_services, filled)
+     sehingga bentuknya identik dengan splash Flutter (.dart). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <!-- Kotak putih membulat -->
+    <path
+        android:fillColor="@color/splash_logo_background"
+        android:pathData="M30,0 L90,0 A30,30 0 0 1 120,30 L120,90 A30,30 0 0 1 90,120 L30,120 A30,30 0 0 1 0,90 L0,30 A30,30 0 0 1 30,0 Z" />
+    <!-- Ikon medical_services (24x24) diskalakan ke 70x70 lalu dipusatkan -->
+    <group
+        android:scaleX="2.9167"
+        android:scaleY="2.9167"
+        android:translateX="25"
+        android:translateY="25">
+        <path
+            android:fillColor="@color/splash_logo_color"
+            android:pathData="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4zm6 11h-3v3h-2v-3H8v-2h3v-3h2v3h3v2z" />
+    </group>
+</vector>

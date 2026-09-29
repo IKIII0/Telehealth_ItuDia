@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Warna native splash, disamakan dengan splash Flutter (.dart).
+         Flutter memakai AppTheme.light() dengan seedColor #2196F3:
+           - scheme.primary = #36618E
+           - variasi gelap   = #254362 (lightness -0.12)
+         Gradient splash Dart: #36618E (atas) -> #254362 (bawah). -->
+    <color name="splash_background">#36618E</color>
+    <color name="splash_gradient_top">#36618E</color>
+    <color name="splash_gradient_bottom">#254362</color>
+    <color name="splash_logo_background">#FFFFFF</color>
+    <color name="splash_logo_color">#36618E</color>
+</resources>
