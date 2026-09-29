@@ -5,7 +5,6 @@ import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/appointment.dart';
 import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/repositories/doctor_repository.dart';
-import 'package:Telehealth/lib/features/profile/presentation/pages/profile_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -181,13 +180,15 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.white24,
-              child: Icon(Icons.person, color: Colors.white, size: 20),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
               onTap: () => _go('/profile'),
+              child: const CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.white24,
+                child: Icon(Icons.person, color: Colors.white, size: 20),
+              ),
             ),
           ),
         ],
