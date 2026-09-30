@@ -192,7 +192,7 @@ Route yang terdaftar di `lib/app.dart`:
 
 | No | Anggota | Kontribusi |
 |---|---|---|
-| 1 | `Rifky Al Sauqy` | Pengingat obat, list dokter, detail dokter, chat, repository |
+| 1 | `Rifki Al Sauqy` | Pengingat obat, list dokter, detail dokter, chat, repository |
 | 2 | `Yehezkiel Gustav Setiawan Sitanggang` | dashboard, jurnal kesehatan, tambah jurnal kesehatan, cek gejala, models |
 | 3 | `Muhammad Farhan Prasetyo` | splash, autentikasi(login, register), profile, core(widget & theme), icon |
 
