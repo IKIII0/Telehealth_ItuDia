@@ -3,6 +3,7 @@ import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/conversation.dart';
 import 'package:Telehealth/data/repositories/conversation_repository.dart';
+import 'package:Telehealth/features/chat/presentation/pages/chat_room_page.dart';
 
 class ConversationListPage extends StatefulWidget {
   const ConversationListPage({super.key});
@@ -90,7 +91,11 @@ class _ConversationListPageState extends State<ConversationListPage>
   }
 
   void _openConversation(Conversation conversation) {
-    showAppSnack(context, 'Membuka chat dengan ${conversation.name}');
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => ChatRoomPage(conversation: conversation),
+      ),
+    );
   }
 
   @override
