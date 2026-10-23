@@ -11,7 +11,7 @@ class ConversationRepository {
   final List<Conversation> _conversations = [
     const Conversation(
       id: 'conv1',
-      name: 'Dr. Ahmad Fauzi',
+      name: 'dr. Rifki Al Sauqy, Sp.JP',
       role: 'Dokter',
       type: 'dokter',
       lastMessage:
@@ -19,12 +19,12 @@ class ConversationRepository {
       time: '10:30',
       unreadCount: 2,
       isOnline: true,
-      initials: 'AF',
+      initials: 'RAS',
       color: Color(0xFFE53935),
     ),
     const Conversation(
       id: 'conv2',
-      name: 'Dr. Siti Rahma',
+      name: 'dr. Yehezkiel Sitanggang, Sp.A',
       role: 'Dokter',
       type: 'dokter',
       lastMessage:
@@ -32,7 +32,7 @@ class ConversationRepository {
       time: '09:15',
       unreadCount: 0,
       isOnline: true,
-      initials: 'SR',
+      initials: 'YS',
       color: Color(0xFF1E88E5),
     ),
     const Conversation(
@@ -50,7 +50,7 @@ class ConversationRepository {
     ),
     const Conversation(
       id: 'conv4',
-      name: 'Dr. Dewi Kusuma',
+      name: 'dr. Pocut Qanitah, Sp.KK',
       role: 'Dokter',
       type: 'dokter',
       lastMessage:
@@ -58,7 +58,7 @@ class ConversationRepository {
       time: 'Kemarin',
       unreadCount: 0,
       isOnline: false,
-      initials: 'DK',
+      initials: 'PQ',
       color: Color(0xFF8E24AA),
     ),
     const Conversation(
@@ -76,7 +76,7 @@ class ConversationRepository {
     ),
     const Conversation(
       id: 'conv6',
-      name: 'Dr. Rizky Pratama',
+      name: 'dr. Daffa Afdhillah, Sp.PD',
       role: 'Dokter',
       type: 'dokter',
       lastMessage:
@@ -84,7 +84,7 @@ class ConversationRepository {
       time: 'Senin',
       unreadCount: 0,
       isOnline: false,
-      initials: 'RP',
+      initials: 'DA',
       color: Color(0xFF00897B),
     ),
   ];
