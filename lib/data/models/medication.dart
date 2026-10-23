@@ -29,6 +29,8 @@ class Medication {
     required this.schedules,
     this.color = const Color(0xFF1E88E5),
     this.icon = Icons.medication_rounded,
+    this.isDeleted = false,
+    this.deletedAt,
   });
 
   final String id;
@@ -42,6 +44,8 @@ class Medication {
   final List<MedicationSchedule> schedules;
   final Color color;
   final IconData icon;
+  final bool isDeleted;
+  final String? deletedAt;
 
   int get totalSchedules => schedules.length;
   int get takenSchedules => schedules.where((s) => s.taken).length;
@@ -57,6 +61,8 @@ class Medication {
     List<MedicationSchedule>? schedules,
     Color? color,
     IconData? icon,
+    bool? isDeleted,
+    String? deletedAt,
   }) {
     return Medication(
       id: id,
@@ -70,6 +76,8 @@ class Medication {
       schedules: schedules ?? this.schedules,
       color: color ?? this.color,
       icon: icon ?? this.icon,
+      isDeleted: isDeleted ?? this.isDeleted,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 }

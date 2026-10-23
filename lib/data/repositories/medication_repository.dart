@@ -106,7 +106,9 @@ class MedicationRepository {
     ),
   ];
 
-  List<Medication> get _all => _medications;
+  List<Medication> get _all => _medications.where((m) => !m.isDeleted).toList();
+  List<Medication> get _history =>
+      _medications.where((m) => m.isDeleted).toList();
 
   Future<List<Medication>> fetchAll({bool simulateError = false}) {
     return SimulatedApi.run(
@@ -150,7 +152,22 @@ class MedicationRepository {
   }
 
   Future<void> delete(String id) {
-    return SimulatedApi.run(() => _all.removeWhere((m) => m.id == id));
+    return SimulatedApi.run(() {
+      final index = _medications.indexWhere((m) => m.id == id);
+      if (index != -1) {
+        _medications[index] = _medications[index].copyWith(
+          isDeleted: true,
+          deletedAt: _today(),
+        );
+      }
+    });
+  }
+
+  Future<List<Medication>> fetchHistory({bool simulateError = false}) {
+    return SimulatedApi.run(
+      () => List<Medication>.of(_history),
+      simulateError: simulateError,
+    );
   }
 
   /// Menandai satu jadwal minum obat sebagai sudah/belum diminum.
