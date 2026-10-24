@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/routing/route_error_page.dart';
+import 'package:Telehealth/data/models/user.dart';
+import 'package:Telehealth/data/repositories/auth_repository.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/login_page.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/register_page.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/splash_screen.dart';
@@ -11,6 +13,7 @@ import 'package:Telehealth/features/chat/presentation/pages/conversation_list_pa
 import 'package:Telehealth/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_detail_page.dart';
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_list_page.dart';
+import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_dashboard_page.dart';
 import 'package:Telehealth/features/health_journal/presentation/pages/add_journal_entry_page.dart';
 import 'package:Telehealth/features/health_journal/presentation/pages/health_journal_page.dart';
 import 'package:Telehealth/features/medication/presentation/pages/medication_reminder_page.dart';
@@ -26,6 +29,7 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.splashPath,
+    refreshListenable: AuthRepository.instance,
     redirect: _redirect,
     errorBuilder: (context, state) =>
         RouteErrorPage(message: state.error?.toString()),
@@ -98,15 +102,65 @@ class AppRouter {
         path: AppRoutes.patientMedicationPath,
         builder: (context, state) => const MedicationReminderPage(),
       ),
+      GoRoute(
+        name: AppRoutes.doctorDashboardName,
+        path: AppRoutes.doctorDashboardPath,
+        builder: (context, state) => const DoctorDashboardPage(),
+      ),
     ],
   );
 
-  /// Redirect kompatibilitas untuk path lama dan root.
+  /// Redirect untuk kompatibilitas path lama, autentikasi, dan role.
   static String? _redirect(BuildContext context, GoRouterState state) {
     final location = state.matchedLocation;
     if (location == '/') {
       return AppRoutes.splashPath;
     }
-    return AppRoutes.legacyRedirects[location];
+
+    final legacyTarget = AppRoutes.legacyRedirects[location];
+    if (legacyTarget != null) {
+      return legacyTarget;
+    }
+
+    // Splash menjadi titik tunggu selama status sesi belum diketahui.
+    if (location == AppRoutes.splashPath) {
+      return null;
+    }
+
+    final auth = AuthRepository.instance;
+    if (auth.status == AuthStatus.unknown) {
+      return AppRoutes.splashPath;
+    }
+
+    final isPublic =
+        location == AppRoutes.loginPath || location == AppRoutes.registerPath;
+
+    if (auth.status == AuthStatus.unauthenticated) {
+      if (isPublic) return null;
+      return Uri(
+        path: AppRoutes.loginPath,
+        queryParameters: {'from': state.uri.toString()},
+      ).toString();
+    }
+
+    final user = auth.currentUser;
+    if (user == null) {
+      return AppRoutes.loginPath;
+    }
+
+    final role = user.role;
+
+    if (isPublic) {
+      return AppRoutes.homePathFor(role);
+    }
+
+    if (role == UserRole.patient && location.startsWith('/doctor/')) {
+      return AppRoutes.patientDashboardPath;
+    }
+    if (role == UserRole.doctor && location.startsWith('/patient/')) {
+      return AppRoutes.doctorDashboardPath;
+    }
+
+    return null;
   }
 }

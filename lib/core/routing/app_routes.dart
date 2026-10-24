@@ -1,3 +1,5 @@
+import 'package:Telehealth/data/models/user.dart';
+
 /// Nama dan path route aplikasi.
 ///
 /// Navigasi antarlayar memakai nama route agar string path tidak tersebar
@@ -45,6 +47,26 @@ class AppRoutes {
 
   static const String patientMedicationName = 'patientMedication';
   static const String patientMedicationPath = '/patient/medication';
+
+  // ── Dokter ─────────────────────────────────────────────────────────────────
+  static const String doctorDashboardName = 'doctorDashboard';
+  static const String doctorDashboardPath = '/doctor/dashboard';
+
+  /// Halaman utama sesuai role akun.
+  static String homePathFor(UserRole role) => switch (role) {
+    UserRole.patient => patientDashboardPath,
+    UserRole.doctor => doctorDashboardPath,
+  };
+
+  /// Memvalidasi tujuan redirect agar hanya path internal yang sesuai role.
+  static String? safePathForRole(String? path, UserRole role) {
+    if (path == null || !path.startsWith('/')) return null;
+    final allowedPrefix = switch (role) {
+      UserRole.patient => '/patient/',
+      UserRole.doctor => '/doctor/',
+    };
+    return path.startsWith(allowedPrefix) ? path : null;
+  }
 
   /// Redirect dari path lama (sebelum migrasi GoRouter) ke path baru.
   ///

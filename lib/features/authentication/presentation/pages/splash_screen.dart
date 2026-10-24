@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
+import 'package:Telehealth/data/repositories/auth_repository.dart';
 
 /// Splash Screen - Halaman pembuka aplikasi.
 ///
@@ -53,7 +54,13 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) {
       return;
     }
-    context.goNamed(AppRoutes.loginName);
+
+    final user = AuthRepository.instance.currentUser;
+    if (user == null) {
+      context.goNamed(AppRoutes.loginName);
+    } else {
+      context.go(AppRoutes.homePathFor(user.role));
+    }
   }
 
   @override

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/data/repositories/auth_repository.dart';
 import 'package:Telehealth/data/repositories/simulated_api.dart';
 
 /// Pola sederhana untuk memastikan format email terlihat wajar.
@@ -24,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _rememberMe = false;
+  bool _rememberMe = true;
   bool _submitting = false;
 
   @override
@@ -46,12 +47,31 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _submitting = true);
     try {
-      await SimulatedApi.run(() => true);
+      final user = await AuthRepository.instance.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        persist: _rememberMe,
+      );
       if (!mounted) {
         return;
       }
       showAppSnack(context, 'Login berhasil');
-      context.goNamed(AppRoutes.patientDashboardName);
+
+      final from = GoRouterState.of(context).uri.queryParameters['from'];
+      final target =
+          AppRoutes.safePathForRole(from, user.role) ??
+          AppRoutes.homePathFor(user.role);
+      context.go(target);
+    } on AuthException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, e.message, success: false);
+    } on SimulatedFailure catch (e) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, e.message, success: false);
     } catch (_) {
       if (!mounted) {
         return;
@@ -117,7 +137,24 @@ class _LoginPageState extends State<LoginPage> {
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Akun demo:\n'
+                    'Pasien — pasien@telehealth.app / 123456\n'
+                    'Dokter — dokter@telehealth.app / 123456',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,

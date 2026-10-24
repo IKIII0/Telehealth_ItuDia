@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/data/repositories/auth_repository.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -25,6 +26,16 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _notifEnabled = true;
   bool _chatReminder = true;
   bool _promoEmail = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = AuthRepository.instance.currentUser;
+    if (user != null) {
+      _name = user.name;
+      _email = user.email;
+    }
+  }
 
   // ── Build ───────────────────────────────────────────────────────────────────
   @override
@@ -108,9 +119,9 @@ class _ProfilePageState extends State<ProfilePage> {
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text(
-              'Pasien',
-              style: TextStyle(
+            child: Text(
+              AuthRepository.instance.currentUser?.role.label ?? 'Pasien',
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),
@@ -454,6 +465,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
     if (!confirmed || !mounted) return;
     showAppSnack(context, 'Berhasil keluar');
+    await AuthRepository.instance.signOut();
+    if (!mounted) return;
     context.goNamed(AppRoutes.loginName);
   }
 }
