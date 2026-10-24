@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/app_logo.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 import 'package:Telehealth/data/repositories/simulated_api.dart';
 
@@ -116,11 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                       color: scheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Icon(
-                      Icons.medical_services,
-                      size: 50,
-                      color: scheme.primary,
-                    ),
+                    child: AppLogo(size: 50, color: scheme.primary),
                   ),
                 ),
                 const SizedBox(height: 30),
