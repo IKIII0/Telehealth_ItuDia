@@ -137,23 +137,6 @@ class _LoginPageState extends State<LoginPage> {
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Akun demo:\n'
-                    'Pasien — pasien@telehealth.app / 123456\n'
-                    'Dokter — dokter@telehealth.app / 123456',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _emailController,

@@ -36,7 +36,7 @@ class AuthRepository extends ChangeNotifier {
       user: AppUser(
         id: 'user-patient',
         name: 'ItuDia',
-        email: 'pasien@telehealth.app',
+        email: 'pasien@gmail.com',
         role: UserRole.patient,
         avatarColor: Color(0xFF36618E),
       ),
@@ -46,7 +46,7 @@ class AuthRepository extends ChangeNotifier {
       user: AppUser(
         id: 'user-doctor',
         name: 'dr. Rifki Al Sauqy, Sp.JP',
-        email: 'dokter@telehealth.app',
+        email: 'dokter@gmail.com',
         role: UserRole.doctor,
         avatarColor: Color(0xFFE53935),
         doctorProfile: DoctorProfile(
