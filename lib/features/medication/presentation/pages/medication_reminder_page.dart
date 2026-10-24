@@ -20,6 +20,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
 
   // ── Loaded data ────────────────────────────────────────────────────────────
   List<Medication> _medications = [];
+  List<Medication> _historyMedications = [];
   List<Doctor> _doctors = [];
 
   // ── Async states ───────────────────────────────────────────────────────────
@@ -37,7 +38,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _load();
   }
 
@@ -57,12 +58,14 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
     try {
       final results = await Future.wait<Object>([
         MedicationRepository.instance.fetchAll(),
+        MedicationRepository.instance.fetchHistory(),
         DoctorRepository.instance.fetchAll(),
       ]);
       if (!mounted) return;
       setState(() {
         _medications = results[0] as List<Medication>;
-        _doctors = results[1] as List<Doctor>;
+        _historyMedications = results[1] as List<Medication>;
+        _doctors = results[2] as List<Doctor>;
         _loading = false;
       });
     } catch (e) {
@@ -78,9 +81,15 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
   /// dipakai setelah aksi toggle/CRUD agar UI tetap sinkron dengan repository.
   Future<void> _refresh() async {
     try {
-      final meds = await MedicationRepository.instance.fetchAll();
+      final results = await Future.wait<Object>([
+        MedicationRepository.instance.fetchAll(),
+        MedicationRepository.instance.fetchHistory(),
+      ]);
       if (!mounted) return;
-      setState(() => _medications = meds);
+      setState(() {
+        _medications = results[0] as List<Medication>;
+        _historyMedications = results[1] as List<Medication>;
+      });
     } catch (_) {
       if (mounted) {
         showAppSnack(context, 'Gagal memuat ulang data obat', success: false);
@@ -155,16 +164,14 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: scheme.surface,
+      backgroundColor: const Color(0xFF4B4453),
       appBar: AppBar(
         title: const Text(
           'Pengingat Obat',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: scheme.primary,
+        backgroundColor: const Color(0xFF845EC2),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
@@ -187,19 +194,25 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
             Tab(text: 'Hari Ini'),
             Tab(text: 'Minggu Ini'),
             Tab(text: 'Semua'),
+            Tab(text: 'Riwayat'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: List.generate(3, (_) => _buildTabContent()),
+        children: [
+          _buildTabContent(_medications),
+          _buildTabContent(_medications),
+          _buildTabContent(_medications),
+          _buildHistoryTabContent(),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: (_loading || _error != null)
             ? null
             : () => _openMedicationSheet(),
-        backgroundColor: scheme.primary,
-        foregroundColor: scheme.onPrimary,
+        backgroundColor: const Color(0xFF845EC2),
+        foregroundColor: Colors.white,
         tooltip: 'Tambah Obat',
         child: const Icon(Icons.add_rounded),
       ),
@@ -208,14 +221,14 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
 
   // ── Tab content (loading / error / empty / list) ────────────────────────────
 
-  Widget _buildTabContent() {
+  Widget _buildTabContent(List<Medication> meds) {
     if (_loading) {
       return const LoadingView(message: 'Memuat pengingat obat...');
     }
     if (_error != null) {
       return ErrorView(message: _error!, onRetry: _load);
     }
-    if (_medications.isEmpty) {
+    if (meds.isEmpty) {
       return EmptyView(
         icon: Icons.medication_outlined,
         title: 'Belum ada pengingat obat',
@@ -224,18 +237,167 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
         onAction: () => _openMedicationSheet(),
       );
     }
-    return _buildMedicationList();
+    return _buildMedicationList(meds);
+  }
+
+  Widget _buildHistoryTabContent() {
+    if (_loading) {
+      return const LoadingView(message: 'Memuat riwayat obat...');
+    }
+    if (_error != null) {
+      return ErrorView(message: _error!, onRetry: _load);
+    }
+    if (_historyMedications.isEmpty) {
+      return const EmptyView(
+        icon: Icons.history_rounded,
+        title: 'Belum ada riwayat obat',
+        message: 'Obat yang telah dihapus akan masuk ke riwayat di sini.',
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+      children: _historyMedications
+          .map((med) => _buildHistoryCard(med))
+          .toList(),
+    );
+  }
+
+  Widget _buildHistoryCard(Medication med) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF5A5563),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF6B6274), width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF845EC2).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    med.icon,
+                    color: const Color(0xFF9E7EB5),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        med.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${med.dose} • ${med.frequency}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3A3A3A),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Dihapus: ${med.deletedAt ?? '-'}',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (med.schedules.any((s) => s.taken)) ...[
+              const SizedBox(height: 12),
+              Divider(height: 1, color: Colors.white.withOpacity(0.1)),
+              const SizedBox(height: 12),
+              Text(
+                'JADWAL YANG PERNAH DIMINUM',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withOpacity(0.5),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: med.schedules.where((s) => s.taken).map((s) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2D5F3D),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${s.time} (${s.hour})',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   // ── Medication list ────────────────────────────────────────────────────────
 
-  Widget _buildMedicationList() {
+  Widget _buildMedicationList(List<Medication> meds) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       children: [
         _buildProgressCard(),
         const SizedBox(height: 16),
-        ..._medications.asMap().entries.map(
+        ...meds.asMap().entries.map(
           (entry) => _buildMedicationCard(entry.value, entry.key),
         ),
       ],
@@ -245,7 +407,6 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
   // ── Progress summary card ──────────────────────────────────────────────────
 
   Widget _buildProgressCard() {
-    final scheme = Theme.of(context).colorScheme;
     final total = _totalSchedules;
     final taken = _takenSchedules;
     final double progress = total > 0 ? taken / total : 0.0;
@@ -253,22 +414,9 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            scheme.primary,
-            Color.lerp(scheme.primary, Colors.white, 0.28)!,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withOpacity(0.35),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: const Color(0xFF5A5563),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF6B6274), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,13 +426,13 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.medication_outlined,
                   color: Colors.white,
-                  size: 26,
+                  size: 22,
                 ),
               ),
               const SizedBox(width: 14),
@@ -292,17 +440,22 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Progress Hari Ini',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    Text(
+                      'PROGRESS KONSUMSI',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$taken dari $total dosis sudah diminum',
+                      '$taken dari $total dosis diminum',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -312,7 +465,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                 '${(progress * 100).toStringAsFixed(0)}%',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -320,20 +473,25 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
           ),
           const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.white24,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-              minHeight: 10,
+              backgroundColor: Colors.white.withValues(alpha: 0.15),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFFB388FF),
+              ),
+              minHeight: 6,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             progress >= 1.0
-                ? '🎉 Semua dosis hari ini sudah selesai!'
-                : '${total - taken} dosis lagi untuk diselesaikan',
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ? 'Seluruh dosis hari ini telah selesai.'
+                : 'Tersisa ${total - taken} dosis lagi.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 12,
+            ),
           ),
         ],
       ),
@@ -343,31 +501,21 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
   // ── Single medication card ─────────────────────────────────────────────────
 
   Widget _buildMedicationCard(Medication med, int medIndex) {
-    final scheme = Theme.of(context).colorScheme;
     final schedules = med.schedules;
     final allTaken =
         schedules.isNotEmpty && med.takenSchedules == schedules.length;
     final someTaken = med.takenSchedules > 0;
     final Color medColor = med.color;
 
-    final Color borderColor;
-    if (allTaken) {
-      borderColor = Colors.green;
-    } else if (someTaken) {
-      borderColor = Colors.orange;
-    } else {
-      borderColor = Colors.grey[300]!;
-    }
-
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF3D2A52),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 1.5),
+        border: Border.all(color: const Color(0xFF5C3A7F), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: const Color(0xFF000000).withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -378,20 +526,14 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
         children: [
           // ── Card header ──────────────────────────────────────────────────
           Container(
-            padding: const EdgeInsets.fromLTRB(14, 12, 6, 10),
-            decoration: BoxDecoration(
-              color: medColor.withOpacity(0.06),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(14),
-              ),
-            ),
+            padding: const EdgeInsets.all(16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: medColor.withOpacity(0.15),
+                    color: medColor.withOpacity(0.25),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(med.icon, color: medColor, size: 22),
@@ -401,17 +543,53 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        med.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              med.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: allTaken
+                                  ? const Color(0xFF2D5F3D)
+                                  : someTaken
+                                  ? const Color(0xFF5C4A2E)
+                                  : const Color(0xFF4C2365),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              allTaken
+                                  ? 'Selesai'
+                                  : someTaken
+                                  ? 'Sebagian'
+                                  : 'Belum',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 6),
                       Text(
-                        '${med.dose}  •  ${med.frequency}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        '${med.dose} • ${med.frequency}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -419,7 +597,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                           Icon(
                             Icons.medical_services_outlined,
                             size: 12,
-                            color: Colors.grey[500],
+                            color: Colors.white.withOpacity(0.5),
                           ),
                           const SizedBox(width: 4),
                           Expanded(
@@ -428,7 +606,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: Colors.grey[500],
+                                color: Colors.white.withOpacity(0.5),
                                 fontSize: 12,
                               ),
                             ),
@@ -438,112 +616,33 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                     ],
                   ),
                 ),
-                Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: allTaken
-                              ? const Color(0xFFE8F5E9)
-                              : const Color(0xFFFFF3E0),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: allTaken
-                                ? const Color(0xFF66BB6A)
-                                : const Color(0xFFFFB300),
-                          ),
-                        ),
-                        child: Text(
-                          allTaken ? 'Selesai' : 'Dalam Proses',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: allTaken
-                                ? const Color(0xFF2E7D32)
-                                : const Color(0xFFE65100),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 24,
-                      width: 32,
-                      child: PopupMenuButton<String>(
-                        padding: EdgeInsets.zero,
-                        iconSize: 20,
-                        icon: Icon(
-                          Icons.more_vert_rounded,
-                          color: Colors.grey[600],
-                        ),
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            _openMedicationSheet(existing: med);
-                          } else if (value == 'delete') {
-                            _deleteMedication(med);
-                          }
-                        },
-                        itemBuilder: (ctx) => [
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(Icons.edit_outlined, size: 18),
-                                SizedBox(width: 10),
-                                Text('Edit'),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.delete_outline_rounded,
-                                  size: 18,
-                                  color: scheme.error,
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  'Hapus',
-                                  style: TextStyle(color: scheme.error),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
 
           // ── Sub-info: date range + note ──────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Row(
               children: [
                 Icon(
                   Icons.calendar_today_outlined,
                   size: 13,
-                  color: Colors.grey[400],
+                  color: Colors.white.withOpacity(0.5),
                 ),
                 const SizedBox(width: 5),
                 Text(
                   '${med.startDate} - ${med.endDate}',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Icon(
                   Icons.restaurant_outlined,
                   size: 13,
-                  color: Colors.grey[400],
+                  color: Colors.white.withOpacity(0.5),
                 ),
                 const SizedBox(width: 5),
                 Flexible(
@@ -551,14 +650,22 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                     med.note,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          const Divider(height: 1, indent: 14, endIndent: 14),
+          Divider(
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+            color: Colors.white.withOpacity(0.1),
+          ),
 
           // ── Schedule checkboxes ──────────────────────────────────────────
           ...schedules.asMap().entries.map((entry) {
@@ -568,9 +675,10 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
 
             return CheckboxListTile(
               dense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               controlAffinity: ListTileControlAffinity.leading,
               value: isTaken,
-              activeColor: scheme.primary,
+              activeColor: const Color(0xFF7F5DAF),
               checkColor: Colors.white,
               onChanged: (_) => _toggleTaken(med, schedIndex),
               title: Row(
@@ -580,52 +688,101 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: isTaken ? FontWeight.normal : FontWeight.w600,
-                      color: isTaken ? Colors.grey[400] : Colors.black87,
+                      color: isTaken
+                          ? Colors.white.withOpacity(0.5)
+                          : Colors.white,
                       decoration: isTaken ? TextDecoration.lineThrough : null,
-                      decorationColor: Colors.grey[400],
+                      decorationColor: Colors.white.withOpacity(0.5),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
-                      vertical: 2,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
                       color: isTaken
-                          ? Colors.grey[100]
-                          : const Color(0xFFF5F7FA),
+                          ? const Color(0xFF2D5F3D)
+                          : const Color(0xFF4C2365),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: isTaken ? Colors.grey[300]! : Colors.grey[200]!,
-                      ),
                     ),
-                    child: Text(
-                      sched.hour,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isTaken ? Colors.grey[400] : Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isTaken)
+                          if (isTaken)
+                            const Padding(
+                              padding: EdgeInsets.only(right: 4),
+                              child: Icon(
+                                Icons.check_circle,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                        Text(
+                          sched.hour,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              secondary: isTaken
-                  ? const Icon(
-                      Icons.check_circle_rounded,
-                      color: Colors.green,
-                      size: 20,
-                    )
-                  : Icon(
-                      Icons.radio_button_unchecked_rounded,
-                      color: Colors.grey[400],
-                      size: 20,
-                    ),
             );
           }),
 
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
+
+          // ── Action buttons ───────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openMedicationSheet(existing: med),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      size: 16,
+                      color: Color(0xFF9E7EB5),
+                    ),
+                    label: const Text(
+                      'Edit',
+                      style: TextStyle(color: Color(0xFF9E7EB5)),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF5C3A7F)),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _deleteMedication(med),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      size: 16,
+                      color: Color(0xFFFF6B6B),
+                    ),
+                    label: const Text(
+                      'Hapus',
+                      style: TextStyle(color: Color(0xFFFF6B6B)),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF5C3A7F)),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -772,20 +929,33 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
   }) {
     return InputDecoration(
       labelText: label,
+      labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
       hintText: hint,
+      hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
       errorText: errorText,
-      prefixIcon: Icon(icon),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.7)),
+      filled: true,
+      fillColor: const Color(0xFF3D2A52),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF5C3A7F)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF5C3A7F)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF7F5DAF), width: 2),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFF2A1B3D),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
@@ -806,7 +976,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -818,12 +988,12 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: scheme.primary.withOpacity(0.1),
+                    color: const Color(0xFF7F5DAF).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     _isEditing ? Icons.edit_outlined : Icons.add_circle_outline,
-                    color: scheme.primary,
+                    color: const Color(0xFF9E7EB5),
                     size: 22,
                   ),
                 ),
@@ -833,11 +1003,12 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close, color: Colors.white),
                   onPressed: _submitting ? null : () => Navigator.pop(context),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -851,6 +1022,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
               controller: _nameController,
               enabled: !_submitting,
               textCapitalization: TextCapitalization.words,
+              style: const TextStyle(color: Colors.white),
               decoration: _decoration(
                 label: 'Nama Obat',
                 hint: 'Contoh: Paracetamol',
@@ -864,6 +1036,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
             TextField(
               controller: _doseController,
               enabled: !_submitting,
+              style: const TextStyle(color: Colors.white),
               decoration: _decoration(
                 label: 'Dosis',
                 hint: 'Contoh: 500 mg',
@@ -876,12 +1049,22 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
             // Frekuensi dropdown
             DropdownButtonFormField<String>(
               value: _frequency,
+              style: const TextStyle(color: Colors.white),
               decoration: _decoration(
                 label: 'Frekuensi',
                 icon: Icons.repeat_rounded,
               ),
+              dropdownColor: const Color(0xFF5A5563),
               items: _frequencies
-                  .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                  .map(
+                    (f) => DropdownMenuItem(
+                      value: f,
+                      child: Text(
+                        f,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  )
                   .toList(),
               onChanged: _submitting
                   ? null
@@ -897,16 +1080,22 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
             DropdownButtonFormField<String>(
               value: _doctorId,
               isExpanded: true,
+              style: const TextStyle(color: Colors.white),
               decoration: _decoration(
                 label: 'Dokter Peresep',
                 icon: Icons.medical_services_outlined,
                 errorText: _doctorError,
               ),
+              dropdownColor: const Color(0xFF5A5563),
               items: widget.doctors
                   .map(
                     (doc) => DropdownMenuItem(
                       value: doc.id,
-                      child: Text(doc.name, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        doc.name,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
                   )
                   .toList(),
@@ -920,6 +1109,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
             TextField(
               controller: _noteController,
               enabled: !_submitting,
+              style: const TextStyle(color: Colors.white),
               decoration: _decoration(
                 label: 'Catatan (opsional)',
                 hint: 'Contoh: Sesudah makan',
@@ -940,7 +1130,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: scheme.onPrimary,
+                          color: Colors.white,
                         ),
                       )
                     : const Icon(Icons.save_rounded),
@@ -954,8 +1144,8 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: scheme.primary,
-                  foregroundColor: scheme.onPrimary,
+                  backgroundColor: const Color(0xFF845EC2),
+                  foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

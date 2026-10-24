@@ -38,11 +38,11 @@ class DoctorDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accentColor = Theme.of(context).colorScheme.primary;
+    const Color accentColor = Color(0xFF845EC2);
     final int consultPrice = doctor.price;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFF4B4453),
       body: CustomScrollView(
         slivers: [
           // ── Sliver App Bar ───────────────────────────────────────────────
@@ -63,13 +63,7 @@ class DoctorDetailPage extends StatelessWidget {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [accentColor, accentColor.withOpacity(0.75)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
+                color: accentColor,
                 child: SafeArea(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -77,7 +71,7 @@ class DoctorDetailPage extends StatelessWidget {
                       const SizedBox(height: 8),
                       CircleAvatar(
                         radius: 50,
-                        backgroundColor: Colors.white.withOpacity(0.25),
+                        backgroundColor: Colors.white.withValues(alpha: 0.25),
                         child: const Icon(
                           Icons.person,
                           size: 54,
@@ -98,7 +92,7 @@ class DoctorDetailPage extends StatelessWidget {
                       Text(
                         doctor.specialization,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontSize: 13,
                         ),
                       ),
@@ -118,19 +112,19 @@ class DoctorDetailPage extends StatelessWidget {
                 _buildStatsCard(accentColor),
 
                 // About Dokter
-                _SectionTitle(title: 'Tentang Dokter'),
+                _SectionTitle(title: 'Tentang dokter'),
                 _buildAboutCard(),
 
                 // Jadwal Praktik
-                _SectionTitle(title: 'Jadwal Praktik'),
+                _SectionTitle(title: 'Jadwal praktik'),
                 _buildScheduleRow(),
 
                 // Layanan & Harga
-                _SectionTitle(title: 'Layanan & Harga'),
+                _SectionTitle(title: 'Layanan & harga'),
                 _buildServicesCard(context, consultPrice),
 
                 // Ulasan Pasien
-                _SectionTitle(title: 'Ulasan Pasien'),
+                _SectionTitle(title: 'Ulasan pasien'),
                 ..._buildReviewCards(),
 
                 const SizedBox(height: 100),
@@ -152,12 +146,13 @@ class DoctorDetailPage extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF5A5563),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF6B6274)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: const Color(0xFF31144D).withValues(alpha: 0.03),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -204,12 +199,13 @@ class DoctorDetailPage extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF5A5563),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF6B6274)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: const Color(0xFF31144D).withValues(alpha: 0.03),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -222,7 +218,7 @@ class DoctorDetailPage extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               height: 1.65,
-              color: Colors.black87,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 14),
@@ -278,12 +274,13 @@ class DoctorDetailPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF5A5563),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF6B6274)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: const Color(0xFF31144D).withValues(alpha: 0.03),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -332,7 +329,7 @@ class DoctorDetailPage extends StatelessWidget {
             'Dokternya sangat ramah dan penjelasannya detail sekali. Saya merasa nyaman berkonsultasi dan masalah saya terselesaikan!',
         'date': '20 Sep 2024',
         'initials': 'AW',
-        'colorVal': 0xFF3949AB,
+        'colorVal': 0xFF6B7280,
       },
       {
         'name': 'Rina Sari',
@@ -358,14 +355,15 @@ class DoctorDetailPage extends StatelessWidget {
       final color = Color(review['colorVal'] as int);
       return Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFF5A5563),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF6B6274), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
@@ -377,7 +375,7 @@ class DoctorDetailPage extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: color.withOpacity(0.15),
+                  backgroundColor: color.withValues(alpha: 0.15),
                   child: Text(
                     review['initials'] as String,
                     style: TextStyle(
@@ -443,7 +441,7 @@ class DoctorDetailPage extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: const Color(0xFF31144D).withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),

@@ -117,8 +117,12 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     final conversation = widget.conversation;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFF4B4453),
       appBar: AppBar(
+        backgroundColor: const Color(0xFF845EC2),
+        elevation: 0,
+        shadowColor: Colors.black.withValues(alpha: 0.3),
+        iconTheme: const IconThemeData(color: Colors.white),
         titleSpacing: 0,
         title: Row(
           children: [
@@ -209,7 +213,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF5A5563),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -236,7 +240,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                     vertical: 12,
                   ),
                   filled: true,
-                  fillColor: const Color(0xFFF0F2F5),
+                  fillColor: const Color(0xFF5A5563),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
@@ -247,7 +251,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: scheme.primary, width: 1.5),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6B6274),
+                      width: 1.5,
+                    ),
                   ),
                 ),
               ),
@@ -261,7 +268,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 style: FilledButton.styleFrom(
                   padding: EdgeInsets.zero,
                   shape: const CircleBorder(),
-                  backgroundColor: scheme.primary,
+                  backgroundColor: const Color(0xFF845EC2),
                   foregroundColor: Colors.white,
                 ),
                 child: _sending
@@ -294,7 +301,7 @@ class _HeaderAvatar extends StatelessWidget {
       padding: const EdgeInsets.only(left: 12, right: 4),
       child: CircleAvatar(
         radius: 18,
-        backgroundColor: Colors.white24,
+        backgroundColor: const Color(0xFF6B6274),
         child: Text(
           conversation.initials,
           style: const TextStyle(
@@ -351,7 +358,9 @@ class _MessageBubble extends StatelessWidget {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: isMe ? scheme.primary : Colors.white,
+                    color: isMe
+                        ? const Color(0xFF845EC2)
+                        : const Color(0xFF5A5563),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -373,7 +382,9 @@ class _MessageBubble extends StatelessWidget {
                       Text(
                         message.text,
                         style: TextStyle(
-                          color: isMe ? Colors.white : Colors.black87,
+                          color: isMe
+                              ? const Color(0xFFF5F5F5)
+                              : const Color(0xFFF5F5F5),
                           fontSize: 13.5,
                           height: 1.35,
                         ),
@@ -383,7 +394,7 @@ class _MessageBubble extends StatelessWidget {
                         message.time,
                         style: TextStyle(
                           fontSize: 10,
-                          color: isMe ? Colors.white70 : Colors.grey.shade500,
+                          color: const Color(0xFFB0A8B9),
                         ),
                       ),
                     ],
