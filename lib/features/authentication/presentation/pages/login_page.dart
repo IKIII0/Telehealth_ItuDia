@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/data/repositories/simulated_api.dart';
 
@@ -48,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
       showAppSnack(context, 'Login berhasil');
-      await Navigator.pushReplacementNamed(context, '/dashboard');
+      context.goNamed(AppRoutes.patientDashboardName);
     } catch (_) {
       if (!mounted) {
         return;
@@ -66,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _goToRegister() {
-    Navigator.pushNamed(context, '/register');
+    context.pushNamed(AppRoutes.registerName);
   }
 
   @override

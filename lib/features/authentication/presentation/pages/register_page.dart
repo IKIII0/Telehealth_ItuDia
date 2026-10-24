@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/data/repositories/simulated_api.dart';
 
@@ -124,11 +127,10 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _goToLogin() {
-    final navigator = Navigator.of(context);
-    if (navigator.canPop()) {
-      navigator.pop();
+    if (context.canPop()) {
+      context.pop();
     } else {
-      navigator.pushReplacementNamed('/login');
+      context.goNamed(AppRoutes.loginName);
     }
   }
 

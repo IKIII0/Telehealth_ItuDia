@@ -1,7 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -454,8 +454,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
     if (!confirmed || !mounted) return;
     showAppSnack(context, 'Berhasil keluar');
-    unawaited(
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false),
-    );
+    context.goNamed(AppRoutes.loginName);
   }
 }

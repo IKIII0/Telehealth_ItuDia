@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:Telehealth/core/routing/app_routes.dart';
 
 /// Splash Screen - Halaman pembuka aplikasi.
 ///
@@ -50,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) {
       return;
     }
-    await Navigator.pushReplacementNamed(context, '/login');
+    context.goNamed(AppRoutes.loginName);
   }
 
   @override
