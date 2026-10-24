@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/conversation.dart';
 import 'package:Telehealth/data/repositories/conversation_repository.dart';
-import 'package:Telehealth/features/chat/presentation/pages/chat_room_page.dart';
 
 class ConversationListPage extends StatefulWidget {
   const ConversationListPage({super.key});
@@ -91,10 +93,9 @@ class _ConversationListPageState extends State<ConversationListPage>
   }
 
   void _openConversation(Conversation conversation) {
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => ChatRoomPage(conversation: conversation),
-      ),
+    context.pushNamed(
+      AppRoutes.patientChatRoomName,
+      pathParameters: {'conversationId': conversation.id},
     );
   }
 
@@ -179,7 +180,7 @@ class _ConversationListPageState extends State<ConversationListPage>
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/doctors');
+          context.pushNamed(AppRoutes.patientDoctorsName);
         },
         backgroundColor: const Color(0xFF845EC2),
         child: const Icon(Icons.chat_rounded, color: Colors.white),

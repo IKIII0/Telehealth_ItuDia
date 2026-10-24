@@ -96,6 +96,13 @@ class ConversationRepository {
     );
   }
 
+  Future<Conversation?> findById(String id) {
+    return SimulatedApi.run(() {
+      final matches = _conversations.where((c) => c.id == id);
+      return matches.isEmpty ? null : matches.first;
+    });
+  }
+
   Future<void> delete(String id) {
     return SimulatedApi.run(
       () => _conversations.removeWhere((c) => c.id == id),

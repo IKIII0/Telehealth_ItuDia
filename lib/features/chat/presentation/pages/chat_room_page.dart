@@ -3,14 +3,15 @@ import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/chat_message.dart';
 import 'package:Telehealth/data/models/conversation.dart';
 import 'package:Telehealth/data/repositories/chat_repository.dart';
+import 'package:Telehealth/data/repositories/conversation_repository.dart';
 import 'package:flutter/material.dart';
 
 /// Ruang percakapan: menampilkan gelembung pesan antara pengguna
 /// dengan dokter atau keluarga.
 class ChatRoomPage extends StatefulWidget {
-  const ChatRoomPage({super.key, required this.conversation});
+  const ChatRoomPage({super.key, required this.conversationId});
 
-  final Conversation conversation;
+  final String conversationId;
 
   @override
   State<ChatRoomPage> createState() => _ChatRoomPageState();
@@ -23,6 +24,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   bool _loading = true;
   String? _error;
   bool _sending = false;
+  Conversation? _conversation;
   List<ChatMessage> _messages = const [];
 
   @override
@@ -44,11 +46,23 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       _error = null;
     });
     try {
+      final conversation = await ConversationRepository.instance.findById(
+        widget.conversationId,
+      );
+      if (conversation == null) {
+        if (!mounted) return;
+        setState(() {
+          _error = 'Percakapan tidak ditemukan.';
+          _loading = false;
+        });
+        return;
+      }
       final messages = await ChatRepository.instance.fetchMessages(
-        widget.conversation.id,
+        conversation.id,
       );
       if (!mounted) return;
       setState(() {
+        _conversation = conversation;
         _messages = messages;
         _loading = false;
       });
@@ -69,7 +83,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     setState(() => _sending = true);
     try {
       final message = await ChatRepository.instance.send(
-        widget.conversation.id,
+        widget.conversationId,
         text,
       );
       if (!mounted) return;
@@ -90,7 +104,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   Future<void> _replyLater() async {
     try {
       final reply = await ChatRepository.instance.autoReply(
-        widget.conversation.id,
+        widget.conversationId,
       );
       if (!mounted) return;
       setState(() => _messages = [..._messages, reply]);
@@ -114,7 +128,19 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final conversation = widget.conversation;
+    final conversation = _conversation;
+
+    if (conversation == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF4B4453),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF845EC2),
+          foregroundColor: Colors.white,
+          title: const Text('Percakapan'),
+        ),
+        body: _buildBody(scheme),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF4B4453),
@@ -202,7 +228,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       itemCount: _messages.length,
       itemBuilder: (context, index) => _MessageBubble(
         message: _messages[index],
-        conversation: widget.conversation,
+        conversation: _conversation!,
       ),
     );
   }

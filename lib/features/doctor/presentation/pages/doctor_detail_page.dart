@@ -1,11 +1,91 @@
 import 'package:flutter/material.dart';
-import 'package:Telehealth/core/widgets/app_dialogs.dart';
-import 'package:Telehealth/data/models/doctor.dart';
+import 'package:go_router/go_router.dart';
 
-class DoctorDetailPage extends StatelessWidget {
+import 'package:Telehealth/core/routing/app_routes.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/data/models/doctor.dart';
+import 'package:Telehealth/data/repositories/doctor_repository.dart';
+
+/// Halaman detail dokter.
+///
+/// Route hanya membawa `doctorId`; data dokter dimuat dari
+/// [DoctorRepository] agar objek model tidak disimpan di URL.
+class DoctorDetailPage extends StatefulWidget {
+  const DoctorDetailPage({super.key, required this.doctorId});
+
+  final String doctorId;
+
+  @override
+  State<DoctorDetailPage> createState() => _DoctorDetailPageState();
+}
+
+class _DoctorDetailPageState extends State<DoctorDetailPage> {
+  static const Color _accentColor = Color(0xFF845EC2);
+  static const Color _backgroundColor = Color(0xFF4B4453);
+
+  bool _loading = true;
+  String? _error;
+  Doctor? _doctor;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final doctor = await DoctorRepository.instance.findById(widget.doctorId);
+      if (!mounted) return;
+      setState(() {
+        _doctor = doctor;
+        _loading = false;
+        if (doctor == null) {
+          _error = 'Dokter tidak ditemukan.';
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final doctor = _doctor;
+    if (doctor != null) {
+      return _DoctorDetailContent(doctor: doctor);
+    }
+
+    return Scaffold(
+      backgroundColor: _backgroundColor,
+      appBar: AppBar(
+        backgroundColor: _accentColor,
+        foregroundColor: Colors.white,
+        title: const Text('Detail Dokter'),
+      ),
+      body: _loading
+          ? const LoadingView(message: 'Memuat data dokter...')
+          : ErrorView(
+              message: _error ?? 'Dokter tidak ditemukan.',
+              onRetry: _load,
+            ),
+    );
+  }
+}
+
+class _DoctorDetailContent extends StatelessWidget {
   final Doctor doctor;
 
-  const DoctorDetailPage({super.key, required this.doctor});
+  const _DoctorDetailContent({required this.doctor});
 
   // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -474,7 +554,7 @@ class DoctorDetailPage extends StatelessWidget {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
-                Navigator.pushNamed(context, '/chat');
+                context.pushNamed(AppRoutes.patientChatName);
               },
               icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
               label: const Text('Chat'),

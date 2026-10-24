@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/repositories/doctor_repository.dart';
-
-import 'doctor_detail_page.dart';
 
 class DoctorListPage extends StatefulWidget {
   const DoctorListPage({super.key});
@@ -78,9 +79,9 @@ class _DoctorListPageState extends State<DoctorListPage> {
   }
 
   void _openDetail(Doctor doctor) {
-    Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => DoctorDetailPage(doctor: doctor)),
+    context.pushNamed(
+      AppRoutes.patientDoctorDetailName,
+      pathParameters: {'doctorId': doctor.id},
     );
   }
 
