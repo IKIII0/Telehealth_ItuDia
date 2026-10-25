@@ -164,14 +164,16 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF4B4453),
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text(
           'Pengingat Obat',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF845EC2),
+        backgroundColor: scheme.primary,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
@@ -211,7 +213,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
         onPressed: (_loading || _error != null)
             ? null
             : () => _openMedicationSheet(),
-        backgroundColor: const Color(0xFF845EC2),
+        backgroundColor: scheme.primary,
         foregroundColor: Colors.white,
         tooltip: 'Tambah Obat',
         child: const Icon(Icons.add_rounded),
@@ -263,12 +265,21 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
   }
 
   Widget _buildHistoryCard(Medication med) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF5A5563),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF6B6274), width: 1),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -280,14 +291,10 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF845EC2).withValues(alpha: 0.2),
+                    color: scheme.primaryContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    med.icon,
-                    color: const Color(0xFF9E7EB5),
-                    size: 20,
-                  ),
+                  child: Icon(med.icon, color: scheme.primary, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -299,14 +306,14 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
-                          color: Colors.white,
+                          color: Colors.black87,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         '${med.dose} • ${med.frequency}',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.grey.shade600,
                           fontSize: 13,
                         ),
                       ),
@@ -319,13 +326,13 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3A3A3A),
+                    color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     'Dihapus: ${med.deletedAt ?? '-'}',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.grey.shade600,
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                     ),
@@ -335,14 +342,14 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
             ),
             if (med.schedules.any((s) => s.taken)) ...[
               const SizedBox(height: 12),
-              Divider(height: 1, color: Colors.white.withOpacity(0.1)),
+              Divider(height: 1, color: Colors.grey.shade200),
               const SizedBox(height: 12),
               Text(
                 'JADWAL YANG PERNAH DIMINUM',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.grey.shade500,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -357,7 +364,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2D5F3D),
+                      color: const Color(0xFF4CAF50),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -407,6 +414,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
   // ── Progress summary card ──────────────────────────────────────────────────
 
   Widget _buildProgressCard() {
+    final scheme = Theme.of(context).colorScheme;
     final total = _totalSchedules;
     final taken = _takenSchedules;
     final double progress = total > 0 ? taken / total : 0.0;
@@ -414,9 +422,16 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF5A5563),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF6B6274), width: 1),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,12 +441,12 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: scheme.primaryContainer,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.medication_outlined,
-                  color: Colors.white,
+                  color: scheme.primary,
                   size: 22,
                 ),
               ),
@@ -443,7 +458,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                     Text(
                       'PROGRESS KONSUMSI',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: Colors.grey.shade600,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.5,
@@ -453,7 +468,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                     Text(
                       '$taken dari $total dosis diminum',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Colors.black87,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
@@ -464,7 +479,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
               Text(
                 '${(progress * 100).toStringAsFixed(0)}%',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black87,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -476,10 +491,8 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
             borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.white.withValues(alpha: 0.15),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFFB388FF),
-              ),
+              backgroundColor: Colors.grey.shade200,
+              valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
               minHeight: 6,
             ),
           ),
@@ -488,10 +501,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
             progress >= 1.0
                 ? 'Seluruh dosis hari ini telah selesai.'
                 : 'Tersisa ${total - taken} dosis lagi.',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 12,
-            ),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
           ),
         ],
       ),
@@ -501,6 +511,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
   // ── Single medication card ─────────────────────────────────────────────────
 
   Widget _buildMedicationCard(Medication med, int medIndex) {
+    final scheme = Theme.of(context).colorScheme;
     final schedules = med.schedules;
     final allTaken =
         schedules.isNotEmpty && med.takenSchedules == schedules.length;
@@ -510,13 +521,13 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF3D2A52),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF5C3A7F), width: 1),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF000000).withValues(alpha: 0.2),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
@@ -533,10 +544,10 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                 Container(
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: medColor.withOpacity(0.25),
+                    color: scheme.primaryContainer,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(med.icon, color: medColor, size: 22),
+                  child: Icon(med.icon, color: scheme.primary, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -551,7 +562,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 16,
-                                color: Colors.white,
+                                color: Colors.black87,
                               ),
                             ),
                           ),
@@ -562,10 +573,10 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                             ),
                             decoration: BoxDecoration(
                               color: allTaken
-                                  ? const Color(0xFF2D5F3D)
+                                  ? const Color(0xFF4CAF50)
                                   : someTaken
-                                  ? const Color(0xFF5C4A2E)
-                                  : const Color(0xFF4C2365),
+                                  ? const Color(0xFFFF9800)
+                                  : const Color(0xFF9E9E9E),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -587,7 +598,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                       Text(
                         '${med.dose} • ${med.frequency}',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.grey.shade600,
                           fontSize: 13,
                         ),
                       ),
@@ -597,7 +608,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                           Icon(
                             Icons.medical_services_outlined,
                             size: 12,
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.grey.shade500,
                           ),
                           const SizedBox(width: 4),
                           Expanded(
@@ -606,7 +617,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.grey.shade500,
                                 fontSize: 12,
                               ),
                             ),
@@ -628,21 +639,18 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                 Icon(
                   Icons.calendar_today_outlined,
                   size: 13,
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.grey.shade500,
                 ),
                 const SizedBox(width: 5),
                 Text(
                   '${med.startDate} - ${med.endDate}',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
                 const SizedBox(width: 16),
                 Icon(
                   Icons.restaurant_outlined,
                   size: 13,
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.grey.shade500,
                 ),
                 const SizedBox(width: 5),
                 Flexible(
@@ -650,10 +658,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                     med.note,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                   ),
                 ),
               ],
@@ -664,7 +669,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
             height: 1,
             indent: 16,
             endIndent: 16,
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.grey.shade200,
           ),
 
           // ── Schedule checkboxes ──────────────────────────────────────────
@@ -678,7 +683,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
               contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               controlAffinity: ListTileControlAffinity.leading,
               value: isTaken,
-              activeColor: const Color(0xFF7F5DAF),
+              activeColor: scheme.primary,
               checkColor: Colors.white,
               onChanged: (_) => _toggleTaken(med, schedIndex),
               title: Row(
@@ -688,11 +693,9 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: isTaken ? FontWeight.normal : FontWeight.w600,
-                      color: isTaken
-                          ? Colors.white.withOpacity(0.5)
-                          : Colors.white,
+                      color: isTaken ? Colors.grey.shade500 : Colors.black87,
                       decoration: isTaken ? TextDecoration.lineThrough : null,
-                      decorationColor: Colors.white.withOpacity(0.5),
+                      decorationColor: Colors.grey.shade500,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -703,8 +706,8 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                     ),
                     decoration: BoxDecoration(
                       color: isTaken
-                          ? const Color(0xFF2D5F3D)
-                          : const Color(0xFF4C2365),
+                          ? const Color(0xFF4CAF50)
+                          : scheme.primaryContainer,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -722,9 +725,9 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                             ),
                         Text(
                           sched.hour,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Colors.white,
+                            color: isTaken ? Colors.white : scheme.primary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -746,17 +749,17 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _openMedicationSheet(existing: med),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.edit_outlined,
                       size: 16,
-                      color: Color(0xFF9E7EB5),
+                      color: Colors.grey.shade600,
                     ),
-                    label: const Text(
+                    label: Text(
                       'Edit',
-                      style: TextStyle(color: Color(0xFF9E7EB5)),
+                      style: TextStyle(color: Colors.grey.shade700),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF5C3A7F)),
+                      side: BorderSide(color: Colors.grey.shade300),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
                   ),
@@ -775,7 +778,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                       style: TextStyle(color: Color(0xFFFF6B6B)),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF5C3A7F)),
+                      side: BorderSide(color: Colors.grey.shade300),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
                   ),
@@ -927,36 +930,40 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
     String? hint,
     String? errorText,
   }) {
+    final scheme = Theme.of(context).colorScheme;
+
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+      labelStyle: TextStyle(color: Colors.grey.shade700),
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+      hintStyle: TextStyle(color: Colors.grey.shade400),
       errorText: errorText,
-      prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.7)),
+      prefixIcon: Icon(icon, color: Colors.grey.shade600),
       filled: true,
-      fillColor: const Color(0xFF3D2A52),
+      fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF5C3A7F)),
+        borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF5C3A7F)),
+        borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF7F5DAF), width: 2),
+        borderSide: BorderSide(color: scheme.primary, width: 2),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF2A1B3D),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -976,7 +983,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -988,12 +995,12 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF7F5DAF).withOpacity(0.2),
+                    color: scheme.primaryContainer,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     _isEditing ? Icons.edit_outlined : Icons.add_circle_outline,
-                    color: const Color(0xFF9E7EB5),
+                    color: scheme.primary,
                     size: 22,
                   ),
                 ),
@@ -1003,12 +1010,12 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Colors.black87,
                   ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
+                  icon: Icon(Icons.close, color: Colors.grey.shade700),
                   onPressed: _submitting ? null : () => Navigator.pop(context),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -1022,7 +1029,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
               controller: _nameController,
               enabled: !_submitting,
               textCapitalization: TextCapitalization.words,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black87),
               decoration: _decoration(
                 label: 'Nama Obat',
                 hint: 'Contoh: Paracetamol',
@@ -1036,7 +1043,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
             TextField(
               controller: _doseController,
               enabled: !_submitting,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black87),
               decoration: _decoration(
                 label: 'Dosis',
                 hint: 'Contoh: 500 mg',
@@ -1049,19 +1056,19 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
             // Frekuensi dropdown
             DropdownButtonFormField<String>(
               value: _frequency,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black87),
               decoration: _decoration(
                 label: 'Frekuensi',
                 icon: Icons.repeat_rounded,
               ),
-              dropdownColor: const Color(0xFF5A5563),
+              dropdownColor: Colors.white,
               items: _frequencies
                   .map(
                     (f) => DropdownMenuItem(
                       value: f,
                       child: Text(
                         f,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black87),
                       ),
                     ),
                   )
@@ -1080,13 +1087,13 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
             DropdownButtonFormField<String>(
               value: _doctorId,
               isExpanded: true,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black87),
               decoration: _decoration(
                 label: 'Dokter Peresep',
                 icon: Icons.medical_services_outlined,
                 errorText: _doctorError,
               ),
-              dropdownColor: const Color(0xFF5A5563),
+              dropdownColor: Colors.white,
               items: widget.doctors
                   .map(
                     (doc) => DropdownMenuItem(
@@ -1094,7 +1101,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
                       child: Text(
                         doc.name,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black87),
                       ),
                     ),
                   )
@@ -1109,7 +1116,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
             TextField(
               controller: _noteController,
               enabled: !_submitting,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black87),
               decoration: _decoration(
                 label: 'Catatan (opsional)',
                 hint: 'Contoh: Sesudah makan',
@@ -1144,7 +1151,7 @@ class _MedicationFormSheetState extends State<_MedicationFormSheet> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF845EC2),
+                  backgroundColor: scheme.primary,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(

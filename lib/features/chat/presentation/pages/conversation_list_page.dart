@@ -113,13 +113,13 @@ class _ConversationListPageState extends State<ConversationListPage>
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF4B4453),
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text(
           'Pesan',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF845EC2),
+        backgroundColor: scheme.primary,
         elevation: 0,
         shadowColor: Colors.black.withValues(alpha: 0.3),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -150,7 +150,7 @@ class _ConversationListPageState extends State<ConversationListPage>
                           )
                         : null,
                     filled: true,
-                    fillColor: const Color(0xFF4B4453),
+                    fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(vertical: 0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -182,7 +182,7 @@ class _ConversationListPageState extends State<ConversationListPage>
         onPressed: () {
           context.pushNamed(AppRoutes.patientDoctorsName);
         },
-        backgroundColor: const Color(0xFF845EC2),
+        backgroundColor: scheme.primary,
         child: const Icon(Icons.chat_rounded, color: Colors.white),
       ),
     );
@@ -317,18 +317,18 @@ class _ConversationItem extends StatelessWidget {
       onLongPress: onDelete,
       child: Container(
         decoration: BoxDecoration(
-          color: unread > 0
-              ? const Color(0xFF845EC2).withValues(alpha: 0.15)
-              : const Color(0xFF4B4453),
-          border: Border.all(color: const Color(0xFF6B6274), width: 1),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
           ],
         ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -338,13 +338,13 @@ class _ConversationItem extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: color.withValues(alpha: 0.15),
+                  backgroundColor: scheme.primaryContainer,
                   child: Text(
                     conversation.initials,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: color,
+                      color: scheme.primary,
                     ),
                   ),
                 ),
@@ -383,7 +383,7 @@ class _ConversationItem extends StatelessWidget {
                                 ? FontWeight.bold
                                 : FontWeight.w500,
                             fontSize: 15,
-                            color: Colors.white,
+                            color: Colors.black87,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -392,8 +392,8 @@ class _ConversationItem extends StatelessWidget {
                         conversation.time,
                         style: TextStyle(
                           color: unread > 0
-                              ? const Color(0xFF845EC2)
-                              : const Color(0xFFB0A8B9),
+                              ? scheme.primary
+                              : Colors.grey.shade500,
                           fontSize: 12,
                           fontWeight: unread > 0
                               ? FontWeight.bold
@@ -413,8 +413,8 @@ class _ConversationItem extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isDoctor
-                          ? const Color(0xFF845EC2).withValues(alpha: 0.2)
-                          : const Color(0xFF00896F).withValues(alpha: 0.2),
+                          ? scheme.primaryContainer
+                          : Colors.green.shade50,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -423,8 +423,8 @@ class _ConversationItem extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: isDoctor
-                            ? const Color(0xFF845EC2)
-                            : const Color(0xFF00C0A3),
+                            ? scheme.primary
+                            : Colors.green.shade700,
                       ),
                     ),
                   ),
@@ -440,8 +440,8 @@ class _ConversationItem extends StatelessWidget {
                           conversation.lastMessage,
                           style: TextStyle(
                             color: unread > 0
-                                ? Colors.white
-                                : const Color(0xFFB0A8B9),
+                                ? Colors.black87
+                                : Colors.grey.shade600,
                             fontSize: 13,
                             fontWeight: unread > 0
                                 ? FontWeight.w500
@@ -458,7 +458,7 @@ class _ConversationItem extends StatelessWidget {
                           height: 20,
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF845EC2),
+                            color: scheme.primary,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(

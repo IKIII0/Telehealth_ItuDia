@@ -21,8 +21,7 @@ class DoctorDetailPage extends StatefulWidget {
 }
 
 class _DoctorDetailPageState extends State<DoctorDetailPage> {
-  static const Color _accentColor = Color(0xFF845EC2);
-  static const Color _backgroundColor = Color(0xFF4B4453);
+  static const Color _backgroundColor = Color(0xFFF5F7FA);
 
   bool _loading = true;
   String? _error;
@@ -60,15 +59,16 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final doctor = _doctor;
     if (doctor != null) {
       return _DoctorDetailContent(doctor: doctor);
     }
 
     return Scaffold(
-      backgroundColor: _backgroundColor,
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        backgroundColor: _accentColor,
+        backgroundColor: scheme.primary,
         foregroundColor: Colors.white,
         title: const Text('Detail Dokter'),
       ),
@@ -118,18 +118,17 @@ class _DoctorDetailContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color accentColor = Color(0xFF845EC2);
+    final scheme = Theme.of(context).colorScheme;
     final int consultPrice = doctor.price;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF4B4453),
+      backgroundColor: const Color(0xFFF5F7FA),
       body: CustomScrollView(
         slivers: [
-          // ── Sliver App Bar ───────────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
-            backgroundColor: accentColor,
+            backgroundColor: scheme.primary,
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
               IconButton(
@@ -143,7 +142,7 @@ class _DoctorDetailContent extends StatelessWidget {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                color: accentColor,
+                color: scheme.primary,
                 child: SafeArea(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -189,7 +188,7 @@ class _DoctorDetailContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Quick Stats Card
-                _buildStatsCard(accentColor),
+                _buildStatsCard(scheme.primary),
 
                 // About Dokter
                 _SectionTitle(title: 'Tentang dokter'),
@@ -215,7 +214,11 @@ class _DoctorDetailContent extends StatelessWidget {
       ),
 
       // ── Sticky Bottom Bar ────────────────────────────────────────────────
-      bottomNavigationBar: _buildBottomBar(context, accentColor, consultPrice),
+      bottomNavigationBar: _buildBottomBar(
+        context,
+        scheme.primary,
+        consultPrice,
+      ),
     );
   }
 
@@ -226,12 +229,12 @@ class _DoctorDetailContent extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF5A5563),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF6B6274)),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF31144D).withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -263,7 +266,7 @@ class _DoctorDetailContent extends StatelessWidget {
           _VertDivider(),
           _StatItem(
             icon: Icons.chat_bubble_rounded,
-            iconColor: Colors.purple,
+            iconColor: accentColor,
             value: '98%',
             label: 'Respons',
           ),
@@ -279,12 +282,12 @@ class _DoctorDetailContent extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF5A5563),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF6B6274)),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF31144D).withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -298,7 +301,7 @@ class _DoctorDetailContent extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               height: 1.65,
-              color: Colors.white,
+              color: Colors.black87,
             ),
           ),
           const SizedBox(height: 14),
@@ -351,15 +354,16 @@ class _DoctorDetailContent extends StatelessWidget {
   // ── Services Card ──────────────────────────────────────────────────────────
 
   Widget _buildServicesCard(BuildContext context, int basePrice) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF5A5563),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF6B6274)),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF31144D).withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -369,7 +373,7 @@ class _DoctorDetailContent extends StatelessWidget {
         children: [
           _ServiceTile(
             icon: Icons.video_call_rounded,
-            color: Theme.of(context).colorScheme.primary,
+            color: scheme.primary,
             title: 'Konsultasi Online',
             subtitle: 'Chat & Video Call langsung dengan dokter',
             price: basePrice,
@@ -437,13 +441,13 @@ class _DoctorDetailContent extends StatelessWidget {
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF5A5563),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF6B6274), width: 1),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 8,
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
@@ -475,6 +479,7 @@ class _DoctorDetailContent extends StatelessWidget {
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
+                          color: Colors.black87,
                         ),
                       ),
                       Row(
@@ -521,7 +526,7 @@ class _DoctorDetailContent extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF31144D).withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),
