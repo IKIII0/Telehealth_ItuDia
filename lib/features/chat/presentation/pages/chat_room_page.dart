@@ -132,9 +132,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
     if (conversation == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFF4B4453),
+        backgroundColor: const Color(0xFFF5F7FA),
         appBar: AppBar(
-          backgroundColor: const Color(0xFF845EC2),
+          backgroundColor: scheme.primary,
           foregroundColor: Colors.white,
           title: const Text('Percakapan'),
         ),
@@ -143,9 +143,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF4B4453),
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF845EC2),
+        backgroundColor: scheme.primary,
         elevation: 0,
         shadowColor: Colors.black.withValues(alpha: 0.3),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -239,10 +239,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF5A5563),
+          color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -266,21 +266,18 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                     vertical: 12,
                   ),
                   filled: true,
-                  fillColor: const Color(0xFF5A5563),
+                  fillColor: Colors.grey.shade100,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(
-                      color: const Color(0xFF6B6274),
-                      width: 1.5,
-                    ),
+                    borderSide: BorderSide(color: scheme.primary, width: 2),
                   ),
                 ),
               ),
@@ -294,7 +291,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 style: FilledButton.styleFrom(
                   padding: EdgeInsets.zero,
                   shape: const CircleBorder(),
-                  backgroundColor: const Color(0xFF845EC2),
+                  backgroundColor: scheme.primary,
                   foregroundColor: Colors.white,
                 ),
                 child: _sending
@@ -323,17 +320,18 @@ class _HeaderAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(left: 12, right: 4),
       child: CircleAvatar(
         radius: 18,
-        backgroundColor: const Color(0xFF6B6274),
+        backgroundColor: scheme.primaryContainer,
         child: Text(
           conversation.initials,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: scheme.primary,
           ),
         ),
       ),
@@ -361,13 +359,13 @@ class _MessageBubble extends StatelessWidget {
           if (!isMe) ...[
             CircleAvatar(
               radius: 14,
-              backgroundColor: conversation.color.withValues(alpha: 0.15),
+              backgroundColor: scheme.primaryContainer,
               child: Text(
                 conversation.initials,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: conversation.color,
+                  color: scheme.primary,
                 ),
               ),
             ),
@@ -384,9 +382,7 @@ class _MessageBubble extends StatelessWidget {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: isMe
-                        ? const Color(0xFF845EC2)
-                        : const Color(0xFF5A5563),
+                    color: isMe ? scheme.primary : Colors.grey.shade200,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -395,9 +391,9 @@ class _MessageBubble extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
                       ),
                     ],
                   ),
@@ -408,9 +404,7 @@ class _MessageBubble extends StatelessWidget {
                       Text(
                         message.text,
                         style: TextStyle(
-                          color: isMe
-                              ? const Color(0xFFF5F5F5)
-                              : const Color(0xFFF5F5F5),
+                          color: isMe ? Colors.white : Colors.black87,
                           fontSize: 13.5,
                           height: 1.35,
                         ),
@@ -420,7 +414,9 @@ class _MessageBubble extends StatelessWidget {
                         message.time,
                         style: TextStyle(
                           fontSize: 10,
-                          color: const Color(0xFFB0A8B9),
+                          color: isMe
+                              ? Colors.white.withOpacity(0.8)
+                              : Colors.grey.shade600,
                         ),
                       ),
                     ],

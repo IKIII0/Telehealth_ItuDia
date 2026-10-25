@@ -285,6 +285,7 @@ class _DoctorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final bool isAvailable = doctor.available;
     final Color avatarColor = doctor.avatarColor;
 
@@ -451,7 +452,7 @@ class _DoctorCard extends StatelessWidget {
                             Text(
                               'Rp ${formatPrice(doctor.price)}',
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
+                                color: scheme.primary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -469,9 +470,7 @@ class _DoctorCard extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: onTap,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                          backgroundColor: scheme.primary,
                           elevation: 0,
                           padding: EdgeInsets.zero,
                           shape: RoundedRectangleBorder(
