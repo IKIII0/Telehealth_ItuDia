@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/supabase/supabase_config.dart';
 import '../models/doctor.dart';
 import 'simulated_api.dart';
+import 'supabase_mappers.dart';
 
-/// Repository dokter dengan data simulasi.
+/// Repository dokter.
 ///
-/// Data disimpan di memori sehingga perubahan (bila ada) bertahan
-/// selama sesi aplikasi berjalan.
+/// Sumber data: tabel `doctors` di Supabase bila tersedia, selain itu
+/// memakai data simulasi lokal (dipakai unit test / mode offline).
 class DoctorRepository {
   DoctorRepository._();
   static final DoctorRepository instance = DoctorRepository._();
 
+  SupabaseClient? get _db => SupabaseConfig.client;
+
+  /// Cache hasil fetch terakhir dari Supabase untuk [specializations].
+  List<Doctor> _remoteCache = const [];
+
   final List<Doctor> _doctors = [
     const Doctor(
       id: 'doc1',
-      name: 'Dr. Ahmad Fauzi, Sp.JP',
+      name: 'dr. Rifki Al Sauqy, Sp.JP',
       specialization: 'Spesialis Jantung',
       experience: 12,
       rating: 4.9,
@@ -28,7 +36,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc2',
-      name: 'Dr. Siti Rahma, Sp.A',
+      name: 'dr. Yehezkiel Sitanggang, Sp.A',
       specialization: 'Spesialis Anak',
       experience: 8,
       rating: 4.8,
@@ -42,7 +50,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc3',
-      name: 'Dr. Budi Santoso',
+      name: 'dr. Farhan Prasetyo',
       specialization: 'Dokter Umum',
       experience: 5,
       rating: 4.6,
@@ -56,7 +64,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc4',
-      name: 'Dr. Dewi Kusuma, Sp.KK',
+      name: 'dr. Pocut Qanitah, Sp.KK',
       specialization: 'Spesialis Kulit',
       experience: 10,
       rating: 4.7,
@@ -70,7 +78,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc5',
-      name: 'Dr. Rizky Pratama, Sp.PD',
+      name: 'dr. Daffa Afdhillah, Sp.PD',
       specialization: 'Spesialis Penyakit Dalam',
       experience: 9,
       rating: 4.8,
@@ -84,7 +92,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc6',
-      name: 'Dr. Maya Indah',
+      name: 'dr. Arkaan Ramdhan',
       specialization: 'Dokter Umum',
       experience: 6,
       rating: 4.7,
@@ -98,7 +106,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc7',
-      name: 'Dr. Reza Fauzan, Sp.KJ',
+      name: 'dr. Cristian, Sp.KJ',
       specialization: 'Psikiatri',
       experience: 8,
       rating: 4.8,
@@ -112,7 +120,7 @@ class DoctorRepository {
     ),
     const Doctor(
       id: 'doc8',
-      name: 'Dr. Laila Nurfitri, Sp.DVE',
+      name: 'dr. William Bevan, Sp.DVE',
       specialization: 'Dermatologi',
       experience: 6,
       rating: 4.7,
@@ -128,22 +136,37 @@ class DoctorRepository {
 
   /// Daftar spesialisasi unik (data referensi/kategori untuk filter).
   List<String> get specializations {
-    final list = _doctors.map((d) => d.specialization).toSet().toList();
+    final source = _remoteCache.isNotEmpty ? _remoteCache : _doctors;
+    final list = source.map((d) => d.specialization).toSet().toList();
     list.sort();
     return list;
   }
 
-  Future<List<Doctor>> fetchAll({bool simulateError = false}) {
-    return SimulatedApi.run(
-      () => List<Doctor>.of(_doctors),
-      simulateError: simulateError,
-    );
+  Future<List<Doctor>> fetchAll({bool simulateError = false}) async {
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(
+        () => List<Doctor>.of(_doctors),
+        simulateError: simulateError,
+      );
+    }
+
+    final rows = await db.from('doctors').select().order('name');
+    final doctors = rows.map(doctorFromRow).toList();
+    _remoteCache = doctors;
+    return doctors;
   }
 
-  Future<Doctor?> findById(String id) {
-    return SimulatedApi.run(() {
-      final matches = _doctors.where((d) => d.id == id);
-      return matches.isEmpty ? null : matches.first;
-    });
+  Future<Doctor?> findById(String id) async {
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(() {
+        final matches = _doctors.where((d) => d.id == id);
+        return matches.isEmpty ? null : matches.first;
+      });
+    }
+
+    final row = await db.from('doctors').select().eq('id', id).maybeSingle();
+    return row == null ? null : doctorFromRow(row);
   }
 }

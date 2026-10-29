@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/repositories/doctor_repository.dart';
-
-import 'doctor_detail_page.dart';
 
 class DoctorListPage extends StatefulWidget {
   const DoctorListPage({super.key});
@@ -78,9 +79,9 @@ class _DoctorListPageState extends State<DoctorListPage> {
   }
 
   void _openDetail(Doctor doctor) {
-    Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => DoctorDetailPage(doctor: doctor)),
+    context.pushNamed(
+      AppRoutes.patientDoctorDetailName,
+      pathParameters: {'doctorId': doctor.id},
     );
   }
 
@@ -284,6 +285,7 @@ class _DoctorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final bool isAvailable = doctor.available;
     final Color avatarColor = doctor.avatarColor;
 
@@ -450,7 +452,7 @@ class _DoctorCard extends StatelessWidget {
                             Text(
                               'Rp ${formatPrice(doctor.price)}',
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
+                                color: scheme.primary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -464,14 +466,13 @@ class _DoctorCard extends StatelessWidget {
                     // Detail button
                     SizedBox(
                       width: double.infinity,
-                      height: 36,
+                      height: 42,
                       child: ElevatedButton(
                         onPressed: onTap,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                          backgroundColor: scheme.primary,
                           elevation: 0,
+                          padding: EdgeInsets.zero,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),

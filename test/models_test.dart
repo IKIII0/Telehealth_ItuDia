@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:telehealth_app/data/models/doctor.dart';
-import 'package:telehealth_app/data/models/journal.dart';
-import 'package:telehealth_app/data/models/medication.dart';
+import 'package:Telehealth/data/models/doctor.dart';
+import 'package:Telehealth/data/models/journal.dart';
+import 'package:Telehealth/data/models/medication.dart';
 
 void main() {
   group('Doctor', () {

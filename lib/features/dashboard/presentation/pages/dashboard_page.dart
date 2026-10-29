@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/appointment.dart';
@@ -20,25 +22,25 @@ class _DashboardPageState extends State<DashboardPage> {
       'icon': Icons.medical_services_outlined,
       'label': 'Cek\nGejala',
       'color': Colors.blue,
-      'route': '/symptom-checker',
+      'route': AppRoutes.patientSymptomCheckerName,
     },
     {
       'icon': Icons.chat_outlined,
       'label': 'Chat\nDokter',
       'color': Colors.green,
-      'route': '/chat',
+      'route': AppRoutes.patientChatName,
     },
     {
       'icon': Icons.book_outlined,
       'label': 'Jurnal\nKesehatan',
       'color': Colors.orange,
-      'route': '/journal',
+      'route': AppRoutes.patientJournalName,
     },
     {
       'icon': Icons.alarm_outlined,
       'label': 'Pengingat\nObat',
       'color': Colors.purple,
-      'route': '/medication',
+      'route': AppRoutes.patientMedicationName,
     },
   ];
 
@@ -133,7 +135,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  void _go(String route) => Navigator.pushNamed(context, route);
+  void _go(String routeName) => context.pushNamed(routeName);
 
   // ── Build ───────────────────────────────────────────────────────────────────
   @override
@@ -183,7 +185,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
-              onTap: () => _go('/profile'),
+              onTap: () => _go(AppRoutes.patientProfileName),
               child: const CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.white24,
@@ -230,7 +232,7 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         child: TextField(
           readOnly: true,
-          onTap: () => _go('/doctors'),
+          onTap: () => _go(AppRoutes.patientDoctorsName),
           decoration: const InputDecoration(
             hintText: 'Cari dokter, gejala, obat...',
             prefixIcon: Icon(Icons.search, color: Colors.grey),
@@ -567,7 +569,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   isThreeLine: true,
                   trailing: ElevatedButton(
-                    onPressed: () => _go('/doctors'),
+                    onPressed: () => _go(AppRoutes.patientDoctorsName),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: scheme.primary,
                       foregroundColor: scheme.onPrimary,
@@ -627,7 +629,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           const Spacer(),
           TextButton(
-            onPressed: () => _go('/doctors'),
+            onPressed: () => _go(AppRoutes.patientDoctorsName),
             child: const Text('Lihat Semua', style: TextStyle(fontSize: 12)),
           ),
         ],

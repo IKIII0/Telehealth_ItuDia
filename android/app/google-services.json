@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "847906574172",
+    "project_id": "telehealth-itudia",
+    "storage_bucket": "telehealth-itudia.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:847906574172:android:0d80cff82730514ed07b99",
+        "android_client_info": {
+          "package_name": "com.telehealth.telehealth_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDo95Z7AIAFfnxaA716iv97coYj2NXoBfw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

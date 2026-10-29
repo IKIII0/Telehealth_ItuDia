@@ -1,11 +1,91 @@
 import 'package:flutter/material.dart';
-import 'package:Telehealth/core/widgets/app_dialogs.dart';
-import 'package:Telehealth/data/models/doctor.dart';
+import 'package:go_router/go_router.dart';
 
-class DoctorDetailPage extends StatelessWidget {
+import 'package:Telehealth/core/routing/app_routes.dart';
+import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/data/models/doctor.dart';
+import 'package:Telehealth/data/repositories/doctor_repository.dart';
+
+/// Halaman detail dokter.
+///
+/// Route hanya membawa `doctorId`; data dokter dimuat dari
+/// [DoctorRepository] agar objek model tidak disimpan di URL.
+class DoctorDetailPage extends StatefulWidget {
+  const DoctorDetailPage({super.key, required this.doctorId});
+
+  final String doctorId;
+
+  @override
+  State<DoctorDetailPage> createState() => _DoctorDetailPageState();
+}
+
+class _DoctorDetailPageState extends State<DoctorDetailPage> {
+  static const Color _backgroundColor = Color(0xFFF5F7FA);
+
+  bool _loading = true;
+  String? _error;
+  Doctor? _doctor;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final doctor = await DoctorRepository.instance.findById(widget.doctorId);
+      if (!mounted) return;
+      setState(() {
+        _doctor = doctor;
+        _loading = false;
+        if (doctor == null) {
+          _error = 'Dokter tidak ditemukan.';
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final doctor = _doctor;
+    if (doctor != null) {
+      return _DoctorDetailContent(doctor: doctor);
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        backgroundColor: scheme.primary,
+        foregroundColor: Colors.white,
+        title: const Text('Detail Dokter'),
+      ),
+      body: _loading
+          ? const LoadingView(message: 'Memuat data dokter...')
+          : ErrorView(
+              message: _error ?? 'Dokter tidak ditemukan.',
+              onRetry: _load,
+            ),
+    );
+  }
+}
+
+class _DoctorDetailContent extends StatelessWidget {
   final Doctor doctor;
 
-  const DoctorDetailPage({super.key, required this.doctor});
+  const _DoctorDetailContent({required this.doctor});
 
   // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -38,18 +118,17 @@ class DoctorDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accentColor = Theme.of(context).colorScheme.primary;
+    final scheme = Theme.of(context).colorScheme;
     final int consultPrice = doctor.price;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: CustomScrollView(
         slivers: [
-          // ── Sliver App Bar ───────────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
-            backgroundColor: accentColor,
+            backgroundColor: scheme.primary,
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
               IconButton(
@@ -63,13 +142,7 @@ class DoctorDetailPage extends StatelessWidget {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [accentColor, accentColor.withOpacity(0.75)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
+                color: scheme.primary,
                 child: SafeArea(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -77,7 +150,7 @@ class DoctorDetailPage extends StatelessWidget {
                       const SizedBox(height: 8),
                       CircleAvatar(
                         radius: 50,
-                        backgroundColor: Colors.white.withOpacity(0.25),
+                        backgroundColor: Colors.white.withValues(alpha: 0.25),
                         child: const Icon(
                           Icons.person,
                           size: 54,
@@ -98,7 +171,7 @@ class DoctorDetailPage extends StatelessWidget {
                       Text(
                         doctor.specialization,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontSize: 13,
                         ),
                       ),
@@ -115,22 +188,22 @@ class DoctorDetailPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Quick Stats Card
-                _buildStatsCard(accentColor),
+                _buildStatsCard(scheme.primary),
 
                 // About Dokter
-                _SectionTitle(title: 'Tentang Dokter'),
+                _SectionTitle(title: 'Tentang dokter'),
                 _buildAboutCard(),
 
                 // Jadwal Praktik
-                _SectionTitle(title: 'Jadwal Praktik'),
+                _SectionTitle(title: 'Jadwal praktik'),
                 _buildScheduleRow(),
 
                 // Layanan & Harga
-                _SectionTitle(title: 'Layanan & Harga'),
+                _SectionTitle(title: 'Layanan & harga'),
                 _buildServicesCard(context, consultPrice),
 
                 // Ulasan Pasien
-                _SectionTitle(title: 'Ulasan Pasien'),
+                _SectionTitle(title: 'Ulasan pasien'),
                 ..._buildReviewCards(),
 
                 const SizedBox(height: 100),
@@ -141,7 +214,11 @@ class DoctorDetailPage extends StatelessWidget {
       ),
 
       // ── Sticky Bottom Bar ────────────────────────────────────────────────
-      bottomNavigationBar: _buildBottomBar(context, accentColor, consultPrice),
+      bottomNavigationBar: _buildBottomBar(
+        context,
+        scheme.primary,
+        consultPrice,
+      ),
     );
   }
 
@@ -154,10 +231,11 @@ class DoctorDetailPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -188,7 +266,7 @@ class DoctorDetailPage extends StatelessWidget {
           _VertDivider(),
           _StatItem(
             icon: Icons.chat_bubble_rounded,
-            iconColor: Colors.purple,
+            iconColor: accentColor,
             value: '98%',
             label: 'Respons',
           ),
@@ -206,10 +284,11 @@ class DoctorDetailPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -275,15 +354,17 @@ class DoctorDetailPage extends StatelessWidget {
   // ── Services Card ──────────────────────────────────────────────────────────
 
   Widget _buildServicesCard(BuildContext context, int basePrice) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -292,7 +373,7 @@ class DoctorDetailPage extends StatelessWidget {
         children: [
           _ServiceTile(
             icon: Icons.video_call_rounded,
-            color: Theme.of(context).colorScheme.primary,
+            color: scheme.primary,
             title: 'Konsultasi Online',
             subtitle: 'Chat & Video Call langsung dengan dokter',
             price: basePrice,
@@ -332,7 +413,7 @@ class DoctorDetailPage extends StatelessWidget {
             'Dokternya sangat ramah dan penjelasannya detail sekali. Saya merasa nyaman berkonsultasi dan masalah saya terselesaikan!',
         'date': '20 Sep 2024',
         'initials': 'AW',
-        'colorVal': 0xFF3949AB,
+        'colorVal': 0xFF6B7280,
       },
       {
         'name': 'Rina Sari',
@@ -358,14 +439,15 @@ class DoctorDetailPage extends StatelessWidget {
       final color = Color(review['colorVal'] as int);
       return Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
@@ -377,7 +459,7 @@ class DoctorDetailPage extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: color.withOpacity(0.15),
+                  backgroundColor: color.withValues(alpha: 0.15),
                   child: Text(
                     review['initials'] as String,
                     style: TextStyle(
@@ -397,6 +479,7 @@ class DoctorDetailPage extends StatelessWidget {
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
+                          color: Colors.black87,
                         ),
                       ),
                       Row(
@@ -443,7 +526,7 @@ class DoctorDetailPage extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),
@@ -476,7 +559,7 @@ class DoctorDetailPage extends StatelessWidget {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
-                Navigator.pushNamed(context, '/chat');
+                context.pushNamed(AppRoutes.patientChatName);
               },
               icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
               label: const Text('Chat'),

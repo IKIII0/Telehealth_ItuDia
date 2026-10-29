@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fallback app icon untuk Android < 8.0 (API < 26), yang belum mendukung
+     adaptive icon. Memakai aset logo splash yang sama (drawable/splash_logo). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/splash_logo" />
+</layer-list>

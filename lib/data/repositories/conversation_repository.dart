@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/supabase/supabase_config.dart';
 import '../models/conversation.dart';
 import 'simulated_api.dart';
+import 'supabase_mappers.dart';
 
-/// Repository percakapan (layar Chat) dengan data simulasi.
+/// Repository percakapan (layar Chat).
+///
+/// Memakai tabel `conversations` di Supabase bila tersedia, selain itu
+/// memakai data simulasi lokal.
 class ConversationRepository {
   ConversationRepository._();
   static final ConversationRepository instance = ConversationRepository._();
 
+  SupabaseClient? get _db => SupabaseConfig.client;
+
   final List<Conversation> _conversations = [
     const Conversation(
       id: 'conv1',
-      name: 'Dr. Ahmad Fauzi',
+      name: 'dr. Rifki Al Sauqy, Sp.JP',
       role: 'Dokter',
       type: 'dokter',
       lastMessage:
@@ -19,12 +27,12 @@ class ConversationRepository {
       time: '10:30',
       unreadCount: 2,
       isOnline: true,
-      initials: 'AF',
+      initials: 'RAS',
       color: Color(0xFFE53935),
     ),
     const Conversation(
       id: 'conv2',
-      name: 'Dr. Siti Rahma',
+      name: 'dr. Yehezkiel Sitanggang, Sp.A',
       role: 'Dokter',
       type: 'dokter',
       lastMessage:
@@ -32,7 +40,7 @@ class ConversationRepository {
       time: '09:15',
       unreadCount: 0,
       isOnline: true,
-      initials: 'SR',
+      initials: 'YS',
       color: Color(0xFF1E88E5),
     ),
     const Conversation(
@@ -50,7 +58,7 @@ class ConversationRepository {
     ),
     const Conversation(
       id: 'conv4',
-      name: 'Dr. Dewi Kusuma',
+      name: 'dr. Pocut Qanitah, Sp.KK',
       role: 'Dokter',
       type: 'dokter',
       lastMessage:
@@ -58,7 +66,7 @@ class ConversationRepository {
       time: 'Kemarin',
       unreadCount: 0,
       isOnline: false,
-      initials: 'DK',
+      initials: 'PQ',
       color: Color(0xFF8E24AA),
     ),
     const Conversation(
@@ -76,7 +84,7 @@ class ConversationRepository {
     ),
     const Conversation(
       id: 'conv6',
-      name: 'Dr. Rizky Pratama',
+      name: 'dr. Daffa Afdhillah, Sp.PD',
       role: 'Dokter',
       type: 'dokter',
       lastMessage:
@@ -84,21 +92,51 @@ class ConversationRepository {
       time: 'Senin',
       unreadCount: 0,
       isOnline: false,
-      initials: 'RP',
+      initials: 'DA',
       color: Color(0xFF00897B),
     ),
   ];
 
-  Future<List<Conversation>> fetchAll({bool simulateError = false}) {
-    return SimulatedApi.run(
-      () => List<Conversation>.of(_conversations),
-      simulateError: simulateError,
-    );
+  Future<List<Conversation>> fetchAll({bool simulateError = false}) async {
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(
+        () => List<Conversation>.of(_conversations),
+        simulateError: simulateError,
+      );
+    }
+
+    final rows = await db.from('conversations').select().order('created_at');
+    return rows.map(conversationFromRow).toList();
   }
 
-  Future<void> delete(String id) {
-    return SimulatedApi.run(
-      () => _conversations.removeWhere((c) => c.id == id),
-    );
+  Future<Conversation?> findById(String id) async {
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(() {
+        final matches = _conversations.where((c) => c.id == id);
+        return matches.isEmpty ? null : matches.first;
+      });
+    }
+
+    final row = await db
+        .from('conversations')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    return row == null ? null : conversationFromRow(row);
+  }
+
+  Future<void> delete(String id) async {
+    final db = _db;
+    if (db == null) {
+      await SimulatedApi.run(
+        () => _conversations.removeWhere((c) => c.id == id),
+      );
+      return;
+    }
+
+    // Pesan ikut terhapus lewat ON DELETE CASCADE.
+    await db.from('conversations').delete().eq('id', id);
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
-import 'package:Telehealth/data/repositories/simulated_api.dart';
+import 'package:Telehealth/data/repositories/auth_repository.dart';
 
 /// Pola sederhana untuk memastikan format email terlihat wajar.
 final RegExp _emailPattern = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
@@ -10,7 +13,8 @@ final RegExp _digitsOnlyPattern = RegExp(r'^[0-9]+$');
 
 /// Register Page - Halaman pendaftaran akun baru.
 ///
-/// Ini demo UI tanpa backend: setelah data valid, akun dianggap berhasil dibuat.
+/// Akun dibuat melalui Firebase Authentication. Setelah berhasil, Firebase
+/// langsung membuat sesi sehingga pengguna diarahkan ke dashboard.
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -31,6 +35,8 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
   bool _submitting = false;
+
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
   String? _selectedGender;
   DateTime? _selectedDate;
@@ -71,6 +77,16 @@ class _RegisterPageState extends State<RegisterPage> {
 
     final form = _formKey.currentState;
     if (form == null || !form.validate()) {
+      // Tampilkan pesan agar pengguna tidak mengira tombol tidak berfungsi
+      // ketika error validasi berada di luar area layar.
+      setState(() {
+        _autovalidateMode = AutovalidateMode.onUserInteraction;
+      });
+      showAppSnack(
+        context,
+        'Periksa kembali data yang Anda isi',
+        success: false,
+      );
       return;
     }
 
@@ -85,13 +101,22 @@ class _RegisterPageState extends State<RegisterPage> {
 
     setState(() => _submitting = true);
     try {
-      await SimulatedApi.run(() => true);
+      final user = await AuthRepository.instance.register(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        name: _nameController.text.trim(),
+      );
       if (!mounted) {
         return;
       }
       showAppSnack(context, 'Akun berhasil dibuat');
       _resetForm();
-      _goToLogin();
+      context.go(AppRoutes.homePathFor(user.role));
+    } on AuthException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, e.message, success: false);
     } catch (_) {
       if (!mounted) {
         return;
@@ -120,15 +145,15 @@ class _RegisterPageState extends State<RegisterPage> {
       _selectedGender = null;
       _selectedDate = null;
       _agreedToTerms = false;
+      _autovalidateMode = AutovalidateMode.disabled;
     });
   }
 
   void _goToLogin() {
-    final navigator = Navigator.of(context);
-    if (navigator.canPop()) {
-      navigator.pop();
+    if (context.canPop()) {
+      context.pop();
     } else {
-      navigator.pushReplacementNamed('/login');
+      context.goNamed(AppRoutes.loginName);
     }
   }
 
@@ -145,6 +170,7 @@ class _RegisterPageState extends State<RegisterPage> {
           padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
+            autovalidateMode: _autovalidateMode,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

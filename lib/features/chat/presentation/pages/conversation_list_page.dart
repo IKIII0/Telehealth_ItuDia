@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/conversation.dart';
@@ -90,7 +93,10 @@ class _ConversationListPageState extends State<ConversationListPage>
   }
 
   void _openConversation(Conversation conversation) {
-    showAppSnack(context, 'Membuka chat dengan ${conversation.name}');
+    context.pushNamed(
+      AppRoutes.patientChatRoomName,
+      pathParameters: {'conversationId': conversation.id},
+    );
   }
 
   @override
@@ -115,6 +121,7 @@ class _ConversationListPageState extends State<ConversationListPage>
         ),
         backgroundColor: scheme.primary,
         elevation: 0,
+        shadowColor: Colors.black.withValues(alpha: 0.3),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
@@ -173,7 +180,7 @@ class _ConversationListPageState extends State<ConversationListPage>
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/doctors');
+          context.pushNamed(AppRoutes.patientDoctorsName);
         },
         backgroundColor: scheme.primary,
         child: const Icon(Icons.chat_rounded, color: Colors.white),
@@ -309,7 +316,19 @@ class _ConversationItem extends StatelessWidget {
       onTap: onOpen,
       onLongPress: onDelete,
       child: Container(
-        color: unread > 0 ? scheme.primary.withOpacity(0.06) : Colors.white,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -319,13 +338,13 @@ class _ConversationItem extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: color.withOpacity(0.15),
+                  backgroundColor: scheme.primaryContainer,
                   child: Text(
                     conversation.initials,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: color,
+                      color: scheme.primary,
                     ),
                   ),
                 ),
@@ -364,6 +383,7 @@ class _ConversationItem extends StatelessWidget {
                                 ? FontWeight.bold
                                 : FontWeight.w500,
                             fontSize: 15,
+                            color: Colors.black87,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -371,7 +391,9 @@ class _ConversationItem extends StatelessWidget {
                       Text(
                         conversation.time,
                         style: TextStyle(
-                          color: unread > 0 ? scheme.primary : Colors.grey,
+                          color: unread > 0
+                              ? scheme.primary
+                              : Colors.grey.shade500,
                           fontSize: 12,
                           fontWeight: unread > 0
                               ? FontWeight.bold
@@ -392,7 +414,7 @@ class _ConversationItem extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isDoctor
                           ? scheme.primaryContainer
-                          : const Color(0xFFE8F5E9),
+                          : Colors.green.shade50,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -401,8 +423,8 @@ class _ConversationItem extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: isDoctor
-                            ? scheme.onPrimaryContainer
-                            : const Color(0xFF2E7D32),
+                            ? scheme.primary
+                            : Colors.green.shade700,
                       ),
                     ),
                   ),
@@ -419,7 +441,7 @@ class _ConversationItem extends StatelessWidget {
                           style: TextStyle(
                             color: unread > 0
                                 ? Colors.black87
-                                : Colors.grey[500],
+                                : Colors.grey.shade600,
                             fontSize: 13,
                             fontWeight: unread > 0
                                 ? FontWeight.w500

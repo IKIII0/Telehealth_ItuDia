@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/repositories/simulated_api.dart';
@@ -902,7 +904,7 @@ class _SymptomCheckerPageState extends State<SymptomCheckerPage> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/chat');
+                    context.pushNamed(AppRoutes.patientChatName);
                   },
                   icon: const Icon(Icons.chat_outlined, color: Colors.white),
                   label: const Text(

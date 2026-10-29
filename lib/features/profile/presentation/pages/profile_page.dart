@@ -1,8 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/data/repositories/auth_repository.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,18 +14,28 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   // ── Info pengguna (dapat diubah lewat dialog edit) ──────────────────────────
-  String _name = 'John Doe';
-  String _email = 'john.doe@example.com';
+  String _name = 'ItuDia';
+  String _email = 'ItuDia@gmail.com';
   String _phone = '+62 812 3456 7890';
   static const String _birthDate = '15 Januari 1995';
-  static const String _gender = 'Laki-laki';
+  static const String _gender = '-';
   static const String _address = 'Jl. Sudirman No. 123, Jakarta Pusat';
-  static const String _bloodType = 'A+';
+  static const String _bloodType = '-';
 
   // ── Preferensi ──────────────────────────────────────────────────────────────
   bool _notifEnabled = true;
   bool _chatReminder = true;
   bool _promoEmail = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = AuthRepository.instance.currentUser;
+    if (user != null) {
+      _name = user.name;
+      _email = user.email;
+    }
+  }
 
   // ── Build ───────────────────────────────────────────────────────────────────
   @override
@@ -108,9 +119,9 @@ class _ProfilePageState extends State<ProfilePage> {
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text(
-              'Pasien',
-              style: TextStyle(
+            child: Text(
+              AuthRepository.instance.currentUser?.role.label ?? 'Pasien',
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),
@@ -454,8 +465,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
     if (!confirmed || !mounted) return;
     showAppSnack(context, 'Berhasil keluar');
-    unawaited(
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false),
-    );
+    await AuthRepository.instance.signOut();
+    if (!mounted) return;
+    context.goNamed(AppRoutes.loginName);
   }
 }

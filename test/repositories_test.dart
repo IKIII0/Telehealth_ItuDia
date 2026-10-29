@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:telehealth_app/data/models/journal.dart';
-import 'package:telehealth_app/data/models/medication.dart';
-import 'package:telehealth_app/data/repositories/conversation_repository.dart';
-import 'package:telehealth_app/data/repositories/doctor_repository.dart';
-import 'package:telehealth_app/data/repositories/journal_repository.dart';
-import 'package:telehealth_app/data/repositories/medication_repository.dart';
-import 'package:telehealth_app/data/repositories/simulated_api.dart';
+import 'package:Telehealth/data/models/journal.dart';
+import 'package:Telehealth/data/models/medication.dart';
+import 'package:Telehealth/data/repositories/conversation_repository.dart';
+import 'package:Telehealth/data/repositories/doctor_repository.dart';
+import 'package:Telehealth/data/repositories/journal_repository.dart';
+import 'package:Telehealth/data/repositories/medication_repository.dart';
+import 'package:Telehealth/data/repositories/simulated_api.dart';
 
 void main() {
   group('DoctorRepository', () {
