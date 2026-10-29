@@ -1,5 +1,15 @@
 # Environment (kredensial — jangan pernah di-commit)
 .env
+.env.*
+
+# Supabase CLI
+supabase/.temp/
+.supabase/
+
+# Android signing (kredensial keystore)
+android/key.properties
+android/app/*.jks
+android/app/*.keystore
 
 # Miscellaneous
 *.class

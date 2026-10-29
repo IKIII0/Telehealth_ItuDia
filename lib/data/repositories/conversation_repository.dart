@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/supabase/supabase_config.dart';
 import '../models/conversation.dart';
 import 'simulated_api.dart';
+import 'supabase_mappers.dart';
 
-/// Repository percakapan (layar Chat) dengan data simulasi.
+/// Repository percakapan (layar Chat).
+///
+/// Memakai tabel `conversations` di Supabase bila tersedia, selain itu
+/// memakai data simulasi lokal.
 class ConversationRepository {
   ConversationRepository._();
   static final ConversationRepository instance = ConversationRepository._();
+
+  SupabaseClient? get _db => SupabaseConfig.client;
 
   final List<Conversation> _conversations = [
     const Conversation(
@@ -89,23 +97,46 @@ class ConversationRepository {
     ),
   ];
 
-  Future<List<Conversation>> fetchAll({bool simulateError = false}) {
-    return SimulatedApi.run(
-      () => List<Conversation>.of(_conversations),
-      simulateError: simulateError,
-    );
+  Future<List<Conversation>> fetchAll({bool simulateError = false}) async {
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(
+        () => List<Conversation>.of(_conversations),
+        simulateError: simulateError,
+      );
+    }
+
+    final rows = await db.from('conversations').select().order('created_at');
+    return rows.map(conversationFromRow).toList();
   }
 
-  Future<Conversation?> findById(String id) {
-    return SimulatedApi.run(() {
-      final matches = _conversations.where((c) => c.id == id);
-      return matches.isEmpty ? null : matches.first;
-    });
+  Future<Conversation?> findById(String id) async {
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(() {
+        final matches = _conversations.where((c) => c.id == id);
+        return matches.isEmpty ? null : matches.first;
+      });
+    }
+
+    final row = await db
+        .from('conversations')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    return row == null ? null : conversationFromRow(row);
   }
 
-  Future<void> delete(String id) {
-    return SimulatedApi.run(
-      () => _conversations.removeWhere((c) => c.id == id),
-    );
+  Future<void> delete(String id) async {
+    final db = _db;
+    if (db == null) {
+      await SimulatedApi.run(
+        () => _conversations.removeWhere((c) => c.id == id),
+      );
+      return;
+    }
+
+    // Pesan ikut terhapus lewat ON DELETE CASCADE.
+    await db.from('conversations').delete().eq('id', id);
   }
 }
