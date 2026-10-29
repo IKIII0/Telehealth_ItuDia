@@ -1,13 +1,21 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app.dart';
+import 'core/supabase/supabase_config.dart';
 import 'data/repositories/auth_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Menyiapkan koneksi Supabase; bila kredensial kosong aplikasi tetap
+  // berjalan dengan data simulasi lokal.
+  await SupabaseConfig.init();
+
+  // Firebase menangani autentikasi email & kata sandi. Inisialisasi harus
+  // selesai sebelum sesi pengguna dipulihkan.
   await _initializeFirebase();
+
   await AuthRepository.instance.restoreSession();
   runApp(const TelehealthApp());
 }
