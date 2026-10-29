@@ -5,15 +5,14 @@ import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/app_logo.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
-import 'package:Telehealth/data/repositories/simulated_api.dart';
 
 /// Pola sederhana untuk memastikan format email terlihat wajar.
 final RegExp _emailPattern = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
 
-/// Login Page - Halaman untuk login pengguna.
+/// Login Page - Halaman untuk login pengguna dengan Firebase Authentication.
 ///
-/// Ini demo UI tanpa backend: setiap input yang valid secara format diterima
-/// dan langsung diarahkan ke dashboard.
+/// Kredensial diverifikasi oleh Firebase melalui [AuthRepository.signIn], lalu
+/// pengguna diarahkan ke dashboard sesuai role akun.
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -64,11 +63,6 @@ class _LoginPageState extends State<LoginPage> {
           AppRoutes.homePathFor(user.role);
       context.go(target);
     } on AuthException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      showAppSnack(context, e.message, success: false);
-    } on SimulatedFailure catch (e) {
       if (!mounted) {
         return;
       }
