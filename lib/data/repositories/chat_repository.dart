@@ -1,16 +1,22 @@
-import 'package:Telehealth/data/models/chat_message.dart';
-import 'package:Telehealth/data/repositories/simulated_api.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Repository pesan chat dengan data simulasi.
+import '../../core/supabase/supabase_config.dart';
+import '../models/chat_message.dart';
+import 'simulated_api.dart';
+import 'supabase_mappers.dart';
+
+/// Repository pesan chat.
 ///
-/// Pesan disimpan per `conversationId` di memori, sehingga percakapan
-/// bertahan selama sesi aplikasi berjalan.
+/// Memakai tabel `chat_messages` di Supabase bila tersedia, selain itu
+/// memakai data simulasi lokal (seed di bawah).
 class ChatRepository {
   ChatRepository._() {
     _seed();
   }
 
   static final ChatRepository instance = ChatRepository._();
+
+  SupabaseClient? get _db => SupabaseConfig.client;
 
   int _idCounter = 0;
 
@@ -112,42 +118,86 @@ class ChatRepository {
   Future<List<ChatMessage>> fetchMessages(
     String conversationId, {
     bool simulateError = false,
-  }) {
-    return SimulatedApi.run(
-      () =>
-          List<ChatMessage>.of(_store[conversationId] ?? const <ChatMessage>[]),
-      simulateError: simulateError,
-    );
+  }) async {
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(
+        () => List<ChatMessage>.of(
+          _store[conversationId] ?? const <ChatMessage>[],
+        ),
+        simulateError: simulateError,
+      );
+    }
+
+    final rows = await db
+        .from('chat_messages')
+        .select()
+        .eq('conversation_id', conversationId)
+        .order('created_at');
+    return rows.map(chatMessageFromRow).toList();
   }
 
   /// Menyimpan pesan yang dikirim pengguna.
-  Future<ChatMessage> send(String conversationId, String text) {
-    return SimulatedApi.run(() {
-      final message = ChatMessage(
-        id: _nextId(),
-        conversationId: conversationId,
-        text: text,
-        isMe: true,
-        time: _now(),
-      );
-      _store.putIfAbsent(conversationId, () => <ChatMessage>[]).add(message);
-      return message;
-    });
+  Future<ChatMessage> send(String conversationId, String text) async {
+    final time = _now();
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(() {
+        final message = ChatMessage(
+          id: _nextId(),
+          conversationId: conversationId,
+          text: text,
+          isMe: true,
+          time: time,
+        );
+        _store.putIfAbsent(conversationId, () => <ChatMessage>[]).add(message);
+        return message;
+      });
+    }
+
+    final row = await db
+        .from('chat_messages')
+        .insert({
+          'conversation_id': conversationId,
+          'body': text,
+          'is_me': true,
+          'time_label': time,
+        })
+        .select()
+        .single();
+    return chatMessageFromRow(row);
   }
 
   /// Balasan otomatis dari lawan bicara (untuk keperluan demo).
-  Future<ChatMessage> autoReply(String conversationId) {
-    return SimulatedApi.run(() {
-      final message = ChatMessage(
-        id: _nextId(),
-        conversationId: conversationId,
-        text: _cannedReply(conversationId),
-        isMe: false,
-        time: _now(),
-      );
-      _store.putIfAbsent(conversationId, () => <ChatMessage>[]).add(message);
-      return message;
-    });
+  Future<ChatMessage> autoReply(String conversationId) async {
+    final text = _cannedReply(conversationId);
+    final time = _now();
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(() {
+        final message = ChatMessage(
+          id: _nextId(),
+          conversationId: conversationId,
+          text: text,
+          isMe: false,
+          time: time,
+        );
+        _store.putIfAbsent(conversationId, () => <ChatMessage>[]).add(message);
+        return message;
+      });
+    }
+
+    final row = await db
+        .from('chat_messages')
+        .insert({
+          'conversation_id': conversationId,
+          'body': text,
+          'is_me': false,
+          'time_label': time,
+        })
+        .select()
+        .single();
+    return chatMessageFromRow(row);
   }
 
   String _cannedReply(String conversationId) {

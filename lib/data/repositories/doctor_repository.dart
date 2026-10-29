@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/supabase/supabase_config.dart';
 import '../models/doctor.dart';
 import 'simulated_api.dart';
+import 'supabase_mappers.dart';
 
-/// Repository dokter dengan data simulasi.
+/// Repository dokter.
 ///
-/// Data disimpan di memori sehingga perubahan (bila ada) bertahan
-/// selama sesi aplikasi berjalan.
+/// Sumber data: tabel `doctors` di Supabase bila tersedia, selain itu
+/// memakai data simulasi lokal (dipakai unit test / mode offline).
 class DoctorRepository {
   DoctorRepository._();
   static final DoctorRepository instance = DoctorRepository._();
+
+  SupabaseClient? get _db => SupabaseConfig.client;
+
+  /// Cache hasil fetch terakhir dari Supabase untuk [specializations].
+  List<Doctor> _remoteCache = const [];
 
   final List<Doctor> _doctors = [
     const Doctor(
@@ -128,22 +136,37 @@ class DoctorRepository {
 
   /// Daftar spesialisasi unik (data referensi/kategori untuk filter).
   List<String> get specializations {
-    final list = _doctors.map((d) => d.specialization).toSet().toList();
+    final source = _remoteCache.isNotEmpty ? _remoteCache : _doctors;
+    final list = source.map((d) => d.specialization).toSet().toList();
     list.sort();
     return list;
   }
 
-  Future<List<Doctor>> fetchAll({bool simulateError = false}) {
-    return SimulatedApi.run(
-      () => List<Doctor>.of(_doctors),
-      simulateError: simulateError,
-    );
+  Future<List<Doctor>> fetchAll({bool simulateError = false}) async {
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(
+        () => List<Doctor>.of(_doctors),
+        simulateError: simulateError,
+      );
+    }
+
+    final rows = await db.from('doctors').select().order('name');
+    final doctors = rows.map(doctorFromRow).toList();
+    _remoteCache = doctors;
+    return doctors;
   }
 
-  Future<Doctor?> findById(String id) {
-    return SimulatedApi.run(() {
-      final matches = _doctors.where((d) => d.id == id);
-      return matches.isEmpty ? null : matches.first;
-    });
+  Future<Doctor?> findById(String id) async {
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(() {
+        final matches = _doctors.where((d) => d.id == id);
+        return matches.isEmpty ? null : matches.first;
+      });
+    }
+
+    final row = await db.from('doctors').select().eq('id', id).maybeSingle();
+    return row == null ? null : doctorFromRow(row);
   }
 }
