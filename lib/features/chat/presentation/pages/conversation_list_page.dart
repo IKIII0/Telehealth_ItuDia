@@ -9,7 +9,9 @@ import 'package:Telehealth/data/models/conversation.dart';
 import 'package:Telehealth/data/repositories/conversation_repository.dart';
 
 class ConversationListPage extends StatefulWidget {
-  const ConversationListPage({super.key});
+  const ConversationListPage({super.key, this.showNavBar = false});
+
+  final bool showNavBar;
 
   @override
   State<ConversationListPage> createState() => _ConversationListPageState();
@@ -179,7 +181,8 @@ class _ConversationListPageState extends State<ConversationListPage>
         ),
       ),
       body: _buildBody(),
-      bottomNavigationBar: const PatientNavBar(currentIndex: 2),
+      bottomNavigationBar:
+          widget.showNavBar ? const PatientNavBar(currentIndex: 2) : null,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           context.pushNamed(AppRoutes.patientDoctorsName);

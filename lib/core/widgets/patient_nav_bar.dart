@@ -9,13 +9,25 @@ import 'package:Telehealth/core/routing/app_routes.dart';
 /// - Index 2: Chat Dokter
 /// - Index 3: Profil
 class PatientNavBar extends StatelessWidget {
-  const PatientNavBar({super.key, required this.currentIndex});
+  const PatientNavBar({
+    super.key,
+    required this.currentIndex,
+    this.onTap,
+  });
 
   /// Indeks tab yang aktif saat ini.
   final int currentIndex;
 
+  /// Callback opsional saat tab dipilih (misalnya dari StatefulNavigationShell).
+  final ValueChanged<int>? onTap;
+
   void _onDestinationSelected(BuildContext context, int index) {
     if (index == currentIndex) return;
+
+    if (onTap != null) {
+      onTap!(index);
+      return;
+    }
 
     switch (index) {
       case 0:
