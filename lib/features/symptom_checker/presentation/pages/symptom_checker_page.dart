@@ -8,7 +8,9 @@ import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
 import 'package:Telehealth/data/repositories/simulated_api.dart';
 
 class SymptomCheckerPage extends StatefulWidget {
-  const SymptomCheckerPage({super.key});
+  const SymptomCheckerPage({super.key, this.showNavBar = false});
+
+  final bool showNavBar;
 
   @override
   State<SymptomCheckerPage> createState() => _SymptomCheckerPageState();
@@ -186,7 +188,8 @@ class _SymptomCheckerPageState extends State<SymptomCheckerPage> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      bottomNavigationBar: const PatientNavBar(currentIndex: 1),
+      bottomNavigationBar:
+          widget.showNavBar ? const PatientNavBar(currentIndex: 1) : null,
       appBar: AppBar(
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
@@ -906,7 +909,7 @@ class _SymptomCheckerPageState extends State<SymptomCheckerPage> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    context.pushNamed(AppRoutes.patientChatName);
+                    context.goNamed(AppRoutes.patientChatName);
                   },
                   icon: const Icon(Icons.chat_outlined, color: Colors.white),
                   label: const Text(

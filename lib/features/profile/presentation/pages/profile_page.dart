@@ -7,7 +7,9 @@ import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({super.key, this.showNavBar = false});
+
+  final bool showNavBar;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -44,7 +46,8 @@ class _ProfilePageState extends State<ProfilePage> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      bottomNavigationBar: const PatientNavBar(currentIndex: 3),
+      bottomNavigationBar:
+          widget.showNavBar ? const PatientNavBar(currentIndex: 3) : null,
       appBar: AppBar(
         title: const Text('Profil'),
         backgroundColor: scheme.primary,

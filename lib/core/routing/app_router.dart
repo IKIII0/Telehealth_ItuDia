@@ -1,8 +1,10 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/routing/route_error_page.dart';
+import 'package:Telehealth/core/widgets/patient_shell_scaffold.dart';
+// ignore_for_file: directives_ordering
 import 'package:Telehealth/data/models/user.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/login_page.dart';
@@ -24,6 +26,10 @@ import 'package:Telehealth/features/symptom_checker/presentation/pages/symptom_c
 ///
 /// Satu instance [router] dipakai oleh `MaterialApp.router` agar konfigurasi
 /// tidak dibuat ulang pada setiap rebuild.
+///
+/// Tab utama pasien (Dashboard, Cek Gejala, Chat, Profil) dibungkus dalam
+/// [StatefulShellRoute] agar [PatientShellScaffold] (beserta navbar-nya)
+/// tetap statis dan tidak hilang saat berpindah antar halaman tab.
 class AppRouter {
   AppRouter._();
 
@@ -34,6 +40,7 @@ class AppRouter {
     errorBuilder: (context, state) =>
         RouteErrorPage(message: state.error?.toString()),
     routes: [
+      // ── Publik ──────────────────────────────────────────────────────────────
       GoRoute(
         name: AppRoutes.splashName,
         path: AppRoutes.splashPath,
@@ -49,16 +56,56 @@ class AppRouter {
         path: AppRoutes.registerPath,
         builder: (context, state) => const RegisterPage(),
       ),
-      GoRoute(
-        name: AppRoutes.patientDashboardName,
-        path: AppRoutes.patientDashboardPath,
-        builder: (context, state) => const DashboardPage(),
+
+      // ── Pasien: tab utama dengan navbar persisten ────────────────────────────
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            PatientShellScaffold(navigationShell: navigationShell),
+        branches: [
+          // Branch 0: Dashboard
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.patientDashboardName,
+                path: AppRoutes.patientDashboardPath,
+                builder: (context, state) => const DashboardPage(),
+              ),
+            ],
+          ),
+          // Branch 1: Cek Gejala
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.patientSymptomCheckerName,
+                path: AppRoutes.patientSymptomCheckerPath,
+                builder: (context, state) => const SymptomCheckerPage(),
+              ),
+            ],
+          ),
+          // Branch 2: Chat Dokter
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.patientChatName,
+                path: AppRoutes.patientChatPath,
+                builder: (context, state) => const ConversationListPage(),
+              ),
+            ],
+          ),
+          // Branch 3: Profil
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.patientProfileName,
+                path: AppRoutes.patientProfilePath,
+                builder: (context, state) => const ProfilePage(),
+              ),
+            ],
+          ),
+        ],
       ),
-      GoRoute(
-        name: AppRoutes.patientProfileName,
-        path: AppRoutes.patientProfilePath,
-        builder: (context, state) => const ProfilePage(),
-      ),
+
+      // ── Pasien: halaman detail (tanpa navbar shell) ──────────────────────────
       GoRoute(
         name: AppRoutes.patientDoctorsName,
         path: AppRoutes.patientDoctorsPath,
@@ -69,11 +116,6 @@ class AppRouter {
         path: AppRoutes.patientDoctorDetailPath,
         builder: (context, state) =>
             DoctorDetailPage(doctorId: state.pathParameters['doctorId']!),
-      ),
-      GoRoute(
-        name: AppRoutes.patientChatName,
-        path: AppRoutes.patientChatPath,
-        builder: (context, state) => const ConversationListPage(),
       ),
       GoRoute(
         name: AppRoutes.patientChatRoomName,
@@ -93,15 +135,12 @@ class AppRouter {
         builder: (context, state) => const AddJournalEntryPage(),
       ),
       GoRoute(
-        name: AppRoutes.patientSymptomCheckerName,
-        path: AppRoutes.patientSymptomCheckerPath,
-        builder: (context, state) => const SymptomCheckerPage(),
-      ),
-      GoRoute(
         name: AppRoutes.patientMedicationName,
         path: AppRoutes.patientMedicationPath,
         builder: (context, state) => const MedicationReminderPage(),
       ),
+
+      // ── Dokter ───────────────────────────────────────────────────────────────
       GoRoute(
         name: AppRoutes.doctorDashboardName,
         path: AppRoutes.doctorDashboardPath,

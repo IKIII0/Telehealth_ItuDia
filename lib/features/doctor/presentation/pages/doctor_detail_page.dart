@@ -559,7 +559,7 @@ class _DoctorDetailContent extends StatelessWidget {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
-                context.pushNamed(AppRoutes.patientChatName);
+                context.goNamed(AppRoutes.patientChatName);
               },
               icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
               label: const Text('Chat'),

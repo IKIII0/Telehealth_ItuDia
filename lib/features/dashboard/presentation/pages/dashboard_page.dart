@@ -28,7 +28,9 @@ class _UpcomingScheduleItem {
 }
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+  const DashboardPage({super.key, this.showNavBar = false});
+
+  final bool showNavBar;
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -223,7 +225,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
-              onTap: () => _go(AppRoutes.patientProfileName),
+              onTap: () => context.goNamed(AppRoutes.patientProfileName),
               child: const CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.white24,
@@ -233,7 +235,8 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      bottomNavigationBar: const PatientNavBar(currentIndex: 0),
+      bottomNavigationBar:
+          widget.showNavBar ? const PatientNavBar(currentIndex: 0) : null,
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: SingleChildScrollView(
@@ -446,47 +449,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   // Chart display
                   _buildMedicalRecordChart(scheme),
                   const SizedBox(height: 12),
-                  // Bottom hint & arrow to detail
-                  InkWell(
-                    onTap: () => _go(AppRoutes.patientJournalName),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest.withValues(
-                          alpha: 0.35,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle_outline,
-                            size: 16,
-                            color: Colors.green.shade700,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Data rekam medis normal & tercatat rapi',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right,
-                            size: 18,
-                            color: scheme.primary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -775,7 +737,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // ── 2. Pengingat Obat & Jadwal Konsumsi Terdekat ────────────────────────────
+  // Pengingat Obat & Jadwal Konsumsi Terdekat 
   Widget _buildMedicationSection(ColorScheme scheme) {
     final upcoming = _getUpcomingSchedules();
     final totalSchedules = _medications.fold<int>(
@@ -823,7 +785,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                     Text(
-                      'Jadwal konsumsi terdekat & kepatuhan',
+                      'Jadwal konsumsi obat harian',
                       style: TextStyle(fontSize: 11, color: Colors.grey),
                     ),
                   ],
@@ -883,7 +845,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Kepatuhan Hari Ini',
+                        'Obat yang sudah diminum hari ini',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -931,7 +893,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     )
                   else ...[
                     Text(
-                      'Jadwal Konsumsi Terdekat',
+                      'Obat yang dikonsumsi',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -1063,48 +1025,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       );
                     }),
                   ],
-                  const SizedBox(height: 4),
-                  // Bottom link to medication page
-                  InkWell(
-                    onTap: () => _go(AppRoutes.patientMedicationName),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest.withValues(
-                          alpha: 0.35,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.medication_outlined,
-                            size: 16,
-                            color: scheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Kelola semua resep & riwayat pengingat obat',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right,
-                            size: 18,
-                            color: scheme.primary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
