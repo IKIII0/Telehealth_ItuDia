@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
 import 'package:Telehealth/data/models/conversation.dart';
 import 'package:Telehealth/data/repositories/conversation_repository.dart';
 
@@ -178,6 +179,7 @@ class _ConversationListPageState extends State<ConversationListPage>
         ),
       ),
       body: _buildBody(),
+      bottomNavigationBar: const PatientNavBar(currentIndex: 2),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           context.pushNamed(AppRoutes.patientDoctorsName);

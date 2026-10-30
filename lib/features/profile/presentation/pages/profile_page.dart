@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -43,6 +44,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      bottomNavigationBar: const PatientNavBar(currentIndex: 3),
       appBar: AppBar(
         title: const Text('Profil'),
         backgroundColor: scheme.primary,

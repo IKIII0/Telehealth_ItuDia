@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
 import 'package:Telehealth/data/repositories/simulated_api.dart';
 
 class SymptomCheckerPage extends StatefulWidget {
@@ -185,6 +186,7 @@ class _SymptomCheckerPageState extends State<SymptomCheckerPage> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
+      bottomNavigationBar: const PatientNavBar(currentIndex: 1),
       appBar: AppBar(
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
