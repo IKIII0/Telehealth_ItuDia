@@ -2,6 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show MissingPluginException;
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+
+import 'package:Telehealth/core/supabase/supabase_config.dart';
+import 'package:Telehealth/data/models/registration_data.dart';
+import 'package:Telehealth/data/models/user.dart';
 
 /// Kesalahan autentikasi dengan pesan yang siap ditampilkan ke pengguna.
 class AuthException implements Exception {
@@ -20,9 +25,18 @@ class AuthException implements Exception {
 /// pesan berbahasa Indonesia agar lapisan UI tidak perlu mengetahui kode error
 /// Firebase.
 class AuthService {
-  AuthService({FirebaseAuth? auth}) : _authOverride = auth;
+  AuthService({FirebaseAuth? auth, SupabaseClient? supabase})
+    : _authOverride = auth,
+      _supabaseOverride = supabase;
 
   final FirebaseAuth? _authOverride;
+  final SupabaseClient? _supabaseOverride;
+
+  /// Batas waktu tulis ke Supabase agar pendaftaran tidak menggantung ketika
+  /// jaringan lambat. Kegagalan sinkronisasi tidak membatalkan akun Firebase.
+  static const Duration _supabaseTimeout = Duration(seconds: 8);
+
+  SupabaseClient? get _supabase => _supabaseOverride ?? SupabaseConfig.client;
 
   /// Diakses secara lazy agar objek ini aman dibuat sebelum
   /// `Firebase.initializeApp()` selesai (misalnya pada unit test).
@@ -53,6 +67,7 @@ class AuthService {
     required String email,
     required String password,
     String? displayName,
+    RegistrationData? profile,
   }) async {
     try {
       _ensureInitialized();
@@ -61,10 +76,11 @@ class AuthService {
         email: email.trim(),
         password: password,
       );
-      final user = credential.user;
-      if (user == null) {
+      final createdUser = credential.user;
+      if (createdUser == null) {
         throw const AuthException('Pendaftaran gagal. Silakan coba lagi.');
       }
+      var user = createdUser;
 
       final name = displayName?.trim();
       if (name != null && name.isNotEmpty) {
@@ -73,9 +89,23 @@ class AuthService {
         try {
           await user.updateDisplayName(name);
           await user.reload();
-          return _auth.currentUser ?? user;
+          user = _auth.currentUser ?? user;
         } catch (error) {
           _logFailure('updateDisplayName', error);
+        }
+      }
+
+      // Salin profil ke Supabase setelah akun Firebase pasti ada. Kegagalan di
+      // sini tidak melempar exception karena akun Firebase sudah terlanjur
+      // dibuat; repository hanya perlu memberi tahu bahwa sinkronisasi gagal.
+      if (profile != null) {
+        final synced = await syncProfileToSupabase(user: user, data: profile);
+        if (!synced) {
+          debugPrint(
+            '[AuthService] akun Firebase dibuat, tetapi profil Supabase belum '
+            'tersinkronisasi. Panggil syncProfileToSupabase() lagi (mis. dari '
+            'halaman edit profil) untuk menyusul.',
+          );
         }
       }
       return user;
@@ -84,6 +114,165 @@ class AuthService {
       throw AuthException(messageFor(error));
     }
   }
+
+  /// Menyimpan profil pengguna ke Supabase secara idempoten.
+  ///
+  /// [profiles] adalah tabel induk; tabel role-specific hanya disentuh sesuai
+  /// role sehingga akun pasien tidak pernah membuat baris dokter (dan
+  /// sebaliknya). Semua pemanggilan memakai `upsert` agar aman dijalankan
+  /// ulang tanpa duplikasi.
+  ///
+  /// Mengembalikan `true` bila seluruh penulisan berhasil. Method ini tidak
+  /// melempar exception agar kegagalan Supabase tidak membatalkan pendaftaran
+  /// Firebase yang sudah berhasil.
+  Future<bool> syncProfileToSupabase({
+    required User user,
+    required RegistrationData data,
+  }) async {
+    final db = _supabase;
+    if (db == null) {
+      debugPrint(
+        '[AuthService] Supabase belum dikonfigurasi; profil hanya tersimpan '
+        'di Firebase.',
+      );
+      return false;
+    }
+
+    final role = data.role ?? UserRole.patient;
+    try {
+      await db
+          .from('profiles')
+          .upsert(_profileRow(user, data, role), onConflict: 'id')
+          .timeout(_supabaseTimeout);
+
+      switch (role) {
+        case UserRole.doctor:
+          await db
+              .from('doctor_profiles')
+              .upsert(_doctorRow(user.uid, data), onConflict: 'user_id')
+              .timeout(_supabaseTimeout);
+        case UserRole.patient:
+          await db
+              .from('patient_profiles')
+              .upsert(_patientRow(user.uid, data), onConflict: 'user_id')
+              .timeout(_supabaseTimeout);
+      }
+      return true;
+    } catch (error) {
+      _logFailure('syncProfileToSupabase', error);
+      return false;
+    }
+  }
+
+  static Map<String, dynamic> _profileRow(
+    User user,
+    RegistrationData data,
+    UserRole role,
+  ) {
+    final phone = _clean(data.phone);
+    final address = _clean(data.address);
+    final bloodType = _clean(data.bloodType);
+    final gender = _genderToDb(data.gender);
+
+    return {
+      'id': user.uid,
+      'email': _firstNonEmpty([data.email, user.email]),
+      'full_name': _firstNonEmpty([data.name, user.displayName]),
+      'role': role.name,
+      if (phone != null) 'phone': phone,
+      if (data.birthDate != null) 'birth_date': _dateOnly(data.birthDate!),
+      if (gender != null) 'gender': gender,
+      if (address != null) 'address': address,
+      if (bloodType != null) 'blood_type': bloodType,
+      'updated_at': _nowIso(),
+    };
+  }
+
+  static Map<String, dynamic> _doctorRow(String uid, RegistrationData data) {
+    final specialization = _clean(data.specialization);
+    final strNumber = _clean(data.strNumber);
+    final hospital = _clean(data.hospital);
+    final bio = _clean(data.bio);
+    final directoryId = _clean(data.directoryDoctorId);
+
+    final schedule = <String, String>{};
+    for (final entry in data.practiceSchedule.entries) {
+      final day = _clean(entry.key);
+      final hours = _clean(entry.value);
+      if (day != null && hours != null) schedule[day] = hours;
+    }
+
+    return {
+      'user_id': uid,
+      if (specialization != null) 'specialization': specialization,
+      if (strNumber != null) 'str_number': strNumber,
+      if (hospital != null) 'hospital': hospital,
+      if (data.experienceYears != null)
+        'experience_years': data.experienceYears,
+      if (bio != null) 'bio': bio,
+      if (schedule.isNotEmpty) 'practice_schedule': schedule,
+      if (directoryId != null) 'directory_doctor_id': directoryId,
+      'updated_at': _nowIso(),
+    };
+  }
+
+  static Map<String, dynamic> _patientRow(String uid, RegistrationData data) {
+    final history = _clean(data.medicalHistory);
+    final contactName = _clean(data.emergencyContactName);
+    final contactPhone = _clean(data.emergencyContactPhone);
+
+    return {
+      'user_id': uid,
+      'allergies': _cleanList(data.allergies),
+      'chronic_conditions': _cleanList(data.chronicConditions),
+      if (history != null) 'medical_history': history,
+      if (contactName != null) 'emergency_contact_name': contactName,
+      if (contactPhone != null) 'emergency_contact_phone': contactPhone,
+      'updated_at': _nowIso(),
+    };
+  }
+
+  static String? _clean(Object? value) {
+    if (value is! String) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  static List<String> _cleanList(List<String> values) {
+    final result = <String>[];
+    for (final value in values) {
+      final cleaned = _clean(value);
+      if (cleaned != null) result.add(cleaned);
+    }
+    return result;
+  }
+
+  static String _firstNonEmpty(List<String?> values) {
+    for (final value in values) {
+      final cleaned = _clean(value);
+      if (cleaned != null) return cleaned;
+    }
+    return '';
+  }
+
+  static String? _genderToDb(String? value) {
+    final normalized = _clean(value)?.toLowerCase();
+    return switch (normalized) {
+      null => null,
+      'laki-laki' || 'male' || 'pria' => 'male',
+      'perempuan' || 'female' || 'wanita' => 'female',
+      _ => 'other',
+    };
+  }
+
+  static String _dateOnly(DateTime value) {
+    final year = value.year.toString().padLeft(4, '0');
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+
+  static String _nowIso() => DateTime.now().toUtc().toIso8601String();
 
   /// Masuk dengan akun yang sudah terdaftar.
   ///
