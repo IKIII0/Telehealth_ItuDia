@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/app_logo.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Pola sederhana untuk memastikan format email terlihat wajar.
 final RegExp _emailPattern = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
@@ -80,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleForgotPassword() {
-    showAppSnack(context, 'Fitur lupa password akan segera hadir');
+    context.pushNamed(AppRoutes.resetPasswordName);
   }
 
   void _goToRegister() {

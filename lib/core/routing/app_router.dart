@@ -9,7 +9,10 @@ import 'package:Telehealth/data/models/user.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/login_page.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/register_page.dart';
+import 'package:Telehealth/features/authentication/presentation/pages/reset_link_sent_page.dart';
+import 'package:Telehealth/features/authentication/presentation/pages/reset_password_page.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/splash_screen.dart';
+import 'package:Telehealth/features/authentication/presentation/models/reset_link_sent_args.dart';
 import 'package:Telehealth/features/chat/presentation/pages/chat_room_page.dart';
 import 'package:Telehealth/features/chat/presentation/pages/conversation_list_page.dart';
 import 'package:Telehealth/features/dashboard/presentation/pages/dashboard_page.dart';
@@ -55,6 +58,23 @@ class AppRouter {
         name: AppRoutes.registerName,
         path: AppRoutes.registerPath,
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.resetPasswordName,
+        path: AppRoutes.resetPasswordPath,
+        builder: (context, state) => const ResetPasswordPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.resetPasswordSentName,
+        path: AppRoutes.resetPasswordSentPath,
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is ResetLinkSentArgs) {
+            return ResetLinkSentPage(args: extra);
+          }
+          // Url dibuka langsung tanpa data: kembali ke langkah pencarian.
+          return const ResetPasswordPage();
+        },
       ),
 
       // ── Pasien: tab utama dengan navbar persisten ────────────────────────────
@@ -172,7 +192,9 @@ class AppRouter {
     }
 
     final isPublic =
-        location == AppRoutes.loginPath || location == AppRoutes.registerPath;
+        location == AppRoutes.loginPath ||
+        location == AppRoutes.registerPath ||
+        location.startsWith(AppRoutes.resetPasswordPath);
 
     if (auth.status == AuthStatus.unauthenticated) {
       if (isPublic) return null;

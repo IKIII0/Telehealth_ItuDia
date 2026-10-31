@@ -17,6 +17,12 @@ class AppRoutes {
   static const String registerName = 'register';
   static const String registerPath = '/register';
 
+  static const String resetPasswordName = 'resetPassword';
+  static const String resetPasswordPath = '/reset-password';
+
+  static const String resetPasswordSentName = 'resetPasswordSent';
+  static const String resetPasswordSentPath = '/reset-password/sent';
+
   // ── Pasien ─────────────────────────────────────────────────────────────────
   static const String patientDashboardName = 'patientDashboard';
   static const String patientDashboardPath = '/patient/dashboard';

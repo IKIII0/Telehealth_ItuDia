@@ -364,6 +364,22 @@ class AuthService {
         'channel-error' || 'internal-error' =>
           'Layanan autentikasi tidak dapat dihubungi. Pastikan perangkat '
               'memiliki Google Play Services dan koneksi internet.',
+        'invalid-phone-number' || 'missing-phone-number' =>
+          'Nomor telepon tidak valid. Gunakan format internasional, '
+              'mis. +628123456789.',
+        'invalid-verification-code' || 'code-expired' =>
+          'Kode OTP salah atau sudah kedaluwarsa. Periksa kembali atau minta '
+              'kode baru.',
+        'invalid-verification-id' || 'session-expired' =>
+          'Sesi verifikasi sudah berakhir. Silakan minta kode OTP baru.',
+        'quota-exceeded' =>
+          'Kuota pengiriman OTP habis. Coba lagi beberapa saat lagi.',
+        'captcha-check-failed' =>
+          'Verifikasi keamanan gagal. Muat ulang aplikasi lalu coba lagi.',
+        'requires-recent-login' =>
+          'Sesi verifikasi sudah terlalu lama. Lakukan verifikasi ulang.',
+        'credential-already-in-use' || 'provider-already-linked' =>
+          'Nomor telepon ini sudah tertaut ke akun lain.',
         _ => 'Terjadi kesalahan saat autentikasi. Silakan coba lagi.',
       };
     }
