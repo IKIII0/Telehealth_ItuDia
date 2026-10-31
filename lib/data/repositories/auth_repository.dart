@@ -1,13 +1,15 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' show User;
-import 'package:flutter/material.dart';
-
 import 'package:Telehealth/data/models/doctor_profile.dart';
 import 'package:Telehealth/data/models/registration_data.dart';
 import 'package:Telehealth/data/models/user.dart';
 import 'package:Telehealth/data/services/auth_service.dart';
+import 'package:Telehealth/data/services/password_reset_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:flutter/material.dart';
 
 export 'package:Telehealth/data/services/auth_service.dart' show AuthException;
+export 'package:Telehealth/data/services/password_reset_service.dart'
+    show PasswordResetService;
 
 /// Status inisialisasi sesi autentikasi.
 enum AuthStatus { unknown, unauthenticated, authenticated }
@@ -79,6 +81,9 @@ class AuthRepository extends ChangeNotifier {
   ];
 
   final AuthService _authService;
+
+  /// Layanan reset password melalui tautan email Firebase.
+  final PasswordResetService passwordReset = PasswordResetService();
 
   AuthStatus _status = AuthStatus.unknown;
   AppUser? _currentUser;
