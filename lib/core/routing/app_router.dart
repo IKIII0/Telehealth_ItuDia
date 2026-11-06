@@ -21,6 +21,11 @@ import 'package:Telehealth/features/doctor/presentation/pages/doctor_list_page.d
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_dashboard_page.dart';
 import 'package:Telehealth/features/health_journal/presentation/pages/add_journal_entry_page.dart';
 import 'package:Telehealth/features/health_journal/presentation/pages/health_journal_page.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/guards/hospital_admin_guard.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_dashboard_page.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_medication_verification_page.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_patient_monitoring_page.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/widgets/admin_shell_scaffold.dart';
 import 'package:Telehealth/features/medication/presentation/pages/medication_reminder_page.dart';
 import 'package:Telehealth/features/profile/presentation/pages/profile_page.dart';
 import 'package:Telehealth/features/symptom_checker/presentation/pages/symptom_checker_page.dart';
@@ -166,6 +171,43 @@ class AppRouter {
         path: AppRoutes.doctorDashboardPath,
         builder: (context, state) => const DoctorDashboardPage(),
       ),
+
+      // ── Admin Rumah Sakit: Web Dashboard dengan sidebar persisten ────────────
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => HospitalAdminGuard(
+          child: HospitalAdminShellScaffold(navigationShell: navigationShell),
+        ),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.hospitalAdminDashboardName,
+                path: AppRoutes.hospitalAdminDashboardPath,
+                builder: (context, state) => const AdminDashboardPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.hospitalAdminMedicationName,
+                path: AppRoutes.hospitalAdminMedicationPath,
+                builder: (context, state) =>
+                    const AdminMedicationVerificationPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.hospitalAdminPatientsName,
+                path: AppRoutes.hospitalAdminPatientsPath,
+                builder: (context, state) => const AdminPatientMonitoringPage(),
+              ),
+            ],
+          ),
+        ],
+      ),
     ],
   );
 
@@ -212,6 +254,17 @@ class AppRouter {
     final role = user.role;
 
     if (isPublic) {
+      return AppRoutes.homePathFor(role);
+    }
+
+    // Admin rumah sakit memakai Web Dashboard; role lain tidak boleh masuk.
+    if (role == UserRole.hospitalAdmin) {
+      if (location.startsWith('/patient/') || location.startsWith('/doctor/')) {
+        return AppRoutes.hospitalAdminDashboardPath;
+      }
+      return null;
+    }
+    if (location.startsWith('/hospital-admin')) {
       return AppRoutes.homePathFor(role);
     }
 
