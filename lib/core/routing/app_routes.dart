@@ -58,10 +58,22 @@ class AppRoutes {
   static const String doctorDashboardName = 'doctorDashboard';
   static const String doctorDashboardPath = '/doctor/dashboard';
 
+  // ── Admin Rumah Sakit (Web Dashboard) ──────────────────────────────────────
+  static const String hospitalAdminDashboardName = 'hospitalAdminDashboard';
+  static const String hospitalAdminDashboardPath = '/hospital-admin/dashboard';
+
+  static const String hospitalAdminMedicationName = 'hospitalAdminMedication';
+  static const String hospitalAdminMedicationPath =
+      '/hospital-admin/medications';
+
+  static const String hospitalAdminPatientsName = 'hospitalAdminPatients';
+  static const String hospitalAdminPatientsPath = '/hospital-admin/patients';
+
   /// Halaman utama sesuai role akun.
   static String homePathFor(UserRole role) => switch (role) {
     UserRole.patient => patientDashboardPath,
     UserRole.doctor => doctorDashboardPath,
+    UserRole.hospitalAdmin => hospitalAdminDashboardPath,
   };
 
   /// Memvalidasi tujuan redirect agar hanya path internal yang sesuai role.
@@ -70,6 +82,7 @@ class AppRoutes {
     final allowedPrefix = switch (role) {
       UserRole.patient => '/patient/',
       UserRole.doctor => '/doctor/',
+      UserRole.hospitalAdmin => '/hospital-admin/',
     };
     return path.startsWith(allowedPrefix) ? path : null;
   }

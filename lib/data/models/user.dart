@@ -5,12 +5,24 @@ import 'package:Telehealth/data/models/doctor_profile.dart';
 /// Role akun yang didukung aplikasi.
 enum UserRole {
   patient,
-  doctor;
+  doctor,
+  hospitalAdmin;
 
   String get label => switch (this) {
     UserRole.patient => 'Pasien',
     UserRole.doctor => 'Dokter',
+    UserRole.hospitalAdmin => 'Admin Rumah Sakit',
   };
+
+  /// Nilai role yang disimpan di Firestore dan Supabase.
+  String get storageValue => switch (this) {
+    UserRole.patient => 'patient',
+    UserRole.doctor => 'doctor',
+    UserRole.hospitalAdmin => 'hospital_admin',
+  };
+
+  /// `true` bila role berhak membuka Web Dashboard Admin Rumah Sakit.
+  bool get isHospitalAdmin => this == UserRole.hospitalAdmin;
 }
 
 /// Akun pengguna hasil autentikasi.

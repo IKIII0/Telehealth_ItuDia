@@ -23,10 +23,11 @@ enum AuthStatus { unknown, unauthenticated, authenticated }
 /// { "uid": "...", "email": "...", "name": "...", "role": "doctor" }
 /// ```
 ///
-/// Nilai `role` yang dikenali adalah `patient` atau `doctor` (alias `pasien`
-/// dan `dokter` juga diterima). Role dapat diubah langsung dari Firebase
-/// Console tanpa mengubah kode. Bila dokumen atau field role belum ada,
-/// aplikasi memakai role template akun demo (bila email cocok) atau `patient`.
+/// Nilai `role` yang dikenali adalah `patient`, `doctor`, atau
+/// `hospital_admin` (alias `pasien`, `dokter`, `admin_rumah_sakit` juga
+/// diterima). Role dapat diubah langsung dari Firebase Console tanpa
+/// mengubah kode. Bila dokumen atau field role belum ada, aplikasi memakai
+/// role template akun demo (bila email cocok) atau `patient`.
 class AuthRepository extends ChangeNotifier {
   AuthRepository._() : _authService = AuthService();
 
@@ -222,7 +223,7 @@ class AuthRepository extends ChangeNotifier {
             'uid': user.uid,
             'email': email,
             'name': name,
-            'role': role.name,
+            'role': role.storageValue,
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true))
           .timeout(_firestoreTimeout);
@@ -299,6 +300,12 @@ class AuthRepository extends ChangeNotifier {
     return switch (value.trim().toLowerCase()) {
       'doctor' || 'dokter' => UserRole.doctor,
       'patient' || 'pasien' => UserRole.patient,
+      'hospital_admin' ||
+      'hospital-admin' ||
+      'hospitaladmin' ||
+      'admin_rumah_sakit' ||
+      'admin_rs' ||
+      'admin-rs' => UserRole.hospitalAdmin,
       _ => null,
     };
   }
