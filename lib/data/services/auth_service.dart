@@ -156,6 +156,10 @@ class AuthService {
               .from('patient_profiles')
               .upsert(_patientRow(user.uid, data), onConflict: 'user_id')
               .timeout(_supabaseTimeout);
+        case UserRole.hospitalAdmin:
+          // Admin rumah sakit diprovisioning lewat SQL (tabel user_roles),
+          // jadi tidak ada tabel profil tambahan yang perlu ditulis.
+          break;
       }
       return true;
     } catch (error) {
@@ -178,7 +182,7 @@ class AuthService {
       'id': user.uid,
       'email': _firstNonEmpty([data.email, user.email]),
       'full_name': _firstNonEmpty([data.name, user.displayName]),
-      'role': role.name,
+      'role': role.storageValue,
       if (phone != null) 'phone': phone,
       if (data.birthDate != null) 'birth_date': _dateOnly(data.birthDate!),
       if (gender != null) 'gender': gender,
