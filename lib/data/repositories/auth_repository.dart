@@ -64,7 +64,7 @@ class AuthRepository extends ChangeNotifier {
         avatarColor: Color(0xFFE53935),
         doctorProfile: DoctorProfile(
           doctorId: 'doc1',
-          specialization: 'Spesialis Jantung',
+          specialization: 'Spesialis Jantung & Pembuluh Darah',
           strNumber: 'STR-2024-16284',
           hospital: 'RS Jantung Harapan Kita',
           experienceYears: 12,
@@ -74,8 +74,10 @@ class AuthRepository extends ChangeNotifier {
           practiceSchedule: {
             'Senin - Jumat': '09:00 - 15:00',
             'Sabtu': '09:00 - 12:00',
+            'Minggu': 'Libur / On Call',
           },
           phone: '+62 812 9000 1122',
+          verified: true,
         ),
       ),
     ),
@@ -177,6 +179,48 @@ class AuthRepository extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Memperbarui profil dokter pada sesi aktif dan memberitahu listeners.
+  void updateDoctorProfile({
+    String? name,
+    String? email,
+    String? phone,
+    String? specialization,
+    String? hospital,
+    String? strNumber,
+    int? experienceYears,
+    String? bio,
+    Map<String, String>? practiceSchedule,
+    bool? verified,
+  }) {
+    if (_currentUser == null) return;
+    final currentProf =
+        _currentUser!.doctorProfile ?? DoctorProfile.simulatedDefault();
+
+    final newProf = currentProf.copyWith(
+      specialization: specialization,
+      hospital: hospital,
+      strNumber: strNumber,
+      experienceYears: experienceYears,
+      bio: bio,
+      practiceSchedule: practiceSchedule,
+      phone: phone,
+      verified: verified,
+    );
+
+    _currentUser = _currentUser!.copyWith(
+      name: name,
+      email: email,
+      doctorProfile: newProf,
+    );
+    notifyListeners();
+  }
+
+  /// Memperbarui pengguna saat ini secara langsung.
+  void updateCurrentUser(AppUser user) {
+    _currentUser = user;
+    notifyListeners();
+  }
+
   /// Menentukan role dari Firestore. Dokumen dibuat otomatis bila belum ada
   /// (mis. akun yang dibuat lewat Firebase Console) agar role-nya dapat diubah
   /// dari Console.
@@ -259,7 +303,9 @@ class AuthRepository extends ChangeNotifier {
       role: role,
       avatarColor: template?.avatarColor ?? const Color(0xFF1E88E5),
       doctorProfile: role == UserRole.doctor
-          ? _doctorProfileFrom(registration) ?? template?.doctorProfile
+          ? _doctorProfileFrom(registration) ??
+                template?.doctorProfile ??
+                DoctorProfile.simulatedDefault()
           : null,
     );
   }

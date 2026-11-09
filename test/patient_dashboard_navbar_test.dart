@@ -47,7 +47,9 @@ void main() {
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(const MaterialApp(home: DashboardPage()));
+      await tester.pumpWidget(
+        const MaterialApp(home: DashboardPage(showNavBar: true)),
+      );
       // Tunggu load async dari repository selesai
       await tester.pumpAndSettle();
 
@@ -65,7 +67,9 @@ void main() {
         tester.view.devicePixelRatio = 2.0;
         addTearDown(() => tester.view.resetPhysicalSize());
 
-        await tester.pumpWidget(const MaterialApp(home: DashboardPage()));
+        await tester.pumpWidget(
+        const MaterialApp(home: DashboardPage(showNavBar: true)),
+      );
         await tester.pumpAndSettle();
 
         // Judul section lama 'Aksi Cepat' tidak lagi ada
@@ -82,7 +86,9 @@ void main() {
         tester.view.devicePixelRatio = 2.0;
         addTearDown(() => tester.view.resetPhysicalSize());
 
-        await tester.pumpWidget(const MaterialApp(home: DashboardPage()));
+        await tester.pumpWidget(
+        const MaterialApp(home: DashboardPage(showNavBar: true)),
+      );
         await tester.pumpAndSettle();
 
         expect(find.text('Jurnal Kesehatan'), findsOneWidget);
@@ -112,7 +118,9 @@ void main() {
         tester.view.devicePixelRatio = 2.0;
         addTearDown(() => tester.view.resetPhysicalSize());
 
-        await tester.pumpWidget(const MaterialApp(home: DashboardPage()));
+        await tester.pumpWidget(
+        const MaterialApp(home: DashboardPage(showNavBar: true)),
+      );
         await tester.pumpAndSettle();
 
         expect(find.text('Pengingat Obat'), findsOneWidget);
