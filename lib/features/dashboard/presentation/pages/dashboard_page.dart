@@ -785,7 +785,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                     Text(
-                      'Jadwal konsumsi obat harian',
+                      'Jadwal konsumsi terdekat & kepatuhan',
                       style: TextStyle(fontSize: 11, color: Colors.grey),
                     ),
                   ],
@@ -845,7 +845,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Obat yang sudah diminum hari ini',
+                        'Kepatuhan Hari Ini',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -893,7 +893,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     )
                   else ...[
                     Text(
-                      'Obat yang dikonsumsi',
+                      'Jadwal Konsumsi Terdekat',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
