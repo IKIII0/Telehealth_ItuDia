@@ -9,7 +9,10 @@ import 'package:Telehealth/data/models/user.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/login_page.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/register_page.dart';
+import 'package:Telehealth/features/authentication/presentation/pages/reset_link_sent_page.dart';
+import 'package:Telehealth/features/authentication/presentation/pages/reset_password_page.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/splash_screen.dart';
+import 'package:Telehealth/features/authentication/presentation/models/reset_link_sent_args.dart';
 import 'package:Telehealth/features/chat/presentation/pages/chat_room_page.dart';
 import 'package:Telehealth/features/chat/presentation/pages/conversation_list_page.dart';
 import 'package:Telehealth/features/dashboard/presentation/pages/dashboard_page.dart';
@@ -18,6 +21,11 @@ import 'package:Telehealth/features/doctor/presentation/pages/doctor_list_page.d
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_dashboard_page.dart';
 import 'package:Telehealth/features/health_journal/presentation/pages/add_journal_entry_page.dart';
 import 'package:Telehealth/features/health_journal/presentation/pages/health_journal_page.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/guards/hospital_admin_guard.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_dashboard_page.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_medication_verification_page.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_patient_monitoring_page.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/widgets/admin_shell_scaffold.dart';
 import 'package:Telehealth/features/medication/presentation/pages/medication_reminder_page.dart';
 import 'package:Telehealth/features/profile/presentation/pages/profile_page.dart';
 import 'package:Telehealth/features/symptom_checker/presentation/pages/symptom_checker_page.dart';
@@ -55,6 +63,23 @@ class AppRouter {
         name: AppRoutes.registerName,
         path: AppRoutes.registerPath,
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.resetPasswordName,
+        path: AppRoutes.resetPasswordPath,
+        builder: (context, state) => const ResetPasswordPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.resetPasswordSentName,
+        path: AppRoutes.resetPasswordSentPath,
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is ResetLinkSentArgs) {
+            return ResetLinkSentPage(args: extra);
+          }
+          // Url dibuka langsung tanpa data: kembali ke langkah pencarian.
+          return const ResetPasswordPage();
+        },
       ),
 
       // ── Pasien: tab utama dengan navbar persisten ────────────────────────────
@@ -146,6 +171,43 @@ class AppRouter {
         path: AppRoutes.doctorDashboardPath,
         builder: (context, state) => const DoctorDashboardPage(),
       ),
+
+      // ── Admin Rumah Sakit: Web Dashboard dengan sidebar persisten ────────────
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => HospitalAdminGuard(
+          child: HospitalAdminShellScaffold(navigationShell: navigationShell),
+        ),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.hospitalAdminDashboardName,
+                path: AppRoutes.hospitalAdminDashboardPath,
+                builder: (context, state) => const AdminDashboardPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.hospitalAdminMedicationName,
+                path: AppRoutes.hospitalAdminMedicationPath,
+                builder: (context, state) =>
+                    const AdminMedicationVerificationPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.hospitalAdminPatientsName,
+                path: AppRoutes.hospitalAdminPatientsPath,
+                builder: (context, state) => const AdminPatientMonitoringPage(),
+              ),
+            ],
+          ),
+        ],
+      ),
     ],
   );
 
@@ -172,7 +234,9 @@ class AppRouter {
     }
 
     final isPublic =
-        location == AppRoutes.loginPath || location == AppRoutes.registerPath;
+        location == AppRoutes.loginPath ||
+        location == AppRoutes.registerPath ||
+        location.startsWith(AppRoutes.resetPasswordPath);
 
     if (auth.status == AuthStatus.unauthenticated) {
       if (isPublic) return null;
@@ -190,6 +254,17 @@ class AppRouter {
     final role = user.role;
 
     if (isPublic) {
+      return AppRoutes.homePathFor(role);
+    }
+
+    // Admin rumah sakit memakai Web Dashboard; role lain tidak boleh masuk.
+    if (role == UserRole.hospitalAdmin) {
+      if (location.startsWith('/patient/') || location.startsWith('/doctor/')) {
+        return AppRoutes.hospitalAdminDashboardPath;
+      }
+      return null;
+    }
+    if (location.startsWith('/hospital-admin')) {
       return AppRoutes.homePathFor(role);
     }
 

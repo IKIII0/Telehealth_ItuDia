@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/data/models/registration_data.dart';
+import 'package:Telehealth/data/models/user.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 
 /// Pola sederhana untuk memastikan format email terlihat wajar.
@@ -27,7 +29,12 @@ class _RegisterPageState extends State<RegisterPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
   final _birthDateController = TextEditingController();
+  final _specializationController = TextEditingController();
+  final _strController = TextEditingController();
+  final _hospitalController = TextEditingController();
+  final _experienceController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -38,6 +45,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
+  UserRole _selectedRole = UserRole.patient;
   String? _selectedGender;
   DateTime? _selectedDate;
 
@@ -46,7 +54,12 @@ class _RegisterPageState extends State<RegisterPage> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _addressController.dispose();
     _birthDateController.dispose();
+    _specializationController.dispose();
+    _strController.dispose();
+    _hospitalController.dispose();
+    _experienceController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -101,10 +114,30 @@ class _RegisterPageState extends State<RegisterPage> {
 
     setState(() => _submitting = true);
     try {
-      final user = await AuthRepository.instance.register(
+      final data = RegistrationData(
         email: _emailController.text.trim(),
-        password: _passwordController.text,
         name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        birthDate: _selectedDate,
+        gender: _selectedGender,
+        address: _addressController.text.trim(),
+        role: _selectedRole,
+        specialization: _selectedRole == UserRole.doctor
+            ? _specializationController.text.trim()
+            : null,
+        strNumber: _selectedRole == UserRole.doctor
+            ? _strController.text.trim()
+            : null,
+        hospital: _selectedRole == UserRole.doctor
+            ? _hospitalController.text.trim()
+            : null,
+        experienceYears: _selectedRole == UserRole.doctor
+            ? int.tryParse(_experienceController.text.trim())
+            : null,
+      );
+      final user = await AuthRepository.instance.register(
+        data: data,
+        password: _passwordController.text,
       );
       if (!mounted) {
         return;
@@ -138,10 +171,16 @@ class _RegisterPageState extends State<RegisterPage> {
     _nameController.clear();
     _emailController.clear();
     _phoneController.clear();
+    _addressController.clear();
     _birthDateController.clear();
+    _specializationController.clear();
+    _strController.clear();
+    _hospitalController.clear();
+    _experienceController.clear();
     _passwordController.clear();
     _confirmPasswordController.clear();
     setState(() {
+      _selectedRole = UserRole.patient;
       _selectedGender = null;
       _selectedDate = null;
       _agreedToTerms = false;
@@ -188,6 +227,35 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 const SizedBox(height: 32),
+                Text(
+                  'Daftar sebagai',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<UserRole>(
+                    segments: const [
+                      ButtonSegment<UserRole>(
+                        value: UserRole.patient,
+                        label: Text('Pasien'),
+                        icon: Icon(Icons.person_outline),
+                      ),
+                      ButtonSegment<UserRole>(
+                        value: UserRole.doctor,
+                        label: Text('Dokter'),
+                        icon: Icon(Icons.medical_services_outlined),
+                      ),
+                    ],
+                    selected: {_selectedRole},
+                    onSelectionChanged: (selection) {
+                      setState(() => _selectedRole = selection.first);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,
@@ -258,6 +326,17 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
+                  controller: _addressController,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Alamat (opsional)',
+                    hintText: 'Jalan, kota',
+                    prefixIcon: Icon(Icons.location_on_outlined),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
                   controller: _birthDateController,
                   readOnly: true,
                   onTap: _pickBirthDate,
@@ -301,6 +380,92 @@ class _RegisterPageState extends State<RegisterPage> {
                     return null;
                   },
                 ),
+                if (_selectedRole == UserRole.doctor) ...[
+                  const SizedBox(height: 24),
+                  Text(
+                    'Data Profesi Dokter',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _specializationController,
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Spesialisasi',
+                      hintText: 'contoh: Spesialis Jantung',
+                      prefixIcon: Icon(Icons.medical_services_outlined),
+                    ),
+                    validator: (value) {
+                      final specialization = value?.trim() ?? '';
+                      if (specialization.isEmpty) {
+                        return 'Spesialisasi tidak boleh kosong';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _strController,
+                    textCapitalization: TextCapitalization.characters,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Nomor STR / Lisensi',
+                      hintText: 'contoh: STR-2024-16284',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                    ),
+                    validator: (value) {
+                      final str = value?.trim() ?? '';
+                      if (str.isEmpty) {
+                        return 'Nomor STR tidak boleh kosong';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _hospitalController,
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Rumah Sakit / Klinik',
+                      hintText: 'Tempat praktik',
+                      prefixIcon: Icon(Icons.local_hospital_outlined),
+                    ),
+                    validator: (value) {
+                      final hospital = value?.trim() ?? '';
+                      if (hospital.isEmpty) {
+                        return 'Rumah sakit / klinik tidak boleh kosong';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _experienceController,
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Pengalaman (tahun, opsional)',
+                      hintText: 'contoh: 5',
+                      prefixIcon: Icon(Icons.timeline_outlined),
+                    ),
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      if (text.isEmpty) return null;
+                      if (!_digitsOnlyPattern.hasMatch(text)) {
+                        return 'Pengalaman hanya boleh berisi angka';
+                      }
+                      final years = int.tryParse(text) ?? 0;
+                      if (years > 60) {
+                        return 'Pengalaman maksimal 60 tahun';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,

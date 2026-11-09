@@ -1,12 +1,15 @@
+import 'package:Telehealth/data/models/doctor_profile.dart';
+import 'package:Telehealth/data/models/registration_data.dart';
+import 'package:Telehealth/data/models/user.dart';
+import 'package:Telehealth/data/services/auth_service.dart';
+import 'package:Telehealth/data/services/password_reset_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User;
 import 'package:flutter/material.dart';
 
-import 'package:Telehealth/data/models/doctor_profile.dart';
-import 'package:Telehealth/data/models/user.dart';
-import 'package:Telehealth/data/services/auth_service.dart';
-
 export 'package:Telehealth/data/services/auth_service.dart' show AuthException;
+export 'package:Telehealth/data/services/password_reset_service.dart'
+    show PasswordResetService;
 
 /// Status inisialisasi sesi autentikasi.
 enum AuthStatus { unknown, unauthenticated, authenticated }
@@ -20,10 +23,11 @@ enum AuthStatus { unknown, unauthenticated, authenticated }
 /// { "uid": "...", "email": "...", "name": "...", "role": "doctor" }
 /// ```
 ///
-/// Nilai `role` yang dikenali adalah `patient` atau `doctor` (alias `pasien`
-/// dan `dokter` juga diterima). Role dapat diubah langsung dari Firebase
-/// Console tanpa mengubah kode. Bila dokumen atau field role belum ada,
-/// aplikasi memakai role template akun demo (bila email cocok) atau `patient`.
+/// Nilai `role` yang dikenali adalah `patient`, `doctor`, atau
+/// `hospital_admin` (alias `pasien`, `dokter`, `admin_rumah_sakit` juga
+/// diterima). Role dapat diubah langsung dari Firebase Console tanpa
+/// mengubah kode. Bila dokumen atau field role belum ada, aplikasi memakai
+/// role template akun demo (bila email cocok) atau `patient`.
 class AuthRepository extends ChangeNotifier {
   AuthRepository._() : _authService = AuthService();
 
@@ -78,6 +82,9 @@ class AuthRepository extends ChangeNotifier {
   ];
 
   final AuthService _authService;
+
+  /// Layanan reset password melalui tautan email Firebase.
+  final PasswordResetService passwordReset = PasswordResetService();
 
   AuthStatus _status = AuthStatus.unknown;
   AppUser? _currentUser;
@@ -134,22 +141,25 @@ class AuthRepository extends ChangeNotifier {
   }
 
   /// Mendaftarkan akun baru. Firebase langsung membuat sesi untuk akun baru,
-  /// lalu dokumen role dibuat di Firestore.
+  /// lalu dokumen role dibuat di Firestore dan profil lengkap di-upsert ke
+  /// Supabase (tabel `profiles` + tabel sesuai role).
   Future<AppUser> register({
-    required String email,
+    required RegistrationData data,
     required String password,
-    String? name,
   }) async {
+    final role = data.role ?? _fallbackRole(data.email);
+    final registration = data.withRole(role);
+
     final firebaseUser = await _authService.signUpWithEmail(
-      email: email,
+      email: registration.email,
       password: password,
-      displayName: name,
+      displayName: registration.name,
+      profile: registration,
     );
 
-    final role = _fallbackRole(firebaseUser.email);
     await _writeUserDocument(firebaseUser, role: role);
 
-    final user = _buildAppUser(firebaseUser, role);
+    final user = _buildAppUser(firebaseUser, role, registration: registration);
     _currentUser = user;
     _status = AuthStatus.authenticated;
 
@@ -213,7 +223,7 @@ class AuthRepository extends ChangeNotifier {
             'uid': user.uid,
             'email': email,
             'name': name,
-            'role': role.name,
+            'role': role.storageValue,
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true))
           .timeout(_firestoreTimeout);
@@ -224,22 +234,57 @@ class AuthRepository extends ChangeNotifier {
     }
   }
 
-  static AppUser _buildAppUser(User firebaseUser, UserRole role) {
+  static AppUser _buildAppUser(
+    User firebaseUser,
+    UserRole role, {
+    RegistrationData? registration,
+  }) {
     final template = _findByEmail(firebaseUser.email)?.user;
-    final email = firebaseUser.email ?? template?.email ?? '';
+    final email =
+        firebaseUser.email ?? template?.email ?? registration?.email ?? '';
     final displayName = firebaseUser.displayName?.trim();
+    final registrationName = registration?.name.trim();
+    final resolvedName =
+        (registrationName != null && registrationName.isNotEmpty)
+        ? registrationName
+        : template?.name ??
+              ((displayName == null || displayName.isEmpty)
+                  ? _nameFromEmail(email)
+                  : displayName);
 
     return AppUser(
       id: firebaseUser.uid,
-      name:
-          template?.name ??
-          ((displayName == null || displayName.isEmpty)
-              ? _nameFromEmail(email)
-              : displayName),
+      name: resolvedName,
       email: email,
       role: role,
       avatarColor: template?.avatarColor ?? const Color(0xFF1E88E5),
-      doctorProfile: role == UserRole.doctor ? template?.doctorProfile : null,
+      doctorProfile: role == UserRole.doctor
+          ? _doctorProfileFrom(registration) ?? template?.doctorProfile
+          : null,
+    );
+  }
+
+  /// Membentuk profil dokter sesi dari data registrasi bila field profesi
+  /// diisi. Mengembalikan `null` bila tidak ada data yang bisa dipakai.
+  static DoctorProfile? _doctorProfileFrom(RegistrationData? data) {
+    if (data == null) return null;
+
+    final specialization = data.specialization?.trim() ?? '';
+    final strNumber = data.strNumber?.trim() ?? '';
+    final hospital = data.hospital?.trim() ?? '';
+    if (specialization.isEmpty && strNumber.isEmpty && hospital.isEmpty) {
+      return null;
+    }
+
+    return DoctorProfile(
+      doctorId: data.directoryDoctorId?.trim() ?? '',
+      specialization: specialization,
+      strNumber: strNumber,
+      hospital: hospital,
+      experienceYears: data.experienceYears ?? 0,
+      bio: data.bio?.trim() ?? '',
+      practiceSchedule: Map<String, String>.from(data.practiceSchedule),
+      phone: data.phone?.trim() ?? '',
     );
   }
 
@@ -255,6 +300,12 @@ class AuthRepository extends ChangeNotifier {
     return switch (value.trim().toLowerCase()) {
       'doctor' || 'dokter' => UserRole.doctor,
       'patient' || 'pasien' => UserRole.patient,
+      'hospital_admin' ||
+      'hospital-admin' ||
+      'hospitaladmin' ||
+      'admin_rumah_sakit' ||
+      'admin_rs' ||
+      'admin-rs' => UserRole.hospitalAdmin,
       _ => null,
     };
   }
