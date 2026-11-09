@@ -56,4 +56,22 @@ class AppUser {
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
+
+  AppUser copyWith({
+    String? id,
+    String? name,
+    String? email,
+    UserRole? role,
+    Color? avatarColor,
+    DoctorProfile? doctorProfile,
+  }) {
+    return AppUser(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      avatarColor: avatarColor ?? this.avatarColor,
+      doctorProfile: doctorProfile ?? this.doctorProfile,
+    );
+  }
 }
