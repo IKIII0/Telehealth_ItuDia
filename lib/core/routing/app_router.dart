@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/routing/route_error_page.dart';
+import 'package:Telehealth/core/widgets/doctor_shell_scaffold.dart';
 import 'package:Telehealth/core/widgets/patient_shell_scaffold.dart';
 // ignore_for_file: directives_ordering
 import 'package:Telehealth/data/models/user.dart';
@@ -19,6 +20,7 @@ import 'package:Telehealth/features/dashboard/presentation/pages/dashboard_page.
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_detail_page.dart';
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_list_page.dart';
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_dashboard_page.dart';
+import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_profile_page.dart';
 import 'package:Telehealth/features/health_journal/presentation/pages/add_journal_entry_page.dart';
 import 'package:Telehealth/features/health_journal/presentation/pages/health_journal_page.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/guards/hospital_admin_guard.dart';
@@ -165,11 +167,30 @@ class AppRouter {
         builder: (context, state) => const MedicationReminderPage(),
       ),
 
-      // ── Dokter ───────────────────────────────────────────────────────────────
-      GoRoute(
-        name: AppRoutes.doctorDashboardName,
-        path: AppRoutes.doctorDashboardPath,
-        builder: (context, state) => const DoctorDashboardPage(),
+      // ── Dokter: tab utama dengan navbar persisten ────────────────────────────
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            DoctorShellScaffold(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.doctorDashboardName,
+                path: AppRoutes.doctorDashboardPath,
+                builder: (context, state) => const DoctorDashboardPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.doctorProfileName,
+                path: AppRoutes.doctorProfilePath,
+                builder: (context, state) => const DoctorProfilePage(),
+              ),
+            ],
+          ),
+        ],
       ),
 
       // ── Admin Rumah Sakit: Web Dashboard dengan sidebar persisten ────────────
@@ -272,6 +293,9 @@ class AppRouter {
       return AppRoutes.patientDashboardPath;
     }
     if (role == UserRole.doctor && location.startsWith('/patient/')) {
+      if (location == AppRoutes.patientProfilePath) {
+        return AppRoutes.doctorProfilePath;
+      }
       return AppRoutes.doctorDashboardPath;
     }
 
