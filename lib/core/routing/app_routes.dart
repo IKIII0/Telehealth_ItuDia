@@ -61,6 +61,9 @@ class AppRoutes {
   static const String doctorProfileName = 'doctorProfile';
   static const String doctorProfilePath = '/doctor/profile';
 
+  static const String doctorConsultationName = 'doctorConsultation';
+  static const String doctorConsultationPath = '/doctor/consultation/:sessionId';
+
   // ── Admin Rumah Sakit (Web Dashboard) ──────────────────────────────────────
   static const String hospitalAdminDashboardName = 'hospitalAdminDashboard';
   static const String hospitalAdminDashboardPath = '/hospital-admin/dashboard';
