@@ -181,12 +181,14 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     final user = AuthRepository.instance.currentUser;
     final profile = user?.doctorProfile ?? DoctorProfile.simulatedDefault();
 
-    final pendingRequests =
-        _requests.where((r) => r.status == _RequestStatus.pending).toList();
+    final pendingRequests = _requests
+        .where((r) => r.status == _RequestStatus.pending)
+        .toList();
 
     return Scaffold(
-      bottomNavigationBar:
-          widget.showNavBar ? const DoctorNavBar(currentIndex: 0) : null,
+      bottomNavigationBar: widget.showNavBar
+          ? const DoctorNavBar(currentIndex: 0)
+          : null,
       appBar: AppBar(
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
@@ -232,7 +234,9 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: _isOnline ? Colors.greenAccent : Colors.orangeAccent,
+                      color: _isOnline
+                          ? Colors.greenAccent
+                          : Colors.orangeAccent,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -400,7 +404,10 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                     const SizedBox(height: 2),
                     Text(
                       '${profile.specialization} • ${profile.hospital}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -423,7 +430,10 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                 '${_requests.where((r) => r.status == _RequestStatus.pending).length} Baru',
               ),
               _buildStatDivider(),
-              _buildStatCol('Sesi Hari Ini', '${_confirmedAppointments.length} Pasien'),
+              _buildStatCol(
+                'Sesi Hari Ini',
+                '${_confirmedAppointments.length} Pasien',
+              ),
               _buildStatDivider(),
               _buildStatCol('Selesai', '18 Sesi'),
               _buildStatDivider(),
@@ -460,11 +470,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
   }
 
   Widget _buildStatDivider() {
-    return Container(
-      width: 1,
-      height: 26,
-      color: Colors.white24,
-    );
+    return Container(width: 1, height: 26, color: Colors.white24);
   }
 
   // ── Section Title Helper ────────────────────────────────────────────────────
@@ -548,7 +554,8 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
 
   // ── Jadwal Kerja Dokter ─────────────────────────────────────────────────────
   Widget _buildWorkScheduleCard(ColorScheme scheme, DoctorProfile profile) {
-    final scheduleToday = profile.practiceSchedule['Senin - Jumat'] ?? '09:00 - 15:00';
+    final scheduleToday =
+        profile.practiceSchedule['Senin - Jumat'] ?? '09:00 - 15:00';
 
     return Card(
       elevation: 2,
@@ -593,12 +600,16 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -621,7 +632,11 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
             const Divider(height: 22),
             Row(
               children: [
-                const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 16,
+                  color: Colors.grey,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -912,7 +927,9 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                    color: scheme.surfaceContainerHighest.withValues(
+                      alpha: 0.35,
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -1022,8 +1039,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
           final apt = _confirmedAppointments[i];
-          final gradientEnd =
-              Color.lerp(scheme.primary, Colors.black, 0.25)!;
+          final gradientEnd = Color.lerp(scheme.primary, Colors.black, 0.25)!;
 
           return Container(
             width: 260,
@@ -1054,11 +1070,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                     const CircleAvatar(
                       radius: 16,
                       backgroundColor: Colors.white24,
-                      child: Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 18,
-                      ),
+                      child: Icon(Icons.person, color: Colors.white, size: 18),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -1147,9 +1159,9 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                     ),
                     const SizedBox(width: 6),
                     InkWell(
-                      onTap: () => showAppSnack(
-                        context,
-                        'Membuka sesi konsultasi bersama ${apt.patientName}',
+                      onTap: () => context.pushNamed(
+                        AppRoutes.doctorConsultationName,
+                        pathParameters: {'sessionId': apt.id},
                       ),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -1238,8 +1250,9 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                         children: [
                           CircleAvatar(
                             radius: 22,
-                            backgroundColor:
-                                (act['color'] as Color).withValues(alpha: 0.1),
+                            backgroundColor: (act['color'] as Color).withValues(
+                              alpha: 0.1,
+                            ),
                             child: Icon(
                               act['icon'] as IconData,
                               color: act['color'] as Color,

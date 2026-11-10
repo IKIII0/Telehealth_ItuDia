@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/data/models/consultation_session.dart';
 import 'package:Telehealth/data/repositories/consultation_repository.dart';
+import '../widgets/consultation_chat_tab.dart';
 import '../widgets/consultation_history_tab.dart';
 import '../widgets/doctor_notes_tab.dart';
 import '../widgets/medical_records_tab.dart';
@@ -11,11 +14,12 @@ import '../widgets/medication_history_tab.dart';
 /// Halaman utama sesi konsultasi dokter–pasien.
 ///
 /// Dibuka dokter saat menekan "Mulai Sesi" atau "Detail" pada jadwal terkonfirmasi.
-/// Menyajikan 4 tab:
-///   1. Riwayat Medis       – vital signs & grafik tren
-///   2. Riwayat Obat        – obat aktif & historis pasien
-///   3. Riwayat Konsultasi  – kunjungan ke dokter lain
-///   4. Catatan Dokter      – diagnosis, catatan & resep
+/// Menyajikan 5 tab:
+///   1. Percakapan          – chat dokter–pasien selama sesi
+///   2. Riwayat Medis       – vital signs & grafik tren
+///   3. Riwayat Obat        – obat aktif & historis pasien
+///   4. Riwayat Konsultasi  – kunjungan ke dokter lain
+///   5. Catatan Dokter      – diagnosis, catatan & resep
 class ConsultationSessionPage extends StatefulWidget {
   const ConsultationSessionPage({super.key, required this.sessionId});
 
@@ -36,24 +40,27 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
 
   /// Durasi sesi (diperbarui setiap detik bila status ongoing).
   Duration _elapsed = Duration.zero;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _loadSession();
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _tabController.dispose();
     super.dispose();
   }
 
   Future<void> _loadSession() async {
     try {
-      final session = await ConsultationRepository.instance
-          .getSession(widget.sessionId);
+      final session = await ConsultationRepository.instance.getSession(
+        widget.sessionId,
+      );
       if (!mounted) return;
       if (session == null) {
         setState(() {
@@ -82,16 +89,38 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
   }
 
   void _startTimer() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return false;
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final s = _session;
-      if (s == null || s.status != ConsultationStatus.ongoing) return false;
+      if (!mounted || s == null || s.status != ConsultationStatus.ongoing) {
+        timer.cancel();
+        return;
+      }
       setState(() {
         _elapsed = DateTime.now().difference(s.startedAt);
       });
-      return true;
     });
+  }
+
+  Future<void> _startSession() async {
+    final s = _session;
+    if (s == null) return;
+    try {
+      final updated = await ConsultationRepository.instance.startSession(
+        s.sessionId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _session = updated;
+        _elapsed = Duration.zero;
+      });
+      _startTimer();
+      _tabController.animateTo(0);
+      showAppSnack(context, 'Konsultasi dimulai');
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnack(context, 'Gagal memulai sesi: $e', success: false);
+    }
   }
 
   String get _elapsedLabel {
@@ -209,19 +238,21 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
             child: TabBarView(
               controller: _tabController,
               children: [
+                ConsultationChatTab(session: session),
                 MedicalRecordsTab(patientId: session.patientId),
                 MedicationHistoryTab(patientId: session.patientId),
                 ConsultationHistoryTab(patientId: session.patientId),
-                DoctorNotesTab(
-                  session: session,
-                  onSaved: _onNotesSaved,
-                ),
+                DoctorNotesTab(session: session, onSaved: _onNotesSaved),
               ],
             ),
           ),
         ],
       ),
-      bottomNavigationBar: isOngoing ? _buildBottomBar(scheme) : null,
+      bottomNavigationBar: switch (session.status) {
+        ConsultationStatus.ongoing => _buildBottomBar(scheme),
+        ConsultationStatus.scheduled => _buildStartBar(),
+        _ => null,
+      },
     );
   }
 
@@ -363,14 +394,11 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: statusColor.withValues(alpha: 0.4),
-                  ),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -417,12 +445,18 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
       color: Colors.white,
       child: TabBar(
         controller: _tabController,
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
         indicatorColor: scheme.primary,
         labelColor: scheme.primary,
         unselectedLabelColor: Colors.grey.shade600,
         labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(fontSize: 12),
         tabs: const [
+          Tab(
+            icon: Icon(Icons.chat_bubble_outline_rounded, size: 18),
+            text: 'Percakapan',
+          ),
           Tab(
             icon: Icon(Icons.monitor_heart_outlined, size: 18),
             text: 'Riwayat Medis',
@@ -462,7 +496,7 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
-                _tabController.animateTo(3);
+                _tabController.animateTo(4);
               },
               icon: const Icon(Icons.edit_note_rounded, size: 18),
               label: const Text('Tambah Catatan'),
@@ -490,6 +524,37 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStartBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          key: const Key('start_consultation_button'),
+          onPressed: _startSession,
+          icon: const Icon(Icons.play_circle_outline, size: 18),
+          label: const Text('Mulai Konsultasi'),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
       ),
     );
   }

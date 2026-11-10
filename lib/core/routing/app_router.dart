@@ -19,6 +19,7 @@ import 'package:Telehealth/features/chat/presentation/pages/conversation_list_pa
 import 'package:Telehealth/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_detail_page.dart';
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_list_page.dart';
+import 'package:Telehealth/features/consultation/presentation/pages/consultation_list_page.dart';
 import 'package:Telehealth/features/consultation/presentation/pages/consultation_session_page.dart';
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_dashboard_page.dart';
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_profile_page.dart';
@@ -179,6 +180,15 @@ class AppRouter {
                 name: AppRoutes.doctorDashboardName,
                 path: AppRoutes.doctorDashboardPath,
                 builder: (context, state) => const DoctorDashboardPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.doctorConsultationsName,
+                path: AppRoutes.doctorConsultationsPath,
+                builder: (context, state) => const ConsultationListPage(),
               ),
             ],
           ),

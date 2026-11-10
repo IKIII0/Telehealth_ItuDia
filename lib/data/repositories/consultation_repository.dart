@@ -18,6 +18,8 @@ class ConsultationRepository {
   final Map<String, List<PatientVitalRecord>> _vitalRecords = {};
   final Map<String, List<PatientMedicationRecord>> _medicationRecords = {};
   final Map<String, List<PastConsultationRecord>> _consultationHistory = {};
+  final Map<String, List<ConsultationMessage>> _messages = {};
+  int _messageCounter = 0;
 
   // ── Seed data simulasi ─────────────────────────────────────────────────────
   void _seed() {
@@ -77,6 +79,26 @@ class ConsultationRepository {
         status: ConsultationStatus.scheduled,
         startedAt: DateTime.now().add(const Duration(hours: 6)),
       ),
+    );
+
+    // ── Chat awal sesi ──────────────────────────────────────────────────────
+    _addMessage(
+      ratnaSesId,
+      'Selamat pagi Dok, tekanan darah saya masih tinggi dan sering pusing.',
+      fromDoctor: false,
+      sentAt: DateTime.now().subtract(const Duration(minutes: 14)),
+    );
+    _addMessage(
+      ratnaSesId,
+      'Selamat pagi Bu Ratna. Sudah berapa lama keluhan ini, dan apakah ada mual?',
+      fromDoctor: true,
+      sentAt: DateTime.now().subtract(const Duration(minutes: 13)),
+    );
+    _addMessage(
+      ratnaSesId,
+      'Sekitar 3 minggu, Dok. Mual muncul terutama pagi hari.',
+      fromDoctor: false,
+      sentAt: DateTime.now().subtract(const Duration(minutes: 12)),
     );
 
     // ── Vital records untuk Ny. Ratna Dewi ──────────────────────────────────
@@ -313,12 +335,16 @@ class ConsultationRepository {
         specialization: 'Spesialis Penyakit Dalam',
         hospital: 'RSUD Fatmawati',
         date: DateTime.now().subtract(const Duration(days: 14)),
-        complaint: 'Tekanan darah tidak terkontrol meski sudah konsumsi Nifedipine',
+        complaint:
+            'Tekanan darah tidak terkontrol meski sudah konsumsi Nifedipine',
         diagnosis: 'Hipertensi Stage II – ganti obat ke Amlodipine',
         notes:
             'Disarankan pola diet rendah garam, olahraga ringan 30 menit/hari. '
             'Pantau tekanan darah harian. Rujuk ke Sp.JP bila tekanan tidak membaik.',
-        prescribedMedications: ['Amlodipine 10 mg 1x sehari', 'Candesartan 8 mg 1x sehari'],
+        prescribedMedications: [
+          'Amlodipine 10 mg 1x sehari',
+          'Candesartan 8 mg 1x sehari',
+        ],
         followUpDate: DateTime.now().add(const Duration(days: 14)),
       ),
       PastConsultationRecord(
@@ -345,7 +371,10 @@ class ConsultationRepository {
         notes:
             'Lab: kadar kalium rendah (3.3 mEq/L) akibat HCT. Hentikan HCT. '
             'Lanjutkan dengan suplemen kalium dan ganti ke golongan CCB.',
-        prescribedMedications: ['Suplemen Kalium (KSR) 600 mg 2x sehari', 'Nifedipine 30 mg 1x sehari'],
+        prescribedMedications: [
+          'Suplemen Kalium (KSR) 600 mg 2x sehari',
+          'Nifedipine 30 mg 1x sehari',
+        ],
       ),
       PastConsultationRecord(
         id: 'pcr4',
@@ -353,7 +382,8 @@ class ConsultationRepository {
         specialization: 'Spesialis Penyakit Dalam',
         hospital: 'Klinik Sejahtera',
         date: DateTime.now().subtract(const Duration(days: 180)),
-        complaint: 'Sakit kepala berulang, tengkuk kaku, diagnosis awal hipertensi',
+        complaint:
+            'Sakit kepala berulang, tengkuk kaku, diagnosis awal hipertensi',
         diagnosis: 'Hipertensi primer – mulai terapi farmakologis',
         notes:
             'TD: 162/105 mmHg. Mulai terapi antihipertensi. '
@@ -363,7 +393,83 @@ class ConsultationRepository {
     ];
   }
 
+  ConsultationMessage _addMessage(
+    String sessionId,
+    String text, {
+    required bool fromDoctor,
+    DateTime? sentAt,
+  }) {
+    _messageCounter++;
+    final message = ConsultationMessage(
+      id: 'cmsg_$_messageCounter',
+      sessionId: sessionId,
+      text: text,
+      fromDoctor: fromDoctor,
+      sentAt: sentAt ?? DateTime.now(),
+    );
+    _messages.putIfAbsent(sessionId, () => []).add(message);
+    return message;
+  }
+
   // ── API Publik ─────────────────────────────────────────────────────────────
+
+  /// Mulai sesi terjadwal: status menjadi berlangsung dan waktu mulai dicatat.
+  Future<ConsultationSession> startSession(String sessionId) {
+    return SimulatedApi.run(() {
+      final idx = _sessions.indexWhere((s) => s.sessionId == sessionId);
+      if (idx == -1) throw StateError('Sesi tidak ditemukan: $sessionId');
+      final current = _sessions[idx];
+      if (current.status != ConsultationStatus.scheduled) {
+        throw StateError('Hanya sesi terjadwal yang dapat dimulai.');
+      }
+      final updated = current.copyWith(
+        status: ConsultationStatus.ongoing,
+        startedAt: DateTime.now(),
+      );
+      _sessions[idx] = updated;
+      return updated;
+    });
+  }
+
+  /// Pesan chat sesi, urut dari yang terlama.
+  Future<List<ConsultationMessage>> getMessages(String sessionId) {
+    return SimulatedApi.run(
+      () => List<ConsultationMessage>.of(_messages[sessionId] ?? const []),
+    );
+  }
+
+  /// Kirim pesan dokter. Hanya diizinkan pada sesi yang sedang berlangsung.
+  Future<ConsultationMessage> sendDoctorMessage(String sessionId, String text) {
+    return SimulatedApi.run(() {
+      final session = _sessions
+          .where((s) => s.sessionId == sessionId)
+          .firstOrNull;
+      if (session == null) throw StateError('Sesi tidak ditemukan: $sessionId');
+      if (session.status != ConsultationStatus.ongoing) {
+        throw StateError('Chat hanya dapat dikirim saat sesi berlangsung.');
+      }
+      final trimmed = text.trim();
+      if (trimmed.isEmpty) throw ArgumentError('Pesan tidak boleh kosong.');
+      return _addMessage(sessionId, trimmed, fromDoctor: true);
+    });
+  }
+
+  /// Balasan pasien otomatis (simulasi untuk demo).
+  Future<ConsultationMessage?> simulatePatientReply(String sessionId) {
+    return SimulatedApi.run(() {
+      final session = _sessions
+          .where((s) => s.sessionId == sessionId)
+          .firstOrNull;
+      if (session == null || session.status != ConsultationStatus.ongoing) {
+        return null;
+      }
+      return _addMessage(
+        sessionId,
+        'Baik Dok, terima kasih. Saya akan ikuti arahannya.',
+        fromDoctor: false,
+      );
+    });
+  }
 
   /// Ambil sesi berdasarkan sessionId.
   Future<ConsultationSession?> getSession(String sessionId) {
@@ -374,9 +480,7 @@ class ConsultationRepository {
 
   /// Ambil semua sesi untuk tampilan daftar dokter.
   Future<List<ConsultationSession>> getAllSessions() {
-    return SimulatedApi.run(
-      () => List.unmodifiable(_sessions),
-    );
+    return SimulatedApi.run(() => List.unmodifiable(_sessions));
   }
 
   /// Ambil vital records pasien, diurutkan terbaru dulu per metrik.
@@ -423,9 +527,7 @@ class ConsultationRepository {
         diagnosisSummary: diagnosisSummary,
         doctorNotes: doctorNotes,
         prescribedMedications: prescribedMedications,
-        status: complete
-            ? ConsultationStatus.completed
-            : _sessions[idx].status,
+        status: complete ? ConsultationStatus.completed : _sessions[idx].status,
         completedAt: complete ? DateTime.now() : null,
       );
       _sessions[idx] = updated;
