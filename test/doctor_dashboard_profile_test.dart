@@ -24,20 +24,22 @@ void main() {
   });
 
   group('DoctorNavBar Widget Tests', () {
-    testWidgets('menampilkan 2 navigasi: Dashboard dan Profil Dokter', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(bottomNavigationBar: DoctorNavBar(currentIndex: 0)),
-        ),
-      );
-      await tester.pump();
+    testWidgets(
+      'menampilkan 3 navigasi: Dashboard, Konsultasi, Profil Dokter',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(bottomNavigationBar: DoctorNavBar(currentIndex: 0)),
+          ),
+        );
+        await tester.pump();
 
-      expect(find.byType(DoctorNavBar), findsOneWidget);
-      expect(find.text('Dashboard'), findsOneWidget);
-      expect(find.text('Profil Dokter'), findsOneWidget);
-    });
+        expect(find.byType(DoctorNavBar), findsOneWidget);
+        expect(find.text('Dashboard'), findsOneWidget);
+        expect(find.text('Konsultasi'), findsOneWidget);
+        expect(find.text('Profil Dokter'), findsOneWidget);
+      },
+    );
 
     testWidgets('menandai indeks aktif sesuai currentIndex', (tester) async {
       await tester.pumpWidget(
@@ -146,9 +148,6 @@ void main() {
         expect(find.text('Dokter Spesialis'), findsOneWidget);
         expect(find.text('Kredensial Terverifikasi'), findsOneWidget);
 
-        // Banner data simulasi
-        expect(find.text('Data Simulasi Dokter & Kredensial'), findsOneWidget);
-
         // Kartu kredensial dokter
         expect(find.text('Informasi Kredensial Dokter'), findsOneWidget);
         expect(find.text('Rumah Sakit Praktik'), findsOneWidget);
@@ -166,7 +165,10 @@ void main() {
         expect(find.text('Status Menerima Pasien'), findsOneWidget);
 
         // Tombol Ubah Data di appbar
-        expect(find.byKey(const Key('appbar_edit_doctor_button')), findsOneWidget);
+        expect(
+          find.byKey(const Key('appbar_edit_doctor_button')),
+          findsOneWidget,
+        );
       },
     );
 
@@ -192,7 +194,10 @@ void main() {
 
       // Dialog ubah data muncul
       expect(find.text('Ubah Data Profil Dokter'), findsWidgets);
-      expect(find.byKey(const Key('save_doctor_profile_button')), findsOneWidget);
+      expect(
+        find.byKey(const Key('save_doctor_profile_button')),
+        findsOneWidget,
+      );
 
       // Ubah nama dokter di dialog
       final nameField = find.byKey(const Key('edit_doctor_name_field'));
@@ -212,18 +217,21 @@ void main() {
   });
 
   group('DoctorProfile Model Tests', () {
-    test('copyWith memperbarui nilai spesifik dan mempertahankan nilai lain', () {
-      final original = DoctorProfile.simulatedDefault();
-      final updated = original.copyWith(
-        specialization: 'Spesialis Bedah Toraks',
-        experienceYears: 15,
-      );
+    test(
+      'copyWith memperbarui nilai spesifik dan mempertahankan nilai lain',
+      () {
+        final original = DoctorProfile.simulatedDefault();
+        final updated = original.copyWith(
+          specialization: 'Spesialis Bedah Toraks',
+          experienceYears: 15,
+        );
 
-      expect(updated.specialization, 'Spesialis Bedah Toraks');
-      expect(updated.experienceYears, 15);
-      expect(updated.strNumber, original.strNumber);
-      expect(updated.hospital, original.hospital);
-      expect(updated.phone, original.phone);
-    });
+        expect(updated.specialization, 'Spesialis Bedah Toraks');
+        expect(updated.experienceYears, 15);
+        expect(updated.strNumber, original.strNumber);
+        expect(updated.hospital, original.hospital);
+        expect(updated.phone, original.phone);
+      },
+    );
   });
 }

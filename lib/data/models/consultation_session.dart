@@ -62,6 +62,7 @@ class ConsultationSession {
 
   ConsultationSession copyWith({
     ConsultationStatus? status,
+    DateTime? startedAt,
     DateTime? completedAt,
     String? doctorNotes,
     String? diagnosisSummary,
@@ -79,7 +80,7 @@ class ConsultationSession {
       scheduledTime: scheduledTime,
       consultationType: consultationType,
       status: status ?? this.status,
-      startedAt: startedAt,
+      startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
       doctorNotes: doctorNotes ?? this.doctorNotes,
       diagnosisSummary: diagnosisSummary ?? this.diagnosisSummary,
@@ -87,6 +88,25 @@ class ConsultationSession {
           prescribedMedications ?? this.prescribedMedications,
     );
   }
+}
+
+/// Satu pesan chat di dalam sesi konsultasi dokter–pasien.
+class ConsultationMessage {
+  const ConsultationMessage({
+    required this.id,
+    required this.sessionId,
+    required this.text,
+    required this.fromDoctor,
+    required this.sentAt,
+  });
+
+  final String id;
+  final String sessionId;
+  final String text;
+
+  /// `true` bila dikirim oleh dokter, `false` bila dari pasien.
+  final bool fromDoctor;
+  final DateTime sentAt;
 }
 
 /// Riwayat satu kunjungan konsultasi pasien ke dokter (bisa dokter lain).
@@ -137,8 +157,8 @@ class PatientMedicationRecord {
   final String frequency;
   final String startDate;
   final String endDate;
-  final String prescribedBy;  // nama dokter penulis resep
-  final String indication;    // indikasi / diagnosis terkait
+  final String prescribedBy; // nama dokter penulis resep
+  final String indication; // indikasi / diagnosis terkait
   final bool isActive;
   final Color color;
 }

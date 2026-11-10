@@ -5,13 +5,10 @@ import 'package:Telehealth/core/routing/app_routes.dart';
 
 /// Bottom Navigation Bar utama untuk navigasi dokter:
 /// - Index 0: Dashboard (Jadwal Kerja & Permintaan Konsultasi Pasien)
-/// - Index 1: Profil Dokter (Kredensial, Simulasi, & Pengaturan Praktik)
+/// - Index 1: Konsultasi (Daftar & Sesi Konsultasi dengan Pasien)
+/// - Index 2: Profil Dokter (Kredensial, Simulasi, & Pengaturan Praktik)
 class DoctorNavBar extends StatelessWidget {
-  const DoctorNavBar({
-    super.key,
-    required this.currentIndex,
-    this.onTap,
-  });
+  const DoctorNavBar({super.key, required this.currentIndex, this.onTap});
 
   /// Indeks tab yang aktif saat ini.
   final int currentIndex;
@@ -32,6 +29,9 @@ class DoctorNavBar extends StatelessWidget {
         context.goNamed(AppRoutes.doctorDashboardName);
         break;
       case 1:
+        context.goNamed(AppRoutes.doctorConsultationsName);
+        break;
+      case 2:
         context.goNamed(AppRoutes.doctorProfileName);
         break;
     }
@@ -67,6 +67,14 @@ class DoctorNavBar extends StatelessWidget {
             icon: const Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard_rounded, color: scheme.primary),
             label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.medical_services_outlined),
+            selectedIcon: Icon(
+              Icons.medical_services_rounded,
+              color: scheme.primary,
+            ),
+            label: 'Konsultasi',
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline_rounded),

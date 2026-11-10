@@ -61,12 +61,14 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     _hospital = profile.hospital.isNotEmpty
         ? profile.hospital
         : 'RS Jantung Harapan Kita';
-    _experienceYears = profile.experienceYears > 0 ? profile.experienceYears : 12;
+    _experienceYears = profile.experienceYears > 0
+        ? profile.experienceYears
+        : 12;
     _bio = profile.bio.isNotEmpty
         ? profile.bio
         : 'Spesialis jantung berpengalaman dalam penanganan penyakit '
-            'jantung koroner, aritmia, dan gagal jantung. Melayani '
-            'konsultasi Telehealth dan edukasi pencegahan kardiovaskular.';
+              'jantung koroner, aritmia, dan gagal jantung. Melayani '
+              'konsultasi Telehealth dan edukasi pencegahan kardiovaskular.';
     _schedule = profile.practiceSchedule.isNotEmpty
         ? Map.from(profile.practiceSchedule)
         : {
@@ -82,8 +84,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      bottomNavigationBar:
-          widget.showNavBar ? const DoctorNavBar(currentIndex: 1) : null,
+      bottomNavigationBar: widget.showNavBar
+          ? const DoctorNavBar(currentIndex: 2)
+          : null,
       appBar: AppBar(
         title: const Text('Profil Dokter'),
         backgroundColor: scheme.primary,
@@ -204,8 +207,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
             runSpacing: 6,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(20),
@@ -228,12 +233,16 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: Colors.greenAccent.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -245,7 +254,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      _verified ? 'Kredensial Terverifikasi' : 'Menunggu Verifikasi',
+                      _verified
+                          ? 'Kredensial Terverifikasi'
+                          : 'Menunggu Verifikasi',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -261,7 +272,6 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
       ),
     );
   }
-
 
   // ── Informasi Kredensial & Praktik Medis ─────────────────────────────────────
   Widget _buildCredentialsCard(ColorScheme scheme) {
@@ -314,7 +324,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   const Expanded(
                     child: Text(
                       'Informasi Kredensial Dokter',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   TextButton.icon(
@@ -421,7 +434,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   const Expanded(
                     child: Text(
                       'Jadwal Praktik & Konsultasi',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   TextButton.icon(
@@ -439,15 +455,23 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               ..._schedule.entries.map(
                 (entry) => Container(
                   margin: const EdgeInsets.only(bottom: 8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    color: scheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_month, size: 18, color: scheme.primary),
+                      Icon(
+                        Icons.calendar_month,
+                        size: 18,
+                        color: scheme.primary,
+                      ),
                       const SizedBox(width: 10),
                       Text(
                         entry.key,
@@ -513,7 +537,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                 color: scheme.primary,
               ),
               title: const Text('Notifikasi Permintaan Baru'),
-              subtitle: const Text('Terima pengingat instan pasien ingin konsultasi'),
+              subtitle: const Text(
+                'Terima pengingat instan pasien ingin konsultasi',
+              ),
               value: _notifNewPatient,
               onChanged: (v) => _updatePreference(
                 () => _notifNewPatient = v,
@@ -538,7 +564,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                 color: scheme.primary,
               ),
               title: const Text('Status Menerima Pasien'),
-              subtitle: const Text('Tampilkan status online pada antrean pasien'),
+              subtitle: const Text(
+                'Tampilkan status online pada antrean pasien',
+              ),
               value: _acceptingConsultations,
               onChanged: (v) => _updatePreference(
                 () => _acceptingConsultations = v,
@@ -547,9 +575,14 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
             ),
             const Divider(height: 1, indent: 16),
             SwitchListTile(
-              secondary: Icon(Icons.auto_stories_outlined, color: scheme.primary),
+              secondary: Icon(
+                Icons.auto_stories_outlined,
+                color: scheme.primary,
+              ),
               title: const Text('Auto-Ringkasan Sesi'),
-              subtitle: const Text('Buat rangkuman medis otomatis setelah sesi'),
+              subtitle: const Text(
+                'Buat rangkuman medis otomatis setelah sesi',
+              ),
               value: _autoSummarize,
               onChanged: (v) => _updatePreference(
                 () => _autoSummarize = v,
@@ -706,9 +739,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
 
     if (result != null && mounted) {
-      AuthRepository.instance.updateDoctorProfile(
-        practiceSchedule: result,
-      );
+      AuthRepository.instance.updateDoctorProfile(practiceSchedule: result);
 
       setState(() {
         _schedule = result;
@@ -833,8 +864,7 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
     _specCtrl = TextEditingController(text: widget.initialSpecialization);
     _hospitalCtrl = TextEditingController(text: widget.initialHospital);
     _strCtrl = TextEditingController(text: widget.initialStr);
-    _expCtrl =
-        TextEditingController(text: widget.initialExperience.toString());
+    _expCtrl = TextEditingController(text: widget.initialExperience.toString());
     _bioCtrl = TextEditingController(text: widget.initialBio);
   }
 
@@ -897,8 +927,9 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
                   labelText: 'Spesialisasi Medis',
                   prefixIcon: Icon(Icons.workspace_premium_outlined),
                 ),
-                validator: (v) =>
-                    v?.trim().isEmpty == true ? 'Spesialisasi wajib diisi' : null,
+                validator: (v) => v?.trim().isEmpty == true
+                    ? 'Spesialisasi wajib diisi'
+                    : null,
               ),
               const SizedBox(height: 10),
               TextFormField(
@@ -908,8 +939,9 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
                   labelText: 'Rumah Sakit / Faskes Praktik',
                   prefixIcon: Icon(Icons.local_hospital_outlined),
                 ),
-                validator: (v) =>
-                    v?.trim().isEmpty == true ? 'Rumah sakit wajib diisi' : null,
+                validator: (v) => v?.trim().isEmpty == true
+                    ? 'Rumah sakit wajib diisi'
+                    : null,
               ),
               const SizedBox(height: 10),
               TextFormField(
