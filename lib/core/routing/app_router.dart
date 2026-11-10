@@ -19,6 +19,7 @@ import 'package:Telehealth/features/chat/presentation/pages/conversation_list_pa
 import 'package:Telehealth/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_detail_page.dart';
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_list_page.dart';
+import 'package:Telehealth/features/consultation/presentation/pages/consultation_session_page.dart';
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_dashboard_page.dart';
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_profile_page.dart';
 import 'package:Telehealth/features/health_journal/presentation/pages/add_journal_entry_page.dart';
@@ -191,6 +192,15 @@ class AppRouter {
             ],
           ),
         ],
+      ),
+
+      // ── Dokter: Sesi Konsultasi (tanpa navbar shell) ─────────────────────────
+      GoRoute(
+        name: AppRoutes.doctorConsultationName,
+        path: AppRoutes.doctorConsultationPath,
+        builder: (context, state) => ConsultationSessionPage(
+          sessionId: state.pathParameters['sessionId']!,
+        ),
       ),
 
       // ── Admin Rumah Sakit: Web Dashboard dengan sidebar persisten ────────────
