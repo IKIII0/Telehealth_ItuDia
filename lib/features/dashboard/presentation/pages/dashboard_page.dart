@@ -461,8 +461,15 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   const SizedBox(height: 12),
                   // Chart display
-                  _buildMedicalRecordChart(scheme),
-                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F9FC),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: _buildMedicalRecordChart(scheme),
+                  ),
+                  const SizedBox(height: 4),
                 ],
               ),
             ),
@@ -607,7 +614,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         Text(
                           '${sys.toInt()}',
                           style: TextStyle(
-                            fontSize: 8,
+                            fontSize: 8.5,
                             fontWeight: FontWeight.w600,
                             color: scheme.primary,
                           ),
@@ -643,7 +650,10 @@ class _DashboardPageState extends State<DashboardPage> {
                         const SizedBox(height: 4),
                         Text(
                           '${e.date.day}/${e.date.month}',
-                          style: const TextStyle(fontSize: 8),
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            color: Colors.grey.shade600,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -707,8 +717,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         Text(
                           displayVal,
                           style: TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w600,
                             color: chartColor,
                           ),
                         ),
@@ -726,7 +736,10 @@ class _DashboardPageState extends State<DashboardPage> {
                         const SizedBox(height: 4),
                         Text(
                           '${e.date.day}/${e.date.month}',
-                          style: const TextStyle(fontSize: 8),
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            color: Colors.grey.shade600,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
