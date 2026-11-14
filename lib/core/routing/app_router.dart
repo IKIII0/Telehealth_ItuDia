@@ -103,17 +103,7 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch 1: Cek Gejala
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                name: AppRoutes.patientSymptomCheckerName,
-                path: AppRoutes.patientSymptomCheckerPath,
-                builder: (context, state) => const SymptomCheckerPage(),
-              ),
-            ],
-          ),
-          // Branch 2: Chat Dokter
+          // Branch 1: Chat Dokter
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -123,7 +113,7 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch 3: Profil
+          // Branch 2: Profil
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -175,6 +165,11 @@ class AppRouter {
         name: AppRoutes.patientJournalAddName,
         path: AppRoutes.patientJournalAddPath,
         builder: (context, state) => const AddJournalEntryPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.patientSymptomCheckerName,
+        path: AppRoutes.patientSymptomCheckerPath,
+        builder: (context, state) => const SymptomCheckerPage(),
       ),
       GoRoute(
         name: AppRoutes.patientMedicationName,

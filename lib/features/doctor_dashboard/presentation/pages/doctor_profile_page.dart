@@ -88,7 +88,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
           ? const DoctorNavBar(currentIndex: 2)
           : null,
       appBar: AppBar(
-        title: const Text('Profil Dokter'),
+        title: const Text('Profil'),
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
         actions: [
@@ -104,16 +104,15 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         child: Column(
           children: [
             _buildHeader(scheme),
-            const SizedBox(height: 16),
-
+            const SizedBox(height: 20),
             _buildCredentialsCard(scheme),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
             _buildPracticeScheduleCard(scheme),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
             _buildPreferenceCard(scheme),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
             _buildMenuCard(scheme),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -127,7 +126,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 28),
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 36),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -137,16 +136,27 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
             Color.lerp(scheme.primary, Colors.black, 0.28)!,
           ],
         ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
       child: Column(
         children: [
           Stack(
             children: [
-              CircleAvatar(
-                radius: 54,
-                backgroundColor: Colors.white,
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
                 child: CircleAvatar(
-                  radius: 50,
+                  radius: 52,
                   backgroundColor: scheme.primaryContainer,
                   child: Text(
                     initials,
@@ -176,19 +186,20 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
           Text(
             _name,
             style: const TextStyle(
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             _specialization,
+            textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -198,18 +209,19 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
           const SizedBox(height: 4),
           Text(
             _email,
+            textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 13, color: Colors.white60),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Wrap(
             alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 6,
+            spacing: 10,
+            runSpacing: 8,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 5,
+                  horizontal: 16,
+                  vertical: 8,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
@@ -234,8 +246,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
+                  horizontal: 16,
+                  vertical: 8,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.3),
@@ -273,389 +285,372 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  // ── Informasi Kredensial & Praktik Medis ─────────────────────────────────────
-  Widget _buildCredentialsCard(ColorScheme scheme) {
-    final rows = [
-      {
-        'icon': Icons.local_hospital_outlined,
-        'label': 'Rumah Sakit Praktik',
-        'value': _hospital,
-      },
-      {
-        'icon': Icons.workspace_premium_outlined,
-        'label': 'Spesialisasi',
-        'value': _specialization,
-      },
-      {
-        'icon': Icons.badge_outlined,
-        'label': 'Nomor STR (Surat Tanda Registrasi)',
-        'value': _strNumber,
-      },
-      {
-        'icon': Icons.history_edu_outlined,
-        'label': 'Pengalaman Praktik Klinis',
-        'value': '$_experienceYears tahun',
-      },
-      {
-        'icon': Icons.phone_outlined,
-        'label': 'Nomor Telepon Praktik',
-        'value': _phone,
-      },
-      {
-        'icon': Icons.verified_user_outlined,
-        'label': 'Status Verifikasi Kredensial',
-        'value': _verified ? 'Terverifikasi (Aktif)' : 'Dalam Proses Tinjau',
-      },
-    ];
-
+  // ── Shared card wrapper ─────────────────────────────────────────────────────
+  Widget _sectionCard(
+    ColorScheme scheme, {
+    String? title,
+    IconData? icon,
+    Widget? trailing,
+    required Widget child,
+    EdgeInsetsGeometry padding = const EdgeInsets.all(20),
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.6),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: padding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (title != null) ...[
+                  _cardTitle(scheme, title, icon, trailing),
+                  const SizedBox(height: 16),
+                ],
+                child,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _cardTitle(
+    ColorScheme scheme,
+    String title,
+    IconData? icon, [
+    Widget? trailing,
+  ]) {
+    return Row(
+      children: [
+        if (icon != null) ...[
+          Icon(icon, size: 22, color: scheme.primary),
+          const SizedBox(width: 10),
+        ],
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          ),
+        ),
+        ?trailing,
+      ],
+    );
+  }
+
+  Widget _infoRow(
+    ColorScheme scheme,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: scheme.primaryContainer.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 20, color: scheme.primary),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Informasi Kredensial Dokter',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  TextButton.icon(
-                    key: const Key('edit_doctor_profile_button'),
-                    onPressed: _openEditProfileDialog,
-                    icon: const Icon(Icons.edit_note, size: 18),
-                    label: const Text('Ubah Data'),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                  ),
-                ],
+              Text(
+                label,
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
-              const Divider(height: 20),
-              ...rows.map(
-                (r) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        r['icon'] as IconData,
-                        size: 20,
-                        color: scheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              r['label'] as String,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              r['value'] as String,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
                 ),
-              ),
-              const Divider(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.notes_rounded, size: 20, color: scheme.primary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Bio & Keahlian Medis',
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _bio,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF37474F),
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  // ── Informasi Kredensial & Praktik Medis ─────────────────────────────────────
+  Widget _buildCredentialsCard(ColorScheme scheme) {
+    final rows = [
+      (Icons.local_hospital_outlined, 'Rumah Sakit Praktik', _hospital),
+      (Icons.workspace_premium_outlined, 'Spesialisasi', _specialization),
+      (
+        Icons.badge_outlined,
+        'Nomor STR (Surat Tanda Registrasi)',
+        _strNumber,
+      ),
+      (
+        Icons.history_edu_outlined,
+        'Pengalaman Praktik Klinis',
+        '$_experienceYears tahun',
+      ),
+      (Icons.phone_outlined, 'Nomor Telepon Praktik', _phone),
+      (
+        Icons.verified_user_outlined,
+        'Status Verifikasi Kredensial',
+        _verified ? 'Terverifikasi (Aktif)' : 'Dalam Proses Tinjau',
+      ),
+    ];
+
+    return _sectionCard(
+      scheme,
+      title: 'Informasi Kredensial Dokter',
+      icon: Icons.assignment_ind_outlined,
+      trailing: TextButton.icon(
+        key: const Key('edit_doctor_profile_button'),
+        onPressed: _openEditProfileDialog,
+        icon: const Icon(Icons.edit_note, size: 18),
+        label: const Text('Ubah'),
+        style: TextButton.styleFrom(
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
+      ),
+      child: Column(
+        children: [
+          for (final r in rows) ...[
+            _infoRow(scheme, r.$1, r.$2, r.$3),
+            const Divider(height: 28),
+          ],
+          _infoRow(scheme, Icons.notes_rounded, 'Bio & Keahlian Medis', _bio),
+        ],
       ),
     );
   }
 
   // ── Jadwal Praktik Dokter ───────────────────────────────────────────────────
   Widget _buildPracticeScheduleCard(ColorScheme scheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return _sectionCard(
+      scheme,
+      title: 'Jadwal Praktik & Konsultasi',
+      icon: Icons.event_available_outlined,
+      trailing: TextButton.icon(
+        onPressed: _openEditScheduleDialog,
+        icon: const Icon(Icons.schedule, size: 18),
+        label: const Text('Atur'),
+        style: TextButton.styleFrom(
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
+      ),
+      child: Column(
+        children: [
+          for (final entry in _schedule.entries)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
                 children: [
-                  const Expanded(
+                  Icon(Icons.calendar_month, size: 20, color: scheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Text(
-                      'Jadwal Praktik & Konsultasi',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      entry.key,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  TextButton.icon(
-                    onPressed: _openEditScheduleDialog,
-                    icon: const Icon(Icons.schedule, size: 18),
-                    label: const Text('Atur Jadwal'),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: entry.value.toLowerCase().contains('libur')
+                          ? Colors.grey.shade200
+                          : scheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      entry.value,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: entry.value.toLowerCase().contains('libur')
+                            ? Colors.grey.shade700
+                            : scheme.primary,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const Divider(height: 20),
-              ..._schedule.entries.map(
-                (entry) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest.withValues(
-                      alpha: 0.3,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_month,
-                        size: 18,
-                        color: scheme.primary,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        entry.key,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: entry.value.toLowerCase().contains('libur')
-                              ? Colors.grey.shade200
-                              : scheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Text(
-                          entry.value,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: entry.value.toLowerCase().contains('libur')
-                                ? Colors.grey.shade700
-                                : scheme.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+        ],
       ),
     );
   }
 
   // ── Preferensi Dokter ───────────────────────────────────────────────────────
   Widget _buildPreferenceCard(ColorScheme scheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
-              child: Text(
-                'Preferensi Praktik & Pasien',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+    const tilePadding = EdgeInsets.symmetric(horizontal: 20, vertical: 6);
+    return _sectionCard(
+      scheme,
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: _cardTitle(
+              scheme,
+              'Preferensi Praktik & Pasien',
+              Icons.tune_rounded,
             ),
-            SwitchListTile(
-              secondary: Icon(
-                Icons.mark_chat_unread_outlined,
-                color: scheme.primary,
-              ),
-              title: const Text('Notifikasi Permintaan Baru'),
-              subtitle: const Text(
-                'Terima pengingat instan pasien ingin konsultasi',
-              ),
-              value: _notifNewPatient,
-              onChanged: (v) => _updatePreference(
-                () => _notifNewPatient = v,
-                'Preferensi permintaan konsultasi disimpan',
-              ),
+          ),
+          const SizedBox(height: 12),
+          SwitchListTile(
+            contentPadding: tilePadding,
+            secondary: Icon(
+              Icons.mark_chat_unread_outlined,
+              color: scheme.primary,
             ),
-            const Divider(height: 1, indent: 16),
-            SwitchListTile(
-              secondary: Icon(Icons.chat_bubble_outline, color: scheme.primary),
-              title: const Text('Notifikasi Pesan Chat'),
-              subtitle: const Text('Ingatkan saat pasien membalas chat'),
-              value: _notifChatMessage,
-              onChanged: (v) => _updatePreference(
-                () => _notifChatMessage = v,
-                'Preferensi pesan chat disimpan',
-              ),
+            title: const Text('Notifikasi Permintaan Baru'),
+            subtitle: const Text(
+              'Terima pengingat instan pasien ingin konsultasi',
             ),
-            const Divider(height: 1, indent: 16),
-            SwitchListTile(
-              secondary: Icon(
-                Icons.online_prediction_rounded,
-                color: scheme.primary,
-              ),
-              title: const Text('Status Menerima Pasien'),
-              subtitle: const Text(
-                'Tampilkan status online pada antrean pasien',
-              ),
-              value: _acceptingConsultations,
-              onChanged: (v) => _updatePreference(
-                () => _acceptingConsultations = v,
-                'Status ketersediaan praktik disimpan',
-              ),
+            value: _notifNewPatient,
+            onChanged: (v) => _updatePreference(
+              () => _notifNewPatient = v,
+              'Preferensi permintaan konsultasi disimpan',
             ),
-            const Divider(height: 1, indent: 16),
-            SwitchListTile(
-              secondary: Icon(
-                Icons.auto_stories_outlined,
-                color: scheme.primary,
-              ),
-              title: const Text('Auto-Ringkasan Sesi'),
-              subtitle: const Text(
-                'Buat rangkuman medis otomatis setelah sesi',
-              ),
-              value: _autoSummarize,
-              onChanged: (v) => _updatePreference(
-                () => _autoSummarize = v,
-                'Preferensi rangkuman medis disimpan',
-              ),
+          ),
+          _divider(),
+          SwitchListTile(
+            contentPadding: tilePadding,
+            secondary: Icon(Icons.chat_bubble_outline, color: scheme.primary),
+            title: const Text('Notifikasi Pesan Chat'),
+            subtitle: const Text('Ingatkan saat pasien membalas chat'),
+            value: _notifChatMessage,
+            onChanged: (v) => _updatePreference(
+              () => _notifChatMessage = v,
+              'Preferensi pesan chat disimpan',
             ),
-          ],
-        ),
+          ),
+          _divider(),
+          SwitchListTile(
+            contentPadding: tilePadding,
+            secondary: Icon(
+              Icons.online_prediction_rounded,
+              color: scheme.primary,
+            ),
+            title: const Text('Status Menerima Pasien'),
+            subtitle: const Text('Tampilkan status online pada antrean pasien'),
+            value: _acceptingConsultations,
+            onChanged: (v) => _updatePreference(
+              () => _acceptingConsultations = v,
+              'Status ketersediaan praktik disimpan',
+            ),
+          ),
+          _divider(),
+          SwitchListTile(
+            contentPadding: tilePadding,
+            secondary: Icon(Icons.auto_stories_outlined, color: scheme.primary),
+            title: const Text('Auto-Ringkasan Sesi'),
+            subtitle: const Text('Buat rangkuman medis otomatis setelah sesi'),
+            value: _autoSummarize,
+            onChanged: (v) => _updatePreference(
+              () => _autoSummarize = v,
+              'Preferensi rangkuman medis disimpan',
+            ),
+          ),
+        ],
       ),
     );
   }
 
   // ── Menu & Pengaturan Akun Dokter ───────────────────────────────────────────
   Widget _buildMenuCard(ColorScheme scheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Column(
-          children: [
-            _menuItem(
-              scheme,
-              Icons.edit,
-              'Ubah Data Profil Dokter',
-              onTap: _openEditProfileDialog,
+    return _sectionCard(
+      scheme,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        children: [
+          _menuItem(
+            scheme,
+            Icons.edit_outlined,
+            'Ubah Data Profil Dokter',
+            onTap: _openEditProfileDialog,
+          ),
+          _divider(),
+          _menuItem(
+            scheme,
+            Icons.calendar_month_outlined,
+            'Atur Jadwal Praktik',
+            onTap: _openEditScheduleDialog,
+          ),
+          _divider(),
+          _menuItem(
+            scheme,
+            Icons.lock_outline,
+            'Ganti Password Akun',
+            onTap: () => showAppSnack(
+              context,
+              'Tautan ubah kata sandi dapat diakses lewat menu reset password.',
             ),
-            _divider(),
-            _menuItem(
-              scheme,
-              Icons.calendar_month_outlined,
-              'Atur Jadwal Praktik',
-              onTap: _openEditScheduleDialog,
+          ),
+          _divider(),
+          _menuItem(
+            scheme,
+            Icons.medical_information_outlined,
+            'Pedoman Praktik Telehealth',
+            onTap: () => _showTelehealthGuidelines(),
+          ),
+          _divider(),
+          _menuItem(
+            scheme,
+            Icons.info_outline,
+            'Tentang Telehealth',
+            onTap: () => showAboutDialog(
+              context: context,
+              applicationName: 'Telehealth',
+              applicationVersion: '1.0.0',
+              applicationLegalese: '© 2026 Telehealth. Hak Cipta Dilindungi.',
             ),
-            _divider(),
-            _menuItem(
-              scheme,
-              Icons.lock_outline,
-              'Ganti Password Akun',
-              onTap: () => showAppSnack(
-                context,
-                'Tautan ubah kata sandi dapat diakses lewat menu reset password.',
-              ),
-            ),
-            _divider(),
-            _menuItem(
-              scheme,
-              Icons.medical_information_outlined,
-              'Pedoman Praktik Telehealth',
-              onTap: () => _showTelehealthGuidelines(),
-            ),
-            _divider(),
-            _menuItem(
-              scheme,
-              Icons.info_outline,
-              'Tentang Telehealth',
-              onTap: () => showAboutDialog(
-                context: context,
-                applicationName: 'Telehealth',
-                applicationVersion: '1.0.0',
-                applicationLegalese: '© 2026 Telehealth. Hak Cipta Dilindungi.',
-              ),
-            ),
-            _divider(),
-            _menuItem(
-              scheme,
-              Icons.logout,
-              'Keluar akun',
-              color: scheme.error,
-              onTap: _confirmLogout,
-            ),
-          ],
-        ),
+          ),
+          _divider(),
+          _menuItem(
+            scheme,
+            Icons.logout,
+            'Keluar akun',
+            color: scheme.error,
+            onTap: _confirmLogout,
+          ),
+        ],
       ),
     );
   }
@@ -668,6 +663,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     Color? color,
   }) {
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       leading: Icon(icon, color: color ?? scheme.primary),
       title: Text(
         label,
@@ -681,7 +677,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  Widget _divider() => const Divider(height: 1, indent: 56);
+  Widget _divider() => const Divider(height: 1, indent: 20, endIndent: 20);
 
   // ── Dialog Ubah Data Profil Dokter ──────────────────────────────────────────
   Future<void> _openEditProfileDialog() async {
@@ -822,6 +818,59 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 }
 
 /// Dialog stateful untuk ubah data dokter agar controller dikelola dengan aman.
+InputDecoration _dialogDecoration({
+  required String labelText,
+  String? hintText,
+  bool alignLabelWithHint = false,
+  required Icon prefixIcon,
+}) {
+  return InputDecoration(
+    labelText: labelText,
+    hintText: hintText,
+    alignLabelWithHint: alignLabelWithHint,
+    prefixIcon: prefixIcon,
+    border: const OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(14)),
+    ),
+  );
+}
+
+ButtonStyle _dialogButtonShape(
+  ButtonStyle Function({
+    EdgeInsetsGeometry? padding,
+    OutlinedBorder? shape,
+  })
+  factory,
+) {
+  return factory(
+    padding: const EdgeInsets.symmetric(vertical: 14),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  );
+}
+
+Widget _dialogTitle(BuildContext context, String text, IconData icon) {
+  final scheme = Theme.of(context).colorScheme;
+  return Row(
+    children: [
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: scheme.primaryContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, size: 22, color: scheme.primary),
+      ),
+      const SizedBox(width: 14),
+      Expanded(
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+      ),
+    ],
+  );
+}
+
 class _EditDoctorProfileDialog extends StatefulWidget {
   const _EditDoctorProfileDialog({
     required this.initialName,
@@ -897,10 +946,16 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Ubah Profil Dokter'),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      titlePadding: const EdgeInsets.fromLTRB(28, 28, 28, 8),
+      contentPadding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
+      actionsPadding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
+      title: _dialogTitle(context, 'Ubah Profil Dokter', Icons.edit_outlined),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
+          padding: const EdgeInsets.only(top: 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -908,7 +963,7 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
                 key: const Key('edit_doctor_name_field'),
                 controller: _nameCtrl,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
+                decoration: _dialogDecoration(
                   labelText: 'Nama Lengkap & Gelar',
                   prefixIcon: Icon(Icons.person_outline),
                 ),
@@ -919,11 +974,11 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
                   return null;
                 },
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _specCtrl,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
+                decoration: _dialogDecoration(
                   labelText: 'Spesialisasi Medis',
                   prefixIcon: Icon(Icons.workspace_premium_outlined),
                 ),
@@ -931,11 +986,11 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
                     ? 'Spesialisasi wajib diisi'
                     : null,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _hospitalCtrl,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
+                decoration: _dialogDecoration(
                   labelText: 'Rumah Sakit / Faskes Praktik',
                   prefixIcon: Icon(Icons.local_hospital_outlined),
                 ),
@@ -943,23 +998,23 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
                     ? 'Rumah sakit wajib diisi'
                     : null,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _strCtrl,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
+                decoration: _dialogDecoration(
                   labelText: 'Nomor STR',
                   prefixIcon: Icon(Icons.badge_outlined),
                 ),
                 validator: (v) =>
                     v?.trim().isEmpty == true ? 'Nomor STR wajib diisi' : null,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _expCtrl,
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
+                decoration: _dialogDecoration(
                   labelText: 'Pengalaman (Tahun)',
                   prefixIcon: Icon(Icons.history_edu_outlined),
                 ),
@@ -969,12 +1024,12 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
                   return null;
                 },
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _phoneCtrl,
                 keyboardType: TextInputType.phone,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
+                decoration: _dialogDecoration(
                   labelText: 'Nomor Telepon Praktik',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
@@ -984,11 +1039,11 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
                   return null;
                 },
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _bioCtrl,
                 maxLines: 3,
-                decoration: const InputDecoration(
+                decoration: _dialogDecoration(
                   labelText: 'Bio & Ringkasan Keahlian',
                   alignLabelWithHint: true,
                   prefixIcon: Icon(Icons.notes_rounded),
@@ -1001,14 +1056,25 @@ class _EditDoctorProfileDialogState extends State<_EditDoctorProfileDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Batal'),
-        ),
-        FilledButton(
-          key: const Key('save_doctor_profile_button'),
-          onPressed: _submit,
-          child: const Text('Simpan Perubahan'),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                style: _dialogButtonShape(OutlinedButton.styleFrom),
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Batal'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                key: const Key('save_doctor_profile_button'),
+                style: _dialogButtonShape(FilledButton.styleFrom),
+                onPressed: _submit,
+                child: const Text('Simpan'),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -1051,22 +1117,28 @@ class _EditDoctorScheduleDialogState extends State<_EditDoctorScheduleDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Atur Jadwal Praktik Dokter'),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      titlePadding: const EdgeInsets.fromLTRB(28, 28, 28, 8),
+      contentPadding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
+      actionsPadding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
+      title: _dialogTitle(context, 'Atur Jadwal Praktik Dokter', Icons.schedule),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const SizedBox(height: 8),
           TextField(
             controller: _weekdayCtrl,
-            decoration: const InputDecoration(
+            decoration: _dialogDecoration(
               labelText: 'Senin - Jumat',
               hintText: 'Contoh: 09:00 - 15:00',
               prefixIcon: Icon(Icons.access_time),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           TextField(
             controller: _weekendCtrl,
-            decoration: const InputDecoration(
+            decoration: _dialogDecoration(
               labelText: 'Sabtu',
               hintText: 'Contoh: 09:00 - 12:00',
               prefixIcon: Icon(Icons.access_time),
@@ -1075,19 +1147,31 @@ class _EditDoctorScheduleDialogState extends State<_EditDoctorScheduleDialog> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Batal'),
-        ),
-        FilledButton(
-          onPressed: () {
-            Navigator.of(context).pop({
-              'Senin - Jumat': _weekdayCtrl.text.trim(),
-              'Sabtu': _weekendCtrl.text.trim(),
-              'Minggu': widget.initialSchedule['Minggu'] ?? 'Libur / On Call',
-            });
-          },
-          child: const Text('Simpan Jadwal'),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                style: _dialogButtonShape(OutlinedButton.styleFrom),
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Batal'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                style: _dialogButtonShape(FilledButton.styleFrom),
+                onPressed: () {
+                  Navigator.of(context).pop({
+                    'Senin - Jumat': _weekdayCtrl.text.trim(),
+                    'Sabtu': _weekendCtrl.text.trim(),
+                    'Minggu':
+                        widget.initialSchedule['Minggu'] ?? 'Libur / On Call',
+                  });
+                },
+                child: const Text('Simpan'),
+              ),
+            ),
+          ],
         ),
       ],
     );
