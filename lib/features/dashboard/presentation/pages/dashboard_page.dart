@@ -235,8 +235,9 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      bottomNavigationBar:
-          widget.showNavBar ? const PatientNavBar(currentIndex: 0) : null,
+      bottomNavigationBar: widget.showNavBar
+          ? const PatientNavBar(currentIndex: 0)
+          : null,
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: SingleChildScrollView(
@@ -245,6 +246,7 @@ class _DashboardPageState extends State<DashboardPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildSearchBar(),
+              _buildSymptomCheckerButton(scheme),
               // ── 1. Ringkasan Jurnal Kesehatan & Grafik Rekam Medis ──────
               _buildJournalSection(scheme),
               // ── 2. Ringkasan Pengingat Obat & Jadwal Terdekat ──────────
@@ -287,6 +289,69 @@ class _DashboardPageState extends State<DashboardPage> {
             prefixIcon: Icon(Icons.search, color: Colors.grey),
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(vertical: 14),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Tombol Cek Gejala ───────────────────────────────────────────────────────
+  Widget _buildSymptomCheckerButton(ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Material(
+        color: scheme.primary,
+        borderRadius: BorderRadius.circular(16),
+        elevation: 3,
+        shadowColor: scheme.primary.withValues(alpha: 0.4),
+        child: InkWell(
+          key: const Key('symptom_checker_button'),
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _go(AppRoutes.patientSymptomCheckerName),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.medical_services_rounded,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Cek Gejala',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Periksa gejala yang anda rasakan',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -737,7 +802,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Pengingat Obat & Jadwal Konsumsi Terdekat 
+  // Pengingat Obat & Jadwal Konsumsi Terdekat
   Widget _buildMedicationSection(ColorScheme scheme) {
     final upcoming = _getUpcomingSchedules();
     final totalSchedules = _medications.fold<int>(

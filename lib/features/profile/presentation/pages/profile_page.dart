@@ -47,7 +47,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       bottomNavigationBar: widget.showNavBar
-          ? const PatientNavBar(currentIndex: 3)
+          ? const PatientNavBar(currentIndex: 2)
           : null,
       appBar: AppBar(
         title: const Text('Profil'),
