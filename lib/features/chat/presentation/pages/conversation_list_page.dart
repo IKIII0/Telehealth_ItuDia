@@ -181,8 +181,9 @@ class _ConversationListPageState extends State<ConversationListPage>
         ),
       ),
       body: _buildBody(),
-      bottomNavigationBar:
-          widget.showNavBar ? const PatientNavBar(currentIndex: 2) : null,
+      bottomNavigationBar: widget.showNavBar
+          ? const PatientNavBar(currentIndex: 2)
+          : null,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           context.pushNamed(AppRoutes.patientDoctorsName);

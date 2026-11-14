@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
-import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/repositories/doctor_repository.dart';
@@ -99,19 +98,14 @@ class _DoctorDetailContent extends StatelessWidget {
     return result.toString();
   }
 
-  // ── appointment ────────────────────────────────────────────────────────────
+  // ── konsultasi ──���─────────────────────────────────────────────────────────
 
-  Future<void> _bookAppointment(BuildContext context) async {
-    final confirmed = await showConfirmDialog(
-      context,
-      title: 'Buat Janji Konsultasi',
-      message: 'Ajukan jadwal konsultasi dengan ${doctor.name}?',
-      confirmLabel: 'Ajukan',
-      cancelLabel: 'Batal',
-      destructive: false,
+  void _startConsultation(BuildContext context) {
+    context.pushNamed(
+      AppRoutes.patientConsultationName,
+      pathParameters: {'doctorId': doctor.id},
+      extra: doctor,
     );
-    if (!confirmed || !context.mounted) return;
-    showAppSnack(context, 'Jadwal konsultasi berhasil diajukan');
   }
 
   // ── build ──────────────────────────────────────────────────────────────────
@@ -575,13 +569,13 @@ class _DoctorDetailContent extends StatelessWidget {
           ),
           const SizedBox(width: 10),
 
-          // Book appointment button
+          // Consultation button
           Expanded(
             flex: 2,
             child: ElevatedButton.icon(
-              onPressed: () => _bookAppointment(context),
-              icon: const Icon(Icons.calendar_month_rounded, size: 18),
-              label: const Text('Buat Janji'),
+              onPressed: () => _startConsultation(context),
+              icon: const Icon(Icons.forum_rounded, size: 18),
+              label: const Text('Konsultasi Sekarang'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: accentColor,
                 foregroundColor: Colors.white,
