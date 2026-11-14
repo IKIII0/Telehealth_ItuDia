@@ -656,22 +656,18 @@ class _DashboardPageState extends State<DashboardPage> {
                             Container(
                               width: 8,
                               height: sysH,
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade400,
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(3),
-                                ),
+                              decoration: _gradientBarDecoration(
+                                Colors.red.shade400,
+                                3,
                               ),
                             ),
                             const SizedBox(width: 2),
                             Container(
                               width: 8,
                               height: diaH,
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade400,
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(3),
-                                ),
+                              decoration: _gradientBarDecoration(
+                                Colors.blue.shade400,
+                                3,
                               ),
                             ),
                           ],
@@ -782,6 +778,17 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       );
     }
+  }
+
+  BoxDecoration _gradientBarDecoration(Color color, double radius) {
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [color, color.withValues(alpha: 0.5)],
+      ),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
+    );
   }
 
   Widget _chartLegendDot(Color color, String label) {
