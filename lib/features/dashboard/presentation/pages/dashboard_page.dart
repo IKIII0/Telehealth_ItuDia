@@ -283,7 +283,7 @@ class _DashboardPageState extends State<DashboardPage> {
           readOnly: true,
           onTap: () => _go(AppRoutes.patientDoctorsName),
           decoration: const InputDecoration(
-            hintText: 'Cari dokter, spesialisasi, atau obat...',
+            hintText: 'Cari dokter...',
             prefixIcon: Icon(Icons.search, color: Colors.grey),
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(vertical: 14),

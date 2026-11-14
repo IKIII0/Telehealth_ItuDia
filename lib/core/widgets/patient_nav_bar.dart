@@ -87,7 +87,7 @@ class PatientNavBar extends StatelessWidget {
           NavigationDestination(
             icon: const Icon(Icons.chat_outlined),
             selectedIcon: Icon(Icons.chat_rounded, color: scheme.primary),
-            label: 'Chat Dokter',
+            label: 'Chat',
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline_rounded),
