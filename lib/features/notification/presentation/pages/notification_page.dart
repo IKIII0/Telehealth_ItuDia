@@ -212,17 +212,11 @@ class _NotificationPageState extends State<NotificationPage> {
       case NotificationCategory.medication:
         return _CategoryMeta(Icons.medication_rounded, scheme.primary);
       case NotificationCategory.consultation:
-        return const _CategoryMeta(
-          Icons.medical_services_rounded,
-          Color(0xFF00897B),
-        );
+        return _CategoryMeta(Icons.medical_services_rounded, scheme.primary);
       case NotificationCategory.chat:
-        return const _CategoryMeta(
-          Icons.chat_bubble_rounded,
-          Color(0xFF7E57C2),
-        );
+        return _CategoryMeta(Icons.chat_bubble_rounded, scheme.primary);
       case NotificationCategory.system:
-        return _CategoryMeta(Icons.info_outline_rounded, Colors.grey[700]!);
+        return _CategoryMeta(Icons.info_outline_rounded, Colors.grey.shade600);
     }
   }
 }

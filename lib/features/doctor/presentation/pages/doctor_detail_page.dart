@@ -20,8 +20,6 @@ class DoctorDetailPage extends StatefulWidget {
 }
 
 class _DoctorDetailPageState extends State<DoctorDetailPage> {
-  static const Color _backgroundColor = Color(0xFFF5F7FA);
-
   bool _loading = true;
   String? _error;
   Doctor? _doctor;
@@ -120,7 +118,7 @@ class _DoctorDetailContent extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 220,
+            expandedHeight: 270,
             pinned: true,
             backgroundColor: scheme.primary,
             iconTheme: const IconThemeData(color: Colors.white),
@@ -142,32 +140,68 @@ class _DoctorDetailContent extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 8),
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white.withValues(alpha: 0.25),
-                        child: const Icon(
-                          Icons.person,
-                          size: 54,
-                          color: Colors.white,
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            width: 2,
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          radius: 42,
+                          backgroundColor: Colors.white.withValues(alpha: 0.18),
+                          child: const Icon(
+                            Icons.person,
+                            size: 46,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        doctor.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(height: 14),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          doctor.name,
+                          maxLines: 2,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w700,
+                            height: 1.25,
+                          ),
                         ),
-                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         doctor.specialization,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 13,
                         ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _HeaderChip(
+                            icon: Icons.star_rounded,
+                            label: doctor.rating.toStringAsFixed(1),
+                            iconColor: Colors.amber,
+                          ),
+                          const SizedBox(width: 8),
+                          _HeaderChip(
+                            icon: Icons.circle,
+                            label: doctor.available
+                                ? 'Tersedia hari ini'
+                                : 'Belum tersedia',
+                            iconColor: doctor.available
+                                ? Colors.greenAccent
+                                : Colors.white54,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -186,7 +220,7 @@ class _DoctorDetailContent extends StatelessWidget {
 
                 // About Dokter
                 _SectionTitle(title: 'Tentang dokter'),
-                _buildAboutCard(),
+                _buildAboutCard(context),
 
                 // Jadwal Praktik
                 _SectionTitle(title: 'Jadwal praktik'),
@@ -221,48 +255,48 @@ class _DoctorDetailContent extends StatelessWidget {
   Widget _buildStatsCard(Color accentColor) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 15),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _StatItem(
-            icon: Icons.star_rounded,
-            iconColor: Colors.amber,
-            value: doctor.rating.toStringAsFixed(1),
-            label: 'Rating',
+          Expanded(
+            child: _StatItem(
+              icon: Icons.star_rounded,
+              iconColor: Colors.amber,
+              value: doctor.rating.toStringAsFixed(1),
+              label: 'Rating',
+            ),
           ),
-          _VertDivider(),
-          _StatItem(
-            icon: Icons.work_rounded,
-            iconColor: accentColor,
-            value: '${doctor.experience} Thn',
-            label: 'Pengalaman',
+          const _VertDivider(),
+          Expanded(
+            child: _StatItem(
+              icon: Icons.work_outline_rounded,
+              iconColor: accentColor,
+              value: '${doctor.experience} th',
+              label: 'Pengalaman',
+            ),
           ),
-          _VertDivider(),
-          _StatItem(
-            icon: Icons.people_alt_rounded,
-            iconColor: Colors.green,
-            value: '1.2K+',
-            label: 'Pasien',
+          const _VertDivider(),
+          Expanded(
+            child: _StatItem(
+              icon: Icons.people_outline_rounded,
+              iconColor: accentColor,
+              value: '1.2K',
+              label: 'Pasien',
+            ),
           ),
-          _VertDivider(),
-          _StatItem(
-            icon: Icons.chat_bubble_rounded,
-            iconColor: accentColor,
-            value: '98%',
-            label: 'Respons',
+          const _VertDivider(),
+          Expanded(
+            child: _StatItem(
+              icon: Icons.bolt_rounded,
+              iconColor: accentColor,
+              value: '98%',
+              label: 'Respons',
+            ),
           ),
         ],
       ),
@@ -271,51 +305,46 @@ class _DoctorDetailContent extends StatelessWidget {
 
   // ── About Card ─────────────────────────────────────────────────────────────
 
-  Widget _buildAboutCard() {
+  Widget _buildAboutCard(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             doctor.bio,
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.65,
-              color: Colors.black87,
+            style: TextStyle(
+              fontSize: 13.5,
+              height: 1.6,
+              color: Colors.grey.shade800,
             ),
           ),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: Colors.grey.shade200),
           const SizedBox(height: 14),
           _InfoRow(
             icon: Icons.local_hospital_rounded,
-            color: Colors.red[400]!,
+            color: Theme.of(context).colorScheme.primary,
             label: 'Rumah Sakit',
             value: doctor.hospital,
           ),
           const SizedBox(height: 10),
           _InfoRow(
             icon: Icons.school_rounded,
-            color: Colors.blue[400]!,
+            color: Theme.of(context).colorScheme.primary,
             label: 'Pendidikan',
             value: doctor.education,
           ),
           const SizedBox(height: 10),
           _InfoRow(
-            icon: Icons.verified_rounded,
-            color: Colors.green[400]!,
+            icon: Icons.verified_outlined,
+            color: Theme.of(context).colorScheme.primary,
             label: 'No. STR',
             value: 'STR-2024-${doctor.experience * 1357}',
           ),
@@ -353,15 +382,8 @@ class _DoctorDetailContent extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         children: [
@@ -369,14 +391,14 @@ class _DoctorDetailContent extends StatelessWidget {
             icon: Icons.video_call_rounded,
             color: scheme.primary,
             title: 'Konsultasi Online',
-            subtitle: 'Chat & Video Call langsung dengan dokter',
+            subtitle: 'Chat & video call dengan dokter',
             price: basePrice,
             formatPrice: _formatPrice,
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           _ServiceTile(
             icon: Icons.local_hospital_rounded,
-            color: Colors.green,
+            color: scheme.primary,
             title: 'Tatap Muka',
             subtitle: 'Kunjungi dokter langsung di klinik',
             price: (basePrice * 1.5).toInt(),
@@ -385,7 +407,7 @@ class _DoctorDetailContent extends StatelessWidget {
           const Divider(height: 1, indent: 16, endIndent: 16),
           _ServiceTile(
             icon: Icons.home_rounded,
-            color: Colors.orange,
+            color: scheme.primary,
             title: 'Home Visit',
             subtitle: 'Dokter datang ke rumah Anda',
             price: (basePrice * 2.5).toInt(),
@@ -436,15 +458,8 @@ class _DoctorDetailContent extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Colors.grey.shade200, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,79 +530,75 @@ class _DoctorDetailContent extends StatelessWidget {
 
   Widget _buildBottomBar(BuildContext context, Color accentColor, int price) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
       ),
-      child: Row(
-        children: [
-          // Price info
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Konsultasi Online',
-                style: TextStyle(color: Colors.grey, fontSize: 11),
-              ),
-              Text(
-                'Rp ${_formatPrice(price)}',
-                style: TextStyle(
-                  color: accentColor,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Mulai dari',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 14),
-
-          // Chat button
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () {
-                context.goNamed(AppRoutes.patientChatName);
-              },
-              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-              label: const Text('Chat'),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: accentColor),
-                foregroundColor: accentColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 2),
+                Text(
+                  'Rp ${_formatPrice(price)}',
+                  style: TextStyle(
+                    color: accentColor,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 13),
+              ],
+            ),
+            const Spacer(),
+            SizedBox(
+              width: 48,
+              height: 48,
+              child: OutlinedButton(
+                onPressed: () => context.goNamed(AppRoutes.patientChatName),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  foregroundColor: accentColor,
+                  side: BorderSide(color: Colors.grey.shade300),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-
-          // Consultation button
-          Expanded(
-            flex: 2,
-            child: ElevatedButton.icon(
-              onPressed: () => _startConsultation(context),
-              icon: const Icon(Icons.forum_rounded, size: 18),
-              label: const Text('Konsultasi Sekarang'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: accentColor,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => _startConsultation(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: accentColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Konsultasi',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 13),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -602,14 +613,53 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 10),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey.shade900,
         ),
+      ),
+    );
+  }
+}
+
+/// Chip kecil pada header profil dokter (rating & status ketersediaan).
+class _HeaderChip extends StatelessWidget {
+  const _HeaderChip({
+    required this.icon,
+    required this.label,
+    required this.iconColor,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: iconColor),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -633,22 +683,32 @@ class _StatItem extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: iconColor, size: 24),
-        const SizedBox(height: 4),
+        Icon(icon, color: iconColor, size: 20),
+        const SizedBox(height: 6),
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            height: 1.1,
+          ),
         ),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+        ),
       ],
     );
   }
 }
 
 class _VertDivider extends StatelessWidget {
+  const _VertDivider();
+
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 40, color: Colors.grey[200]);
+    return Container(width: 1, height: 34, color: Colors.grey.shade200);
   }
 }
 
@@ -665,14 +725,16 @@ class _ScheduleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
-      width: 68,
-      margin: const EdgeInsets.only(right: 10),
+      width: 64,
+      margin: const EdgeInsets.only(right: 8),
       decoration: BoxDecoration(
-        color: active
-            ? Theme.of(context).colorScheme.primary
-            : Colors.grey[100],
+        color: active ? scheme.primary : Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: active ? scheme.primary : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -680,19 +742,21 @@ class _ScheduleCard extends StatelessWidget {
           Text(
             day,
             style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              color: active ? Colors.white : Colors.grey,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+              color: active ? Colors.white : Colors.grey.shade700,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 5),
           Text(
             hours,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 11,
-              height: 1.4,
-              color: active ? Colors.white.withOpacity(0.9) : Colors.grey[400],
+              height: 1.35,
+              color: active
+                  ? Colors.white.withValues(alpha: 0.9)
+                  : Colors.grey.shade500,
             ),
           ),
         ],
@@ -721,28 +785,28 @@ class _ServiceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       leading: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(9),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: color, size: 22),
+        child: Icon(icon, color: color, size: 20),
       ),
       title: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
+        style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
       ),
       trailing: Text(
         'Rp ${formatPrice(price)}',
         style: TextStyle(
           color: color,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
           fontSize: 13,
         ),
       ),
@@ -769,28 +833,29 @@ class _InfoRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(7),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 16),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: const TextStyle(color: Colors.grey, fontSize: 11),
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
                 style: const TextStyle(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   fontSize: 13,
+                  height: 1.35,
                 ),
               ),
             ],

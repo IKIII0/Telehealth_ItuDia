@@ -90,11 +90,11 @@ class _SplashScreenState extends State<SplashScreen>
                     children: [
                       // Logo Icon
                       Container(
-                        width: 112,
-                        height: 112,
+                        width: 128,
+                        height: 128,
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(26),
+                          borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.2),
@@ -103,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                           ],
                         ),
-                        child: AppLogo(size: 84, color: scheme.primary),
+                        child: AppLogo(size: 96, color: scheme.primary),
                       ),
                       const SizedBox(height: 30),
 

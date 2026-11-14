@@ -245,7 +245,7 @@ class _DashboardPageState extends State<DashboardPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildSearchBar(),
-              _buildSymptomCheckerButton(scheme),
+              _buildQuickActions(scheme),
               // ── 1. Ringkasan Jurnal Kesehatan & Grafik Rekam Medis ──────
               _buildJournalSection(scheme),
               // ── 2. Ringkasan Pengingat Obat & Jadwal Terdekat ──────────
@@ -294,65 +294,34 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // ── Tombol Cek Gejala ───────────────────────────────────────────────────────
-  Widget _buildSymptomCheckerButton(ColorScheme scheme) {
+  // ── Aksi cepat: Cek Gejala & Chat dengan Dokter ──────────────────────────────
+  Widget _buildQuickActions(ColorScheme scheme) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: Material(
-        color: scheme.primary,
-        borderRadius: BorderRadius.circular(16),
-        elevation: 3,
-        shadowColor: scheme.primary.withValues(alpha: 0.4),
-        child: InkWell(
-          key: const Key('symptom_checker_button'),
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => _go(AppRoutes.patientSymptomCheckerName),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.medical_services_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Cek Gejala',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Periksa gejala yang anda rasakan',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ],
+      child: Row(
+        children: [
+          Expanded(
+            child: _QuickActionCard(
+              cardKey: const Key('symptom_checker_button'),
+              icon: Icons.medical_services_rounded,
+              title: 'Cek Gejala',
+              subtitle: 'Periksa gejala',
+              color: scheme.primary,
+              onTap: () => _go(AppRoutes.patientSymptomCheckerName),
             ),
           ),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _QuickActionCard(
+              cardKey: const Key('chat_doctor_button'),
+              icon: Icons.chat_bubble_rounded,
+              title: 'Chat Dokter',
+              subtitle: 'Tanya dokter',
+              color: scheme.primary,
+              onTap: () => _go(AppRoutes.patientDoctorsName),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -375,22 +344,10 @@ class _DashboardPageState extends State<DashboardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 18, 8, 4),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.show_chart_rounded,
-                  color: Colors.orange,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
               const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,9 +356,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       'Jurnal Kesehatan',
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                    SizedBox(height: 2),
                     Text(
                       'Grafik rekam medis & kondisi fisik',
                       style: TextStyle(fontSize: 11, color: Colors.grey),
@@ -409,38 +367,35 @@ class _DashboardPageState extends State<DashboardPage> {
                   ],
                 ),
               ),
-              InkWell(
+              TextButton(
                 key: const Key('journal_detail_arrow_button'),
-                onTap: () => _go(AppRoutes.patientJournalName),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
+                onPressed: () => _go(AppRoutes.patientJournalName),
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
+                    horizontal: 8,
+                    vertical: 6,
                   ),
-                  decoration: BoxDecoration(
-                    color: scheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Detail',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: scheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 16,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Lihat',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                         color: scheme.primary,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: scheme.primary,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -448,10 +403,11 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.grey.shade200),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -465,54 +421,55 @@ class _DashboardPageState extends State<DashboardPage> {
                         label: 'Tensi',
                         value: bpValue,
                         unit: 'mmHg',
-                        icon: Icons.favorite,
-                        color: Colors.red,
+                        icon: Icons.favorite_rounded,
+                        color: scheme.primary,
                       ),
                       _buildVitalMetric(
                         label: 'Gula Darah',
                         value: bsValue,
                         unit: 'mg/dL',
                         icon: Icons.water_drop_outlined,
-                        color: Colors.green,
+                        color: scheme.primary,
                       ),
                       _buildVitalMetric(
                         label: 'Detak',
                         value: '75',
                         unit: 'bpm',
-                        icon: Icons.monitor_heart,
-                        color: Colors.pink,
+                        icon: Icons.monitor_heart_outlined,
+                        color: scheme.primary,
                       ),
                       _buildVitalMetric(
                         label: 'Berat',
                         value: weightValue,
                         unit: 'kg',
-                        icon: Icons.scale,
-                        color: Colors.blue,
+                        icon: Icons.monitor_weight_outlined,
+                        color: scheme.primary,
                       ),
                     ],
                   ),
                   const Divider(height: 24),
-                  // Category selector pills for chart
+                  // Pemilih kategori grafik
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildChartCategoryChip(
-                          'cat1',
-                          'Tekanan Darah',
-                          scheme,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildChartCategoryChip('cat2', 'Gula Darah', scheme),
-                        const SizedBox(width: 8),
-                        _buildChartCategoryChip('cat3', 'Berat Badan', scheme),
+                        _buildChartCategoryTab('cat1', 'Tekanan Darah', scheme),
+                        _buildChartCategoryTab('cat2', 'Gula Darah', scheme),
+                        _buildChartCategoryTab('cat3', 'Berat Badan', scheme),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
                   // Chart display
-                  _buildMedicalRecordChart(scheme),
-                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F9FC),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: _buildMedicalRecordChart(scheme),
+                  ),
+                  const SizedBox(height: 4),
                 ],
               ),
             ),
@@ -533,27 +490,31 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Column(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 26,
+            height: 26,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 19),
+            child: Icon(icon, color: color, size: 15),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 6),
           Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13.5,
+              height: 1.1,
+            ),
           ),
           Text(
             unit,
-            style: TextStyle(fontSize: 9, color: Colors.grey.shade500),
+            style: TextStyle(fontSize: 9.5, color: Colors.grey.shade500),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: Colors.grey.shade700),
+            style: TextStyle(fontSize: 10.5, color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
         ],
@@ -561,7 +522,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildChartCategoryChip(
+  Widget _buildChartCategoryTab(
     String categoryId,
     String label,
     ColorScheme scheme,
@@ -569,22 +530,30 @@ class _DashboardPageState extends State<DashboardPage> {
     final isSelected = _selectedChartCategoryId == categoryId;
     return InkWell(
       onTap: () => setState(() => _selectedChartCategoryId = categoryId),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? scheme.primary
-              : scheme.surfaceContainerHighest.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? Colors.white : Colors.grey.shade800,
-          ),
+      child: Padding(
+        padding: const EdgeInsets.only(right: 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? scheme.primary : Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 2,
+              width: isSelected ? 22 : 0,
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -611,9 +580,12 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           Row(
             children: [
-              _chartLegendDot(Colors.red.shade400, 'Sistolik'),
+              _chartLegendDot(scheme.primary, 'Sistolik'),
               const SizedBox(width: 14),
-              _chartLegendDot(Colors.blue.shade400, 'Diastolik'),
+              _chartLegendDot(
+                scheme.primary.withValues(alpha: 0.35),
+                'Diastolik',
+              ),
               const Spacer(),
               Text(
                 '7 pengukuran terakhir',
@@ -642,9 +614,9 @@ class _DashboardPageState extends State<DashboardPage> {
                         Text(
                           '${sys.toInt()}',
                           style: TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red.shade700,
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w600,
+                            color: scheme.primary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -653,20 +625,24 @@ class _DashboardPageState extends State<DashboardPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              width: 8,
+                              width: 7,
                               height: sysH,
-                              decoration: _gradientBarDecoration(
-                                Colors.red.shade400,
-                                3,
+                              decoration: BoxDecoration(
+                                color: scheme.primary,
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(3),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 2),
                             Container(
-                              width: 8,
+                              width: 7,
                               height: diaH,
-                              decoration: _gradientBarDecoration(
-                                Colors.blue.shade400,
-                                3,
+                              decoration: BoxDecoration(
+                                color: scheme.primary.withValues(alpha: 0.35),
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(3),
+                                ),
                               ),
                             ),
                           ],
@@ -674,7 +650,10 @@ class _DashboardPageState extends State<DashboardPage> {
                         const SizedBox(height: 4),
                         Text(
                           '${e.date.day}/${e.date.month}',
-                          style: const TextStyle(fontSize: 8),
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            color: Colors.grey.shade600,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -689,7 +668,7 @@ class _DashboardPageState extends State<DashboardPage> {
     } else {
       // Grafik Nilai Tunggal (Gula Darah / Berat Badan)
       final isSugar = _selectedChartCategoryId == 'cat2';
-      final chartColor = isSugar ? Colors.green.shade600 : Colors.blue.shade600;
+      final chartColor = scheme.primary;
       final unitLabel = isSugar ? 'mg/dL' : 'kg';
       final vals = entries.map((e) => e.value).toList();
       final maxV = vals.reduce((a, b) => a > b ? a : b);
@@ -738,24 +717,17 @@ class _DashboardPageState extends State<DashboardPage> {
                         Text(
                           displayVal,
                           style: TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w600,
                             color: chartColor,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Container(
-                          width: 14,
+                          width: 12,
                           height: barH,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                chartColor,
-                                chartColor.withValues(alpha: 0.5),
-                              ],
-                            ),
+                            color: chartColor.withValues(alpha: 0.85),
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(4),
                             ),
@@ -764,7 +736,10 @@ class _DashboardPageState extends State<DashboardPage> {
                         const SizedBox(height: 4),
                         Text(
                           '${e.date.day}/${e.date.month}',
-                          style: const TextStyle(fontSize: 8),
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            color: Colors.grey.shade600,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -828,22 +803,10 @@ class _DashboardPageState extends State<DashboardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 18, 8, 4),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.alarm_rounded,
-                  color: Colors.purple,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
               const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -852,9 +815,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       'Pengingat Obat',
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                    SizedBox(height: 2),
                     Text(
                       'Jadwal konsumsi terdekat & kepatuhan',
                       style: TextStyle(fontSize: 11, color: Colors.grey),
@@ -862,38 +826,35 @@ class _DashboardPageState extends State<DashboardPage> {
                   ],
                 ),
               ),
-              InkWell(
+              TextButton(
                 key: const Key('medication_detail_arrow_button'),
-                onTap: () => _go(AppRoutes.patientMedicationName),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
+                onPressed: () => _go(AppRoutes.patientMedicationName),
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
+                    horizontal: 8,
+                    vertical: 6,
                   ),
-                  decoration: BoxDecoration(
-                    color: scheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Detail',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: scheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 16,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Lihat',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                         color: scheme.primary,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: scheme.primary,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -901,10 +862,11 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.grey.shade200),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -1347,9 +1309,95 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           TextButton(
             onPressed: onSeeAll,
-            child: const Text('Lihat Semua', style: TextStyle(fontSize: 12)),
+            style: TextButton.styleFrom(
+              minimumSize: Size.zero,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text(
+              'Lihat semua',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Kartu aksi cepat pada dashboard (Cek Gejala / Chat Dokter).
+class _QuickActionCard extends StatelessWidget {
+  const _QuickActionCard({
+    required this.cardKey,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  final Key cardKey;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        key: cardKey,
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 19),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
