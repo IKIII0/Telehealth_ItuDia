@@ -73,20 +73,10 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final hsl = HSLColor.fromColor(scheme.primary);
-    final darkerPrimary = hsl
-        .withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0))
-        .toColor();
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [scheme.primary, darkerPrimary],
-          ),
-        ),
+        color: scheme.primary,
         child: Center(
           child: AnimatedBuilder(
             animation: _controller,
@@ -100,11 +90,11 @@ class _SplashScreenState extends State<SplashScreen>
                     children: [
                       // Logo Icon
                       Container(
-                        width: 120,
-                        height: 120,
+                        width: 112,
+                        height: 112,
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(26),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.2),
@@ -113,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                           ],
                         ),
-                        child: AppLogo(size: 70, color: scheme.primary),
+                        child: AppLogo(size: 84, color: scheme.primary),
                       ),
                       const SizedBox(height: 30),
 
