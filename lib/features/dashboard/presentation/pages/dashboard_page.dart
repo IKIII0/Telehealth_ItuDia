@@ -205,8 +205,7 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               IconButton(
                 icon: const Icon(Icons.notifications_outlined, size: 28),
-                onPressed: () =>
-                    showAppSnack(context, 'Tidak ada notifikasi baru'),
+                onPressed: () => _go(AppRoutes.patientNotificationsName),
               ),
               Positioned(
                 right: 10,
@@ -1108,7 +1107,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // ── 3. Schedule list ────────────────────────────────────────────────────────
   Widget _buildScheduleList(ColorScheme scheme) {
-    final gradientEnd = Color.lerp(scheme.primary, Colors.white, 0.35)!;
     return SizedBox(
       height: 140,
       child: ListView.separated(
@@ -1122,11 +1120,11 @@ class _DashboardPageState extends State<DashboardPage> {
             width: 240,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [scheme.primary, gradientEnd]),
+              color: scheme.primary,
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: scheme.primary.withValues(alpha: 0.3),
+                  color: scheme.primary.withValues(alpha: 0.2),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -1297,7 +1295,10 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   isThreeLine: true,
                   trailing: ElevatedButton(
-                    onPressed: () => _go(AppRoutes.patientDoctorsName),
+                    onPressed: () => context.pushNamed(
+                      AppRoutes.patientDoctorDetailName,
+                      pathParameters: {'doctorId': doc.id},
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: scheme.primary,
                       foregroundColor: scheme.onPrimary,
@@ -1312,7 +1313,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                     child: const Text(
-                      'Buat Janji',
+                      'Konsultasi',
                       style: TextStyle(fontSize: 11),
                     ),
                   ),

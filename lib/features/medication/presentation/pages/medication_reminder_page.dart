@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/doctor.dart';
@@ -182,7 +184,8 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
               Icons.notifications_active_outlined,
               color: Colors.white,
             ),
-            onPressed: () {},
+            onPressed: () =>
+                context.pushNamed(AppRoutes.patientNotificationsName),
           ),
         ],
         bottom: TabBar(

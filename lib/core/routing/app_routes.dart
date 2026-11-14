@@ -40,6 +40,9 @@ class AppRoutes {
   static const String patientConsultationPath =
       '/patient/consultation/:doctorId';
 
+  static const String patientNotificationsName = 'patientNotifications';
+  static const String patientNotificationsPath = '/patient/notifications';
+
   static const String patientChatName = 'patientChat';
   static const String patientChatPath = '/patient/chat';
 
