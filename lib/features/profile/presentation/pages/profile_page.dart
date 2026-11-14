@@ -46,8 +46,9 @@ class _ProfilePageState extends State<ProfilePage> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      bottomNavigationBar:
-          widget.showNavBar ? const PatientNavBar(currentIndex: 3) : null,
+      bottomNavigationBar: widget.showNavBar
+          ? const PatientNavBar(currentIndex: 3)
+          : null,
       appBar: AppBar(
         title: const Text('Profil'),
         backgroundColor: scheme.primary,
@@ -165,7 +166,9 @@ class _ProfilePageState extends State<ProfilePage> {
         decoration: BoxDecoration(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.6),
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -244,10 +247,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       Text(
                         rows[i].$2,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -434,10 +434,36 @@ class _ProfilePageState extends State<ProfilePage> {
     final saved = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Profil'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        titlePadding: const EdgeInsets.fromLTRB(28, 28, 28, 8),
+        contentPadding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Theme.of(ctx).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.edit_outlined,
+                size: 22,
+                color: Theme.of(ctx).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 14),
+            const Text(
+              'Edit Profil',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
         content: Form(
           key: formKey,
           child: SingleChildScrollView(
+            padding: const EdgeInsets.only(top: 8),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -447,6 +473,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   decoration: const InputDecoration(
                     labelText: 'Nama',
                     prefixIcon: Icon(Icons.person_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(14)),
+                    ),
                   ),
                   validator: (v) {
                     final value = v?.trim() ?? '';
@@ -455,7 +484,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 20),
                 TextFormField(
                   controller: emailCtrl,
                   keyboardType: TextInputType.emailAddress,
@@ -463,6 +492,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     prefixIcon: Icon(Icons.email_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(14)),
+                    ),
                   ),
                   validator: (v) {
                     final value = v?.trim() ?? '';
@@ -474,13 +506,16 @@ class _ProfilePageState extends State<ProfilePage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 20),
                 TextFormField(
                   controller: phoneCtrl,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
                     labelText: 'Nomor Telepon',
                     prefixIcon: Icon(Icons.phone_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(14)),
+                    ),
                   ),
                   validator: (v) {
                     final value = v?.trim() ?? '';
@@ -497,17 +532,38 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) {
-                Navigator.of(ctx).pop(true);
-              }
-            },
-            child: const Text('Simpan'),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('Batal'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    if (formKey.currentState?.validate() ?? false) {
+                      Navigator.of(ctx).pop(true);
+                    }
+                  },
+                  child: const Text('Simpan'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
