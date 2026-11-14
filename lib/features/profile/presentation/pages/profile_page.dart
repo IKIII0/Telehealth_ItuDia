@@ -64,13 +64,13 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           children: [
             _buildHeader(scheme),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             _buildInfoCard(scheme),
-            const SizedBox(height: 8),
+            const SizedBox(height: 20),
             _buildPreferenceCard(scheme),
-            const SizedBox(height: 8),
+            const SizedBox(height: 20),
             _buildMenuCard(scheme),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -81,7 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildHeader(ColorScheme scheme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32),
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 36),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -91,35 +91,48 @@ class _ProfilePageState extends State<ProfilePage> {
             Color.lerp(scheme.primary, Colors.black, 0.25)!,
           ],
         ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 56,
-            backgroundColor: Colors.white,
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
             child: CircleAvatar(
               radius: 52,
               backgroundColor: scheme.primaryContainer,
-              child: Icon(Icons.person, size: 60, color: scheme.primary),
+              child: Icon(Icons.person, size: 58, color: scheme.primary),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
             _name,
+            textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             _email,
+            textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 14, color: Colors.white70),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
@@ -137,195 +150,247 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // ── Info card ───────────────────────────────────────────────────────────────
-  Widget _buildInfoCard(ColorScheme scheme) {
-    final rows = [
-      {'icon': Icons.phone, 'label': 'Telepon', 'value': _phone},
-      {'icon': Icons.cake, 'label': 'Tanggal Lahir', 'value': _birthDate},
-      {'icon': Icons.wc, 'label': 'Jenis Kelamin', 'value': _gender},
-      {'icon': Icons.location_on, 'label': 'Alamat', 'value': _address},
-      {
-        'icon': Icons.water_drop,
-        'label': 'Golongan Darah',
-        'value': _bloodType,
-      },
-    ];
-
+  // ── Shared card wrapper ─────────────────────────────────────────────────────
+  Widget _sectionCard(
+    ColorScheme scheme, {
+    String? title,
+    IconData? icon,
+    required Widget child,
+    EdgeInsetsGeometry padding = const EdgeInsets.all(20),
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Informasi Pribadi',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const Divider(height: 24),
-              ...rows.map(
-                (r) => Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: padding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (title != null) ...[
+                  Row(
                     children: [
-                      Icon(
-                        r['icon'] as IconData,
-                        size: 20,
-                        color: scheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            r['label'] as String,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            r['value'] as String,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                      if (icon != null) ...[
+                        Icon(icon, size: 22, color: scheme.primary),
+                        const SizedBox(width: 10),
+                      ],
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ),
-            ],
+                  const SizedBox(height: 16),
+                ],
+                child,
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // ── Preference card ─────────────────────────────────────────────────────────
-  Widget _buildPreferenceCard(ColorScheme scheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Text(
-                'Preferensi',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-            SwitchListTile(
-              secondary: Icon(
-                Icons.notifications_outlined,
-                color: scheme.primary,
-              ),
-              title: const Text('Notifikasi'),
-              subtitle: const Text('Terima pengingat jadwal & obat'),
-              value: _notifEnabled,
-              onChanged: (v) => _updatePreference(
-                () => _notifEnabled = v,
-                'Preferensi notifikasi disimpan',
-              ),
-            ),
-            const Divider(height: 1, indent: 16),
-            SwitchListTile(
-              secondary: Icon(Icons.chat_outlined, color: scheme.primary),
-              title: const Text('Pengingat Chat Dokter'),
-              subtitle: const Text('Ingatkan saya saat dokter membalas'),
-              value: _chatReminder,
-              onChanged: (v) => _updatePreference(
-                () => _chatReminder = v,
-                'Preferensi pengingat chat disimpan',
-              ),
-            ),
-            const Divider(height: 1, indent: 16),
-            SwitchListTile(
-              secondary: Icon(Icons.mail_outline, color: scheme.primary),
-              title: const Text('Email Promosi'),
-              subtitle: const Text('Kirim info & penawaran kesehatan'),
-              value: _promoEmail,
-              onChanged: (v) => _updatePreference(
-                () => _promoEmail = v,
-                'Preferensi email promosi disimpan',
-              ),
+  // ── Info card ───────────────────────────────────────────────────────────────
+  Widget _buildInfoCard(ColorScheme scheme) {
+    final rows = [
+      (Icons.phone_outlined, 'Telepon', _phone),
+      (Icons.cake_outlined, 'Tanggal Lahir', _birthDate),
+      (Icons.wc_outlined, 'Jenis Kelamin', _gender),
+      (Icons.location_on_outlined, 'Alamat', _address),
+      (Icons.water_drop_outlined, 'Golongan Darah', _bloodType),
+    ];
+
+    return _sectionCard(
+      scheme,
+      title: 'Informasi Pribadi',
+      icon: Icons.badge_outlined,
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) const Divider(height: 28),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(rows[i].$1, size: 20, color: scheme.primary),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        rows[i].$2,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        rows[i].$3,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
+        ],
+      ),
+    );
+  }
+
+  // ── Preference card ─────────────────────────────────────────────────────────
+  Widget _buildPreferenceCard(ColorScheme scheme) {
+    const tilePadding = EdgeInsets.symmetric(horizontal: 20, vertical: 6);
+    return _sectionCard(
+      scheme,
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Icon(Icons.tune_rounded, size: 22, color: scheme.primary),
+                const SizedBox(width: 10),
+                const Text(
+                  'Preferensi',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SwitchListTile(
+            contentPadding: tilePadding,
+            secondary: Icon(
+              Icons.notifications_outlined,
+              color: scheme.primary,
+            ),
+            title: const Text('Notifikasi'),
+            subtitle: const Text('Terima pengingat jadwal & obat'),
+            value: _notifEnabled,
+            onChanged: (v) => _updatePreference(
+              () => _notifEnabled = v,
+              'Preferensi notifikasi disimpan',
+            ),
+          ),
+          const Divider(height: 1, indent: 20, endIndent: 20),
+          SwitchListTile(
+            contentPadding: tilePadding,
+            secondary: Icon(Icons.chat_outlined, color: scheme.primary),
+            title: const Text('Pengingat Chat Dokter'),
+            subtitle: const Text('Ingatkan saya saat dokter membalas'),
+            value: _chatReminder,
+            onChanged: (v) => _updatePreference(
+              () => _chatReminder = v,
+              'Preferensi pengingat chat disimpan',
+            ),
+          ),
+          const Divider(height: 1, indent: 20, endIndent: 20),
+          SwitchListTile(
+            contentPadding: tilePadding,
+            secondary: Icon(Icons.mail_outline, color: scheme.primary),
+            title: const Text('Email Promosi'),
+            subtitle: const Text('Kirim info & penawaran kesehatan'),
+            value: _promoEmail,
+            onChanged: (v) => _updatePreference(
+              () => _promoEmail = v,
+              'Preferensi email promosi disimpan',
+            ),
+          ),
+        ],
       ),
     );
   }
 
   // ── Menu card ───────────────────────────────────────────────────────────────
   Widget _buildMenuCard(ColorScheme scheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Column(
-          children: [
-            _menuItem(
-              scheme,
-              Icons.edit,
-              'Edit Profil',
-              onTap: _openEditProfile,
+    return _sectionCard(
+      scheme,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        children: [
+          _menuItem(
+            scheme,
+            Icons.edit_outlined,
+            'Edit Profil',
+            onTap: _openEditProfile,
+          ),
+          _divider(),
+          _menuItem(
+            scheme,
+            Icons.lock_outline,
+            'Ganti Password',
+            onTap: () => showAppSnack(
+              context,
+              'Fitur ganti password akan segera hadir',
+              success: false,
             ),
-            _divider(),
-            _menuItem(
-              scheme,
-              Icons.lock_outline,
-              'Ganti Password',
-              onTap: () => showAppSnack(
-                context,
-                'Fitur ganti password akan segera hadir',
-                success: false,
-              ),
+          ),
+          _divider(),
+          _menuItem(
+            scheme,
+            Icons.help_outline,
+            'Bantuan',
+            onTap: () => showAppSnack(
+              context,
+              'Fitur bantuan akan segera hadir',
+              success: false,
             ),
-            _divider(),
-            _menuItem(
-              scheme,
-              Icons.help_outline,
-              'Bantuan',
-              onTap: () => showAppSnack(
-                context,
-                'Fitur bantuan akan segera hadir',
-                success: false,
-              ),
+          ),
+          _divider(),
+          _menuItem(
+            scheme,
+            Icons.info_outline,
+            'Tentang Aplikasi',
+            onTap: () => showAboutDialog(
+              context: context,
+              applicationName: 'Telehealth App',
+              applicationVersion: '1.0.0',
+              applicationLegalese: '© 2026 Telehealth App',
             ),
-            _divider(),
-            _menuItem(
-              scheme,
-              Icons.info_outline,
-              'Tentang Aplikasi',
-              onTap: () => showAboutDialog(
-                context: context,
-                applicationName: 'Telehealth App',
-                applicationVersion: '1.0.0',
-                applicationLegalese: '© 2026 Telehealth App',
-              ),
-            ),
-            _divider(),
-            _menuItem(
-              scheme,
-              Icons.logout,
-              'Keluar',
-              color: scheme.error,
-              onTap: _confirmLogout,
-            ),
-          ],
-        ),
+          ),
+          _divider(),
+          _menuItem(
+            scheme,
+            Icons.logout,
+            'Keluar',
+            color: scheme.error,
+            onTap: _confirmLogout,
+          ),
+        ],
       ),
     );
   }
@@ -338,6 +403,7 @@ class _ProfilePageState extends State<ProfilePage> {
     Color? color,
   }) {
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       leading: Icon(icon, color: color ?? scheme.primary),
       title: Text(
         label,
@@ -351,7 +417,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _divider() => const Divider(height: 1, indent: 56);
+  Widget _divider() => const Divider(height: 1, indent: 20, endIndent: 20);
 
   // ── Actions ─────────────────────────────────────────────────────────────────
   void _updatePreference(VoidCallback apply, String message) {
