@@ -5,15 +5,10 @@ import 'package:Telehealth/core/routing/app_routes.dart';
 
 /// Bottom Navigation Bar utama untuk navigasi pasien:
 /// - Index 0: Home (Dashboard)
-/// - Index 1: Cek Gejala
-/// - Index 2: Chat Dokter
-/// - Index 3: Profil
+/// - Index 1: Chat Dokter
+/// - Index 2: Profil
 class PatientNavBar extends StatelessWidget {
-  const PatientNavBar({
-    super.key,
-    required this.currentIndex,
-    this.onTap,
-  });
+  const PatientNavBar({super.key, required this.currentIndex, this.onTap});
 
   /// Indeks tab yang aktif saat ini.
   final int currentIndex;
@@ -34,12 +29,9 @@ class PatientNavBar extends StatelessWidget {
         context.goNamed(AppRoutes.patientDashboardName);
         break;
       case 1:
-        context.goNamed(AppRoutes.patientSymptomCheckerName);
-        break;
-      case 2:
         context.goNamed(AppRoutes.patientChatName);
         break;
-      case 3:
+      case 2:
         context.goNamed(AppRoutes.patientProfileName);
         break;
     }
@@ -76,18 +68,11 @@ class PatientNavBar extends StatelessWidget {
             selectedIcon: Icon(Icons.home_rounded, color: scheme.primary),
             label: 'Home',
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.medical_services_outlined),
-            selectedIcon: Icon(
-              Icons.medical_services_rounded,
-              color: scheme.primary,
-            ),
-            label: 'Cek Gejala',
-          ),
+
           NavigationDestination(
             icon: const Icon(Icons.chat_outlined),
             selectedIcon: Icon(Icons.chat_rounded, color: scheme.primary),
-            label: 'Chat Dokter',
+            label: 'Chat',
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline_rounded),
