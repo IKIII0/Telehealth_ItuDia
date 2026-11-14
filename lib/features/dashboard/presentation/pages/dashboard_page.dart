@@ -754,6 +754,17 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  BoxDecoration _gradientBarDecoration(Color color, double radius) {
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [color, color.withValues(alpha: 0.5)],
+      ),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
+    );
+  }
+
   Widget _chartLegendDot(Color color, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,

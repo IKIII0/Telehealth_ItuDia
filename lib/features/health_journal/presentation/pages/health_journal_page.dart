@@ -216,6 +216,15 @@ class _HealthJournalPageState extends State<HealthJournalPage>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        Text(
+                          '${sys.toInt()}',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -257,7 +266,9 @@ class _HealthJournalPageState extends State<HealthJournalPage>
           .map((v) => decimals ? v.toStringAsFixed(1) : v.toInt().toString())
           .toList(),
       dateLabels: entries.map((e) => _shortDate(e.date)).toList(),
-      color: _categoryColor(category.id),
+      color: category.id == 'cat2'
+          ? Colors.green.shade600
+          : Colors.blue.shade600,
     );
   }
 
@@ -283,16 +294,21 @@ class _HealthJournalPageState extends State<HealthJournalPage>
                   children: [
                     Text(
                       valueLabels[i],
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 9,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
+                        color: color,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Container(
                       height: h,
                       decoration: BoxDecoration(
-                        color: color,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [color, color.withValues(alpha: 0.5)],
+                        ),
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(5),
                         ),
@@ -318,7 +334,11 @@ class _HealthJournalPageState extends State<HealthJournalPage>
     width: width,
     height: height,
     decoration: BoxDecoration(
-      color: color,
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [color, color.withValues(alpha: 0.5)],
+      ),
       borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
     ),
   );
