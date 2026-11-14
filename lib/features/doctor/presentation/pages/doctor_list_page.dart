@@ -117,7 +117,8 @@ class _DoctorListPageState extends State<DoctorListPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-            onPressed: () {},
+            onPressed: () =>
+                context.pushNamed(AppRoutes.patientNotificationsName),
           ),
         ],
       ),

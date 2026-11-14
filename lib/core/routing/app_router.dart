@@ -33,6 +33,7 @@ import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_medi
 import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_patient_monitoring_page.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/widgets/admin_shell_scaffold.dart';
 import 'package:Telehealth/features/medication/presentation/pages/medication_reminder_page.dart';
+import 'package:Telehealth/features/notification/presentation/pages/notification_page.dart';
 import 'package:Telehealth/features/profile/presentation/pages/profile_page.dart';
 import 'package:Telehealth/features/symptom_checker/presentation/pages/symptom_checker_page.dart';
 
@@ -148,6 +149,11 @@ class AppRouter {
             doctor: extra is Doctor ? extra : null,
           );
         },
+      ),
+      GoRoute(
+        name: AppRoutes.patientNotificationsName,
+        path: AppRoutes.patientNotificationsPath,
+        builder: (context, state) => const NotificationPage(),
       ),
       GoRoute(
         name: AppRoutes.patientChatRoomName,

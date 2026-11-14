@@ -205,8 +205,7 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               IconButton(
                 icon: const Icon(Icons.notifications_outlined, size: 28),
-                onPressed: () =>
-                    showAppSnack(context, 'Tidak ada notifikasi baru'),
+                onPressed: () => _go(AppRoutes.patientNotificationsName),
               ),
               Positioned(
                 right: 10,
