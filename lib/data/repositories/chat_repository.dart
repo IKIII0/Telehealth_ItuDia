@@ -169,8 +169,10 @@ class ChatRepository {
   }
 
   /// Balasan otomatis dari lawan bicara (untuk keperluan demo).
-  Future<ChatMessage> autoReply(String conversationId) async {
-    final text = _cannedReply(conversationId);
+  ///
+  /// [text] bisa diisi untuk pesan pembuka sesi konsultasi.
+  Future<ChatMessage> autoReply(String conversationId, {String? text}) async {
+    final body = text ?? _cannedReply(conversationId);
     final time = _now();
     final db = _db;
     if (db == null) {
@@ -178,7 +180,7 @@ class ChatRepository {
         final message = ChatMessage(
           id: _nextId(),
           conversationId: conversationId,
-          text: text,
+          text: body,
           isMe: false,
           time: time,
         );
@@ -191,7 +193,7 @@ class ChatRepository {
         .from('chat_messages')
         .insert({
           'conversation_id': conversationId,
-          'body': text,
+          'body': body,
           'is_me': false,
           'time_label': time,
         })

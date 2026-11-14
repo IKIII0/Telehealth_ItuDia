@@ -182,7 +182,7 @@ class _ConversationListPageState extends State<ConversationListPage>
       ),
       body: _buildBody(),
       bottomNavigationBar: widget.showNavBar
-          ? const PatientNavBar(currentIndex: 1)
+          ? const PatientNavBar(currentIndex: 2)
           : null,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
