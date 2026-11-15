@@ -1,22 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Ikon splash untuk Android 12+ (windowSplashScreenAnimatedIcon).
      Android 12 memaksa mask lingkaran: hanya area 2/3 diameter kanvas yang
-     terlihat. Rounded square di bawah sengaja dibuat sedikit lebih kecil
-     dari mask agar keempat sudutnya tidak terpotong, sehingga tampil sebagai
-     persegi bersudut melengkung (bukan lingkaran) dengan ukuran maksimum
-     yang aman. -->
+     terlihat. Group diperkecil agar kotak putih tampil seukuran logo pada
+     splash Flutter, bukan memenuhi layar. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="120dp"
     android:height="120dp"
     android:viewportWidth="120"
     android:viewportHeight="120">
     <group
-        android:scaleX="0.66"
-        android:scaleY="0.66"
-        android:translateX="20.4"
-        android:translateY="20.4">
-        <!-- Rounded square: sisi 109, radius 42 (dalam koordinat 120).
-             Setelah outer scale 0.66, sudut terjauh ±39.4 < radius mask 40. -->
+        android:scaleX="0.45"
+        android:scaleY="0.45"
+        android:translateX="33"
+        android:translateY="33">
+        <!-- Rounded square: sisi 109, radius 42 (dalam koordinat 120). -->
         <path
             android:fillColor="@color/splash_logo_background"
             android:pathData="M46.5,5.5 L73.5,5.5 A42,42 0 0 1 114.5,46.5 L114.5,73.5 A42,42 0 0 1 73.5,114.5 L46.5,114.5 A42,42 0 0 1 5.5,73.5 L5.5,46.5 A42,42 0 0 1 46.5,5.5 Z" />

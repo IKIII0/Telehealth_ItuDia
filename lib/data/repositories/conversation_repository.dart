@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/supabase/supabase_config.dart';
 import '../models/conversation.dart';
+import '../models/doctor.dart';
 import 'simulated_api.dart';
 import 'supabase_mappers.dart';
 
@@ -125,6 +126,62 @@ class ConversationRepository {
         .eq('id', id)
         .maybeSingle();
     return row == null ? null : conversationFromRow(row);
+  }
+
+  /// Mengambil atau membuat percakapan dengan dokter.
+  ///
+  /// Dipakai setelah pembayaran konsultasi: chat langsung dibuka tanpa
+  /// perlu menjadwalkan janji temu.
+  Future<Conversation> ensureForDoctor(Doctor doctor) async {
+    final id = 'conv_${doctor.id}';
+    final db = _db;
+
+    if (db == null) {
+      return SimulatedApi.run(() {
+        for (final conversation in _conversations) {
+          if (conversation.id == id) return conversation;
+        }
+        final conversation = Conversation(
+          id: id,
+          name: doctor.name,
+          role: 'Dokter',
+          type: 'dokter',
+          lastMessage: 'Konsultasi baru dimulai',
+          time: 'Baru',
+          unreadCount: 0,
+          isOnline: doctor.available,
+          initials: doctor.initials,
+          color: doctor.avatarColor,
+        );
+        _conversations.insert(0, conversation);
+        return conversation;
+      });
+    }
+
+    final existing = await db
+        .from('conversations')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    if (existing != null) return conversationFromRow(existing);
+
+    final row = await db
+        .from('conversations')
+        .insert({
+          'id': id,
+          'name': doctor.name,
+          'role': 'Dokter',
+          'type': 'dokter',
+          'last_message': 'Konsultasi baru dimulai',
+          'time_label': 'Baru',
+          'unread_count': 0,
+          'is_online': doctor.available,
+          'initials': doctor.initials,
+          'color': colorToDb(doctor.avatarColor),
+        })
+        .select()
+        .single();
+    return conversationFromRow(row);
   }
 
   Future<void> delete(String id) async {

@@ -426,161 +426,22 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _openEditProfile() async {
-    final formKey = GlobalKey<FormState>();
-    final nameCtrl = TextEditingController(text: _name);
-    final emailCtrl = TextEditingController(text: _email);
-    final phoneCtrl = TextEditingController(text: _phone);
-
-    final saved = await showDialog<bool>(
+    final result = await showDialog<_ProfileEditResult>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        titlePadding: const EdgeInsets.fromLTRB(28, 28, 28, 8),
-        contentPadding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
-        actionsPadding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Theme.of(ctx).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.edit_outlined,
-                size: 22,
-                color: Theme.of(ctx).colorScheme.primary,
-              ),
-            ),
-            const SizedBox(width: 14),
-            const Text(
-              'Edit Profil',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameCtrl,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama',
-                    prefixIcon: Icon(Icons.person_outline),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(14)),
-                    ),
-                  ),
-                  validator: (v) {
-                    final value = v?.trim() ?? '';
-                    if (value.isEmpty) return 'Nama wajib diisi';
-                    if (value.length < 3) return 'Nama minimal 3 karakter';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(14)),
-                    ),
-                  ),
-                  validator: (v) {
-                    final value = v?.trim() ?? '';
-                    if (value.isEmpty) return 'Email wajib diisi';
-                    final valid = RegExp(
-                      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                    ).hasMatch(value);
-                    if (!valid) return 'Format email tidak valid';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: phoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Nomor Telepon',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(14)),
-                    ),
-                  ),
-                  validator: (v) {
-                    final value = v?.trim() ?? '';
-                    if (value.isEmpty) return 'Nomor telepon wajib diisi';
-                    final digits = value.replaceAll(RegExp(r'\D'), '');
-                    if (digits.length < 9) {
-                      return 'Nomor telepon minimal 9 digit';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('Batal'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () {
-                    if (formKey.currentState?.validate() ?? false) {
-                      Navigator.of(ctx).pop(true);
-                    }
-                  },
-                  child: const Text('Simpan'),
-                ),
-              ),
-            ],
-          ),
-        ],
+      builder: (_) => _EditProfileDialog(
+        initialName: _name,
+        initialEmail: _email,
+        initialPhone: _phone,
       ),
     );
 
-    if (saved == true && mounted) {
-      setState(() {
-        _name = nameCtrl.text.trim();
-        _email = emailCtrl.text.trim();
-        _phone = phoneCtrl.text.trim();
-      });
-      showAppSnack(context, 'Profil berhasil diperbarui');
-    }
-
-    nameCtrl.dispose();
-    emailCtrl.dispose();
-    phoneCtrl.dispose();
+    if (result == null || !mounted) return;
+    setState(() {
+      _name = result.name;
+      _email = result.email;
+      _phone = result.phone;
+    });
+    showAppSnack(context, 'Profil berhasil diperbarui');
   }
 
   Future<void> _confirmLogout() async {
@@ -595,5 +456,214 @@ class _ProfilePageState extends State<ProfilePage> {
     await AuthRepository.instance.signOut();
     if (!mounted) return;
     context.goNamed(AppRoutes.loginName);
+  }
+}
+
+/// Hasil pengisian form edit profil.
+class _ProfileEditResult {
+  const _ProfileEditResult({
+    required this.name,
+    required this.email,
+    required this.phone,
+  });
+
+  final String name;
+  final String email;
+  final String phone;
+}
+
+/// Dialog edit profil sebagai widget berstate sendiri.
+///
+/// Controller dimiliki dan dibuang oleh dialog ini, sehingga tidak ada
+/// controller yang dipakai setelah dibuang saat dialog ditutup (penyebab
+/// error `_dependents.isEmpty`).
+class _EditProfileDialog extends StatefulWidget {
+  const _EditProfileDialog({
+    required this.initialName,
+    required this.initialEmail,
+    required this.initialPhone,
+  });
+
+  final String initialName;
+  final String initialEmail;
+  final String initialPhone;
+
+  @override
+  State<_EditProfileDialog> createState() => _EditProfileDialogState();
+}
+
+class _EditProfileDialogState extends State<_EditProfileDialog> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _emailCtrl;
+  late final TextEditingController _phoneCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.initialName);
+    _emailCtrl = TextEditingController(text: widget.initialEmail);
+    _phoneCtrl = TextEditingController(text: widget.initialPhone);
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _phoneCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    _closeWith(
+      _ProfileEditResult(
+        name: _nameCtrl.text.trim(),
+        email: _emailCtrl.text.trim(),
+        phone: _phoneCtrl.text.trim(),
+      ),
+    );
+  }
+
+  /// Lepas fokus input sebelum menutup dialog.
+  ///
+  /// TextField yang masih fokus saat dialog dibuang membuat `TapRegionSurface`
+  /// melepas dependents setelah elemennya unmount sehingga memicu assertion
+  /// `_dependents.isEmpty` pada framework.
+  void _closeWith([_ProfileEditResult? result]) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    Navigator.of(context).pop(result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      titlePadding: const EdgeInsets.fromLTRB(28, 28, 28, 8),
+      contentPadding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
+      actionsPadding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.edit_outlined, size: 22, color: scheme.primary),
+          ),
+          const SizedBox(width: 14),
+          const Text(
+            'Edit Profil',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(top: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nameCtrl,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'Nama',
+                  prefixIcon: Icon(Icons.person_outline),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(14)),
+                  ),
+                ),
+                validator: (v) {
+                  final value = v?.trim() ?? '';
+                  if (value.isEmpty) return 'Nama wajib diisi';
+                  if (value.length < 3) return 'Nama minimal 3 karakter';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(14)),
+                  ),
+                ),
+                validator: (v) {
+                  final value = v?.trim() ?? '';
+                  if (value.isEmpty) return 'Email wajib diisi';
+                  final valid = RegExp(
+                    r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                  ).hasMatch(value);
+                  if (!valid) return 'Format email tidak valid';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Nomor Telepon',
+                  prefixIcon: Icon(Icons.phone_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(14)),
+                  ),
+                ),
+                validator: (v) {
+                  final value = v?.trim() ?? '';
+                  if (value.isEmpty) return 'Nomor telepon wajib diisi';
+                  final digits = value.replaceAll(RegExp(r'\D'), '');
+                  if (digits.length < 9) {
+                    return 'Nomor telepon minimal 9 digit';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => _closeWith(),
+                child: const Text('Batal'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _submit,
+                child: const Text('Simpan'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }

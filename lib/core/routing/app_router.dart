@@ -7,6 +7,7 @@ import 'package:Telehealth/core/widgets/doctor_shell_scaffold.dart';
 import 'package:Telehealth/core/widgets/patient_shell_scaffold.dart';
 // ignore_for_file: directives_ordering
 import 'package:Telehealth/data/models/user.dart';
+import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/login_page.dart';
 import 'package:Telehealth/features/authentication/presentation/pages/register_page.dart';
@@ -19,6 +20,7 @@ import 'package:Telehealth/features/chat/presentation/pages/conversation_list_pa
 import 'package:Telehealth/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_detail_page.dart';
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_list_page.dart';
+import 'package:Telehealth/features/consultation/presentation/pages/consultation_checkout_page.dart';
 import 'package:Telehealth/features/consultation/presentation/pages/consultation_list_page.dart';
 import 'package:Telehealth/features/consultation/presentation/pages/consultation_session_page.dart';
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_dashboard_page.dart';
@@ -31,6 +33,7 @@ import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_medi
 import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_patient_monitoring_page.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/widgets/admin_shell_scaffold.dart';
 import 'package:Telehealth/features/medication/presentation/pages/medication_reminder_page.dart';
+import 'package:Telehealth/features/notification/presentation/pages/notification_page.dart';
 import 'package:Telehealth/features/profile/presentation/pages/profile_page.dart';
 import 'package:Telehealth/features/symptom_checker/presentation/pages/symptom_checker_page.dart';
 
@@ -135,6 +138,22 @@ class AppRouter {
         path: AppRoutes.patientDoctorDetailPath,
         builder: (context, state) =>
             DoctorDetailPage(doctorId: state.pathParameters['doctorId']!),
+      ),
+      GoRoute(
+        name: AppRoutes.patientConsultationName,
+        path: AppRoutes.patientConsultationPath,
+        builder: (context, state) {
+          final extra = state.extra;
+          return ConsultationCheckoutPage(
+            doctorId: state.pathParameters['doctorId']!,
+            doctor: extra is Doctor ? extra : null,
+          );
+        },
+      ),
+      GoRoute(
+        name: AppRoutes.patientNotificationsName,
+        path: AppRoutes.patientNotificationsPath,
+        builder: (context, state) => const NotificationPage(),
       ),
       GoRoute(
         name: AppRoutes.patientChatRoomName,

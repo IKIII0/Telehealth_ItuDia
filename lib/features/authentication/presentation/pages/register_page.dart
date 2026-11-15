@@ -135,16 +135,19 @@ class _RegisterPageState extends State<RegisterPage> {
             ? int.tryParse(_experienceController.text.trim())
             : null,
       );
-      final user = await AuthRepository.instance.register(
+      await AuthRepository.instance.register(
         data: data,
         password: _passwordController.text,
       );
+      // Pendaftaran tidak boleh langsung masuk: sesi dibuat Firebase saat
+      // sign-up, jadi akhiri sesi agar pengguna login secara eksplisit.
+      await AuthRepository.instance.signOut();
       if (!mounted) {
         return;
       }
-      showAppSnack(context, 'Akun berhasil dibuat');
       _resetForm();
-      context.go(AppRoutes.homePathFor(user.role));
+      showAppSnack(context, 'Akun berhasil dibuat. Silakan masuk.');
+      context.goNamed(AppRoutes.loginName);
     } on AuthException catch (e) {
       if (!mounted) {
         return;

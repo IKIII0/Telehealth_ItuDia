@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/doctor.dart';
@@ -182,7 +184,8 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
               Icons.notifications_active_outlined,
               color: Colors.white,
             ),
-            onPressed: () {},
+            onPressed: () =>
+                context.pushNamed(AppRoutes.patientNotificationsName),
           ),
         ],
         bottom: TabBar(
@@ -273,13 +276,6 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -425,13 +421,6 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -522,15 +511,8 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.grey.shade200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,10 +526,10 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                 Container(
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: scheme.primaryContainer,
+                    color: medColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(med.icon, color: scheme.primary, size: 22),
+                  child: Icon(med.icon, color: medColor, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -573,11 +555,11 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                             ),
                             decoration: BoxDecoration(
                               color: allTaken
-                                  ? const Color(0xFF4CAF50)
+                                  ? const Color(0xFFE7F4EC)
                                   : someTaken
-                                  ? const Color(0xFFFF9800)
-                                  : const Color(0xFF9E9E9E),
-                              borderRadius: BorderRadius.circular(8),
+                                  ? const Color(0xFFFDF1E0)
+                                  : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               allTaken
@@ -585,10 +567,14 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                                   : someTaken
                                   ? 'Sebagian'
                                   : 'Belum',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: allTaken
+                                    ? const Color(0xFF2E6B4F)
+                                    : someTaken
+                                    ? const Color(0xFF9A5B00)
+                                    : Colors.grey.shade600,
                               ),
                             ),
                           ),
@@ -706,7 +692,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                     ),
                     decoration: BoxDecoration(
                       color: isTaken
-                          ? const Color(0xFF4CAF50)
+                          ? const Color(0xFFE7F4EC)
                           : scheme.primaryContainer,
                       borderRadius: BorderRadius.circular(6),
                     ),
@@ -714,20 +700,21 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (isTaken)
-                          if (isTaken)
-                            const Padding(
-                              padding: EdgeInsets.only(right: 4),
-                              child: Icon(
-                                Icons.check_circle,
-                                size: 16,
-                                color: Colors.white,
-                              ),
+                          const Padding(
+                            padding: EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.check_circle,
+                              size: 14,
+                              color: Color(0xFF2E6B4F),
                             ),
+                          ),
                         Text(
                           sched.hour,
                           style: TextStyle(
-                            fontSize: 12,
-                            color: isTaken ? Colors.white : scheme.primary,
+                            fontSize: 11.5,
+                            color: isTaken
+                                ? const Color(0xFF2E6B4F)
+                                : scheme.primary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
