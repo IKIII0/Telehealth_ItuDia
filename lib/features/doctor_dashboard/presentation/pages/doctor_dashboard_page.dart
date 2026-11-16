@@ -221,9 +221,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                 setState(() => _isOnline = !_isOnline);
                 showAppSnack(
                   context,
-                  _isOnline
-                      ? 'Status: Online & Siap Menerima Pasien'
-                      : 'Status: Istirahat / Sibuk',
+                  _isOnline ? 'Status: Aktif' : 'Status: Istirahat',
                 );
               },
               borderRadius: BorderRadius.circular(20),
@@ -258,7 +256,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () => showAppSnack(
               context,
-              'Ada ${pendingRequests.length} permintaan konsultasi baru yang menunggu konfirmasi Anda.',
+              '${pendingRequests.length} permintaan konsultasi baru',
             ),
           ),
           Padding(
@@ -299,8 +297,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
               // ── 2. Jadwal Kerja Dokter ────────────────────────────────────
               _buildSectionTitle(
                 context,
-                title: 'Jadwal Kerja & Praktik Dokter',
-                subtitle: 'Jam operasional poli & telekonsultasi hari ini',
+                title: 'Jadwal Praktik',
                 actionLabel: 'Lihat Semua',
                 onAction: () => _showWeeklyScheduleModal(context, profile),
               ),
@@ -311,8 +308,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
               // ── 3. Daftar Pasien yang Meminta Sesi Konsultasi ─────────────
               _buildSectionTitle(
                 context,
-                title: 'Permintaan Konsultasi Pasien',
-                subtitle: 'Menunggu konfirmasi sesi konsultasi',
+                title: 'Permintaan Konsultasi',
                 badgeCount: pendingRequests.length,
               ),
               const SizedBox(height: 8),
@@ -320,17 +316,9 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
               const SizedBox(height: 20),
 
               // ── 4. Sesi Konsultasi Terkonfirmasi / Hari Ini ───────────────
-              _buildSectionTitle(
-                context,
-                title: 'Jadwal Sesi Pasien Hari Ini',
-                subtitle: 'Konsultasi yang telah terkonfirmasi',
-              ),
+              _buildSectionTitle(context, title: 'Sesi Hari Ini'),
               const SizedBox(height: 8),
               _buildConfirmedScheduleList(scheme),
-              const SizedBox(height: 20),
-
-              // ── 5. Aksi Cepat Medis Dokter ────────────────────────────────
-              _buildQuickActions(scheme),
               const SizedBox(height: 28),
             ],
           ),
@@ -385,14 +373,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Selamat Bertugas,',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
                     Text(
                       name ?? 'dr. Rifki Al Sauqy, Sp.JP',
                       style: const TextStyle(
@@ -477,7 +457,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
   Widget _buildSectionTitle(
     BuildContext context, {
     required String title,
-    required String subtitle,
     int? badgeCount,
     String? actionLabel,
     VoidCallback? onAction,
@@ -524,12 +503,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                     ),
                   ],
                 ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -803,13 +776,8 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Semua Permintaan Telah Ditangani',
+                  'Tidak ada permintaan baru',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Belum ada permintaan konsultasi pasien baru saat ini.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -1017,7 +985,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('Terima Sesi'),
+                      child: const Text('Terima'),
                     ),
                   ],
                 ),
@@ -1188,95 +1156,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  // ── Aksi Cepat Medis ────────────────────────────────────────────────────────
-  Widget _buildQuickActions(ColorScheme scheme) {
-    final actions = [
-      {
-        'icon': Icons.edit_document,
-        'label': 'Resep Obat\nElektronik',
-        'color': Colors.blue.shade700,
-        'action': () => showAppSnack(context, 'Modul e-resep siap dibuat'),
-      },
-      {
-        'icon': Icons.folder_shared_outlined,
-        'label': 'Rekam Medis\nPasien',
-        'color': Colors.teal.shade700,
-        'action': () => showAppSnack(context, 'Arsip rekam medis pasien'),
-      },
-      {
-        'icon': Icons.calendar_month,
-        'label': 'Atur Jadwal\nPraktik',
-        'color': Colors.indigo.shade700,
-        'action': _goToProfile,
-      },
-      {
-        'icon': Icons.manage_accounts_outlined,
-        'label': 'Profil &\nKredensial',
-        'color': Colors.deepPurple.shade700,
-        'action': _goToProfile,
-      },
-    ];
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Aksi Cepat Dokter',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: actions.map((act) {
-                return Expanded(
-                  child: InkWell(
-                    onTap: act['action'] as VoidCallback,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 6,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircleAvatar(
-                            radius: 22,
-                            backgroundColor: (act['color'] as Color).withValues(
-                              alpha: 0.1,
-                            ),
-                            child: Icon(
-                              act['icon'] as IconData,
-                              color: act['color'] as Color,
-                              size: 22,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            act['label'] as String,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
       ),
     );
   }
