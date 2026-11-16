@@ -529,144 +529,147 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
   Widget _buildWorkScheduleCard(ColorScheme scheme, DoctorProfile profile) {
     final scheduleToday =
         profile.practiceSchedule['Senin - Jumat'] ?? '09:00 - 15:00';
+    const filled = 8;
+    const quota = 12;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: scheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.access_time_filled,
-                    color: scheme.primary,
-                    size: 20,
-                  ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: _cardDecoration(scheme),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Shift Praktik Hari Ini',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Hari Ini: $scheduleToday WIB',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                child: Icon(
+                  Icons.access_time_rounded,
+                  color: scheme.primary,
+                  size: 22,
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.green.withValues(alpha: 0.3),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Praktik Hari Ini',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.check_circle, size: 12, color: Colors.green),
-                      SizedBox(width: 4),
-                      Text(
-                        'Sedang Bertugas',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                        ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$scheduleToday WIB',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const Divider(height: 22),
-            Row(
-              children: [
-                const Icon(
-                  Icons.location_on_outlined,
-                  size: 16,
-                  color: Colors.grey,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
                 ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'Poli Rawat Jalan & Konsultasi Telehealth • ${profile.hospital}',
-                    style: const TextStyle(fontSize: 12, color: Colors.black87),
-                  ),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Kuota Pasien
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Kapasitas Antrean Konsultasi',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '8 dari 12 Pasien (Sisa 4)',
+                child: const Text(
+                  'Bertugas',
                   style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.w600,
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: scheme.primary,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: 8 / 12,
-                minHeight: 8,
-                backgroundColor: Colors.grey.shade200,
-                color: scheme.primary,
               ),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: () => _showWeeklyScheduleModal(context, profile),
-              icon: const Icon(Icons.calendar_today, size: 16),
-              label: const Text('Lihat Seluruh Jadwal Praktik Mingguan'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 38),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(
+                Icons.local_hospital_outlined,
+                size: 18,
+                color: Colors.grey[600],
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  profile.hospital,
+                  style: const TextStyle(fontSize: 13, color: Colors.black87),
                 ),
               ),
+            ],
+          ),
+          const Divider(height: 32),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Antrean',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+              ),
+              Text(
+                '$filled / $quota pasien',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: scheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: filled / quota,
+              minHeight: 8,
+              backgroundColor: Colors.grey.shade200,
+              color: scheme.primary,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            onPressed: () => _showWeeklyScheduleModal(context, profile),
+            icon: const Icon(Icons.calendar_today, size: 16),
+            label: const Text('Jadwal Mingguan'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  BoxDecoration _cardDecoration(ColorScheme scheme, {Color? borderColor}) {
+    return BoxDecoration(
+      color: scheme.surface,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: borderColor ?? scheme.outlineVariant.withValues(alpha: 0.6),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ],
     );
   }
 
@@ -762,26 +765,23 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     List<_ConsultationRequest> pendingRequests,
   ) {
     if (pendingRequests.isEmpty) {
-      return Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: Column(
-              children: [
-                Icon(
-                  Icons.check_circle_outline,
-                  size: 40,
-                  color: Colors.green.shade400,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Tidak ada permintaan baru',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-              ],
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+        decoration: _cardDecoration(scheme),
+        child: Column(
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              size: 44,
+              color: Colors.green.shade400,
             ),
-          ),
+            const SizedBox(height: 12),
+            const Text(
+              'Tidak ada permintaan baru',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+          ],
         ),
       );
     }
@@ -789,208 +789,159 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     return Column(
       children: pendingRequests.map((req) {
         final isHighPriority = req.priority == 'Prioritas Tinggi';
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(
-              color: isHighPriority
-                  ? Colors.red.withValues(alpha: 0.35)
-                  : Colors.transparent,
-            ),
+        final isVideo = req.method == 'Video Call';
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(20),
+          decoration: _cardDecoration(
+            scheme,
+            borderColor: isHighPriority
+                ? Colors.red.withValues(alpha: 0.35)
+                : null,
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                      child: Icon(Icons.person, color: scheme.primary),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: scheme.primaryContainer.withValues(
+                      alpha: 0.6,
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  '${req.patientName} (${req.age} th)',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '• ${req.gender}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
+                    child: Icon(Icons.person, color: scheme.primary),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          req.patientName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.access_time,
-                                size: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                req.requestedTime,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${req.age} th • ${req.gender}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ),
+                  if (isHighPriority)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
+                        horizontal: 10,
+                        vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: isHighPriority
-                            ? Colors.red.shade50
-                            : Colors.blue.shade50,
+                        color: Colors.red.shade50,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isHighPriority
-                              ? Colors.red.shade200
-                              : Colors.blue.shade200,
-                        ),
                       ),
                       child: Text(
-                        req.priority,
+                        'Prioritas',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: isHighPriority
-                              ? Colors.red.shade700
-                              : Colors.blue.shade700,
+                          color: Colors.red.shade700,
                         ),
                       ),
                     ),
-                  ],
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest.withValues(
-                      alpha: 0.35,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.medical_information_outlined,
-                        size: 16,
-                        color: scheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          req.complaint,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF263238),
-                            height: 1.35,
-                          ),
-                        ),
-                      ),
-                    ],
+                child: Text(
+                  req.complaint,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF263238),
+                    height: 1.45,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              req.method == 'Video Call'
-                                  ? Icons.videocam_outlined
-                                  : Icons.chat_outlined,
-                              size: 13,
-                              color: Colors.grey.shade700,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                req.method,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.grey.shade700,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Icon(
+                    isVideo ? Icons.videocam_outlined : Icons.chat_outlined,
+                    size: 18,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    req.method,
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(width: 16),
+                  Icon(
+                    Icons.access_time,
+                    size: 18,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      req.requestedTime,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: 8),
-                    OutlinedButton(
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
                       onPressed: () => _rejectRequest(req),
                       style: OutlinedButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
+                        minimumSize: const Size.fromHeight(48),
                         foregroundColor: scheme.error,
                         side: BorderSide(
                           color: scheme.error.withValues(alpha: 0.5),
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: const Text('Tolak'),
                     ),
-                    const SizedBox(width: 8),
-                    FilledButton(
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
                       onPressed: () => _acceptRequest(req),
                       style: FilledButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
+                        minimumSize: const Size.fromHeight(48),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: const Text('Terima'),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       }).toList(),
