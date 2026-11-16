@@ -111,7 +111,7 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
     return Form(
       key: _formKey,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         children: [
           // ── Banner jika sesi selesai ─────────────────────────────────────
           if (isReadOnly) ...[
@@ -122,14 +122,14 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
           // ── Keluhan Pasien (read-only dari session) ──────────────────────
           _SectionCard(
             icon: Icons.report_problem_outlined,
-            title: 'Keluhan Utama Pasien',
+            title: 'Keluhan Pasien',
             iconColor: Colors.orange.shade700,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.orange.shade200),
               ),
               child: Text(
@@ -142,12 +142,12 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
 
           // ── Diagnosis ────────────────────────────────────────────────────
           _SectionCard(
             icon: Icons.medical_information_outlined,
-            title: 'Diagnosis & Kesimpulan Klinis',
+            title: 'Diagnosis',
             iconColor: Colors.blue.shade700,
             child: TextFormField(
               controller: _diagnosisCtrl,
@@ -163,15 +163,15 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
                 fillColor: isReadOnly ? Colors.grey.shade50 : Colors.white,
                 contentPadding: const EdgeInsets.all(14),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide:
                       BorderSide(color: scheme.primary, width: 1.8),
                 ),
@@ -185,12 +185,12 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
               },
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
 
           // ── Catatan Medis ────────────────────────────────────────────────
           _SectionCard(
             icon: Icons.notes_rounded,
-            title: 'Catatan Observasi & Anamnesis',
+            title: 'Catatan Dokter',
             iconColor: Colors.teal.shade700,
             child: TextFormField(
               controller: _notesCtrl,
@@ -206,22 +206,22 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
                 fillColor: isReadOnly ? Colors.grey.shade50 : Colors.white,
                 contentPadding: const EdgeInsets.all(14),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide:
                       BorderSide(color: scheme.primary, width: 1.8),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
 
           // ── Resep Obat ───────────────────────────────────────────────────
           _SectionCard(
@@ -253,17 +253,17 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
                               vertical: 12,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                               borderSide:
                                   BorderSide(color: Colors.grey.shade300),
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                               borderSide:
                                   BorderSide(color: Colors.grey.shade300),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
                                   color: scheme.primary, width: 1.8),
                             ),
@@ -280,7 +280,7 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
                             horizontal: 16,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         child: const Icon(Icons.add, size: 20),
@@ -295,7 +295,7 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade200),
                     ),
                     child: Row(
@@ -327,7 +327,7 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
                       ),
                       decoration: BoxDecoration(
                         color: Colors.purple.shade50,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                             color: Colors.purple.shade100),
                       ),
@@ -371,7 +371,7 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
                 backgroundColor: _isDirty
                     ? scheme.primary
                     : Colors.grey.shade400,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                minimumSize: const Size.fromHeight(52),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -418,7 +418,7 @@ class _ReadOnlyBanner extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.blue.shade200),
       ),
       child: Row(
@@ -457,25 +457,43 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 16, color: iconColor),
-            const SizedBox(width: 6),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 22, color: iconColor),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        child,
-      ],
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
     );
   }
 }

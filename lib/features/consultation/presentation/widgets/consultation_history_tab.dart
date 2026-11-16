@@ -70,12 +70,6 @@ class _ConsultationHistoryTabState extends State<ConsultationHistoryTab>
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Riwayat kunjungan ke dokter lain\nakan tampil di sini.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-              ),
             ],
           ),
         ),
@@ -83,28 +77,23 @@ class _ConsultationHistoryTabState extends State<ConsultationHistoryTab>
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       children: [
         Row(
           children: [
             Icon(
               Icons.history_edu_outlined,
-              size: 18,
+              size: 22,
               color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Text(
-              'Riwayat Kunjungan (${_records.length} catatan)',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              'Riwayat Kunjungan (${_records.length})',
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Riwayat konsultasi dengan dokter lain, dari terbaru',
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-        ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 20),
         // Timeline
         _buildTimeline(),
         const SizedBox(height: 8),
@@ -198,18 +187,22 @@ class _TimelineItem extends StatelessWidget {
           // Kartu
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 14),
+              padding: const EdgeInsets.only(bottom: 16),
               child: Card(
-                elevation: 1.5,
+                elevation: 0,
+                color: Colors.white,
                 margin: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                  ),
                 ),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(20),
                   onTap: onToggle,
                   child: Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -284,7 +277,7 @@ class _TimelineItem extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 16),
                         // Keluhan
                         _InfoChip(
                           icon: Icons.report_problem_outlined,
@@ -292,7 +285,7 @@ class _TimelineItem extends StatelessWidget {
                           value: record.complaint,
                           color: Colors.orange.shade700,
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 10),
                         // Diagnosis – selalu tampil
                         _InfoChip(
                           icon: Icons.medical_information_outlined,
@@ -441,11 +434,10 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,10 +456,10 @@ class _InfoChip extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             value,
-            style: const TextStyle(fontSize: 12, height: 1.4),
+            style: const TextStyle(fontSize: 13, height: 1.45),
           ),
         ],
       ),

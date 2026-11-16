@@ -132,7 +132,7 @@ class _ConsultationListPageState extends State<ConsultationListPage> {
           height: 56,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             children: [
               for (final f in _Filter.values)
                 Padding(
@@ -162,16 +162,16 @@ class _ConsultationListPageState extends State<ConsultationListPage> {
                       const SizedBox(height: 12),
                       Center(
                         child: Text(
-                          'Tidak ada konsultasi pada kategori ini.',
+                          'Tidak ada konsultasi',
                           style: TextStyle(color: Colors.grey.shade600),
                         ),
                       ),
                     ],
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                     itemCount: visible.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 16),
                     itemBuilder: (_, i) => _ConsultationCard(
                       session: visible[i],
                       onOpen: () => _open(visible[i]),
@@ -191,8 +191,8 @@ class _ConsultationCard extends StatelessWidget {
   final VoidCallback onOpen;
 
   String get _actionLabel => switch (session.status) {
-    ConsultationStatus.ongoing => 'Lanjutkan Konsultasi',
-    ConsultationStatus.scheduled => 'Buka & Mulai Konsultasi',
+    ConsultationStatus.ongoing => 'Lanjutkan',
+    ConsultationStatus.scheduled => 'Mulai',
     ConsultationStatus.completed => 'Lihat Detail',
     ConsultationStatus.cancelled => 'Lihat Detail',
   };
@@ -205,173 +205,172 @@ class _ConsultationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final color = session.status.color;
+    final hasAllergy = session.patientAllergies.isNotEmpty;
+    final isClosed =
+        session.status == ConsultationStatus.completed ||
+        session.status == ConsultationStatus.cancelled;
+    final buttonShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    );
 
-    return Card(
+    return Container(
       key: Key('consultation_card_${session.sessionId}'),
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onOpen,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: scheme.primaryContainer,
-                    child: Icon(Icons.person, color: scheme.onPrimaryContainer),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          session.patientName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                        ),
-                        Text(
-                          '${session.patientAge} th \u2022 ${session.patientGender}'
-                          ' \u2022 Gol. Darah ${session.patientBloodType}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      session.status.label,
-                      style: TextStyle(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: scheme.primaryContainer.withValues(alpha: 0.6),
+                child: Icon(Icons.person, color: scheme.primary),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.schedule, size: 15, color: Colors.grey.shade600),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      session.scheduledTime,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                  Icon(_typeIcon, size: 15, color: Colors.grey.shade600),
-                  const SizedBox(width: 6),
-                  Text(
-                    session.consultationType,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF8E1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              const SizedBox(width: 14),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Keluhan',
-                      style: TextStyle(
-                        fontSize: 11,
+                      session.patientName,
+                      style: const TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange.shade800,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
-                      session.complaint,
-                      style: const TextStyle(fontSize: 13),
+                      '${session.patientAge} th \u2022 ${session.patientGender}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    size: 15,
-                    color: session.patientAllergies.isEmpty
-                        ? Colors.grey.shade500
-                        : Colors.red.shade600,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      session.patientAllergies.isEmpty
-                          ? 'Tidak ada alergi tercatat'
-                          : 'Alergi: ${session.patientAllergies.join(', ')}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: session.patientAllergies.isEmpty
-                            ? Colors.grey.shade600
-                            : Colors.red.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (session.status == ConsultationStatus.completed &&
-                  session.diagnosisSummary.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Diagnosis: ${session.diagnosisSummary}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  session.status.label,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
                   ),
                 ),
-              ],
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child:
-                    session.status == ConsultationStatus.completed ||
-                        session.status == ConsultationStatus.cancelled
-                    ? OutlinedButton(
-                        onPressed: onOpen,
-                        child: Text(_actionLabel),
-                      )
-                    : FilledButton(
-                        onPressed: onOpen,
-                        child: Text(_actionLabel),
-                      ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              session.complaint,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF263238),
+                height: 1.45,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Icon(_typeIcon, size: 18, color: Colors.grey.shade600),
+              const SizedBox(width: 6),
+              Text(
+                session.consultationType,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+              ),
+              const SizedBox(width: 16),
+              Icon(Icons.access_time, size: 18, color: Colors.grey.shade600),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  session.scheduledTime,
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          if (hasAllergy) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: 18,
+                  color: Colors.red.shade600,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Alergi: ${session.patientAllergies.join(', ')}',
+                    style: TextStyle(fontSize: 13, color: Colors.red.shade700),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (session.status == ConsultationStatus.completed &&
+              session.diagnosisSummary.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Diagnosis: ${session.diagnosisSummary}',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ],
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: isClosed
+                ? OutlinedButton(
+                    onPressed: onOpen,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      shape: buttonShape,
+                    ),
+                    child: Text(_actionLabel),
+                  )
+                : FilledButton(
+                    onPressed: onOpen,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      shape: buttonShape,
+                    ),
+                    child: Text(_actionLabel),
+                  ),
+          ),
+        ],
       ),
     );
   }

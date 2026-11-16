@@ -62,26 +62,24 @@ class _MedicalRecordsTabState extends State<MedicalRecordsTab>
     final scheme = Theme.of(context).colorScheme;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       children: [
         // ── Ringkasan Vital Terkini ──────────────────────────────────────────
         const _SectionHeader(
           icon: Icons.dashboard_outlined,
-          title: 'Ringkasan Vital Terkini',
-          subtitle: 'Nilai terakhir yang tercatat',
+          title: 'Vital Terkini',
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         _buildVitalSummaryGrid(scheme),
-        const SizedBox(height: 20),
+        const SizedBox(height: 28),
 
         // ── Riwayat Detail per Metrik ───────────────────────────────────────
         _SectionHeader(
           icon: Icons.timeline_outlined,
-          title: 'Riwayat Detail',
-          subtitle: 'Pilih metrik untuk melihat riwayat',
+          title: 'Riwayat',
           trailing: _buildMetricFilter(scheme),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         ..._filteredRecords.map((r) => _VitalRecordCard(record: r)),
         const SizedBox(height: 8),
       ],
@@ -122,8 +120,8 @@ class _MedicalRecordsTabState extends State<MedicalRecordsTab>
     };
 
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 12,
+      runSpacing: 12,
       children: _latest.entries.map((e) {
         final metricName = e.key;
         final record = e.value;
@@ -140,22 +138,22 @@ class _MedicalRecordsTabState extends State<MedicalRecordsTab>
         return GestureDetector(
           onTap: () => setState(() => _selectedMetric = metricName),
           child: Container(
-            width: (MediaQuery.of(context).size.width - 48) / 2,
-            padding: const EdgeInsets.all(14),
+            width: (MediaQuery.of(context).size.width - 52) / 2,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: _selectedMetric == metricName
                     ? scheme.primary
-                    : Colors.grey.shade200,
+                    : scheme.outlineVariant.withValues(alpha: 0.6),
                 width: _selectedMetric == metricName ? 2 : 1,
               ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -191,16 +189,16 @@ class _MedicalRecordsTabState extends State<MedicalRecordsTab>
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
                   metricName,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Colors.grey.shade600,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   valueLabel,
                   style: TextStyle(
@@ -209,10 +207,10 @@ class _MedicalRecordsTabState extends State<MedicalRecordsTab>
                     color: isAbnormal ? statusColor : Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   _formatDate(record.date),
-                  style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
                 ),
               ],
             ),
@@ -279,17 +277,19 @@ class _VitalRecordCard extends StatelessWidget {
     final dateLabel =
         '${record.date.day} ${months[record.date.month - 1]} ${record.date.year}';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: isAbnormal
-            ? BorderSide(color: statusColor.withValues(alpha: 0.4))
-            : BorderSide.none,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isAbnormal
+              ? statusColor.withValues(alpha: 0.4)
+              : Colors.grey.shade200,
+        ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             // Status dot
@@ -301,7 +301,7 @@ class _VitalRecordCard extends StatelessWidget {
                 color: statusColor,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,37 +373,23 @@ class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.icon,
     required this.title,
-    required this.subtitle,
     this.trailing,
   });
 
   final IconData icon;
   final String title;
-  final String subtitle;
   final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
+        Icon(icon, size: 22, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 10),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                subtitle,
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-              ),
-            ],
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
         ),
         if (trailing != null) trailing!,

@@ -54,7 +54,7 @@ class _MedicationHistoryTabState extends State<MedicationHistoryTab>
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       children: [
         // ── Obat Aktif ───────────────────────────────────────────────────────
         _SectionLabel(
@@ -63,7 +63,7 @@ class _MedicationHistoryTabState extends State<MedicationHistoryTab>
           count: _active.length,
           color: Colors.green.shade600,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         if (_active.isEmpty)
           _EmptyState(
             icon: Icons.check_circle_outline,
@@ -73,7 +73,7 @@ class _MedicationHistoryTabState extends State<MedicationHistoryTab>
         else
           ..._active.map((m) => _MedicationCard(medication: m, isActive: true)),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 28),
 
         // ── Riwayat Obat ─────────────────────────────────────────────────────
         _SectionLabel(
@@ -82,7 +82,7 @@ class _MedicationHistoryTabState extends State<MedicationHistoryTab>
           count: _history.length,
           color: Colors.grey.shade700,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         if (_history.isEmpty)
           _EmptyState(
             icon: Icons.inventory_2_outlined,
@@ -112,17 +112,26 @@ class _MedicationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      elevation: 1.5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: isActive
-            ? BorderSide(color: medication.color.withValues(alpha: 0.3))
-            : BorderSide.none,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isActive
+              ? medication.color.withValues(alpha: 0.3)
+              : scheme.outlineVariant.withValues(alpha: 0.6),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(20),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -142,7 +151,7 @@ class _MedicationCard extends StatelessWidget {
                 size: 22,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             // Detail obat
             Expanded(
               child: Column(
@@ -181,31 +190,30 @@ class _MedicationCard extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   _InfoRow(
                     icon: Icons.scale_outlined,
                     label: '${medication.dose} • ${medication.frequency}',
                     color: medication.color,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 6),
                   _InfoRow(
                     icon: Icons.calendar_month_outlined,
                     label: '${medication.startDate} – ${medication.endDate}',
                     color: Colors.grey.shade600,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 6),
                   _InfoRow(
                     icon: Icons.person_outline,
                     label: 'Diresepkan: ${medication.prescribedBy}',
                     color: scheme.primary,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade200),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,9 +228,9 @@ class _MedicationCard extends StatelessWidget {
                           child: Text(
                             medication.indication,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               color: Colors.grey.shade700,
-                              height: 1.3,
+                              height: 1.4,
                             ),
                           ),
                         ),
@@ -255,12 +263,12 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(width: 5),
+        Icon(icon, size: 15, color: color),
+        const SizedBox(width: 8),
         Expanded(
           child: Text(
             label,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
             overflow: TextOverflow.ellipsis,
             maxLines: 2,
           ),
@@ -288,11 +296,11 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 8),
+        Icon(icon, size: 22, color: color),
+        const SizedBox(width: 10),
         Text(
           title,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
         ),
         const SizedBox(width: 8),
         Container(
@@ -330,10 +338,10 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(

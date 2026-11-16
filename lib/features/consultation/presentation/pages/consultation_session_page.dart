@@ -319,122 +319,106 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
     final statusColor = session.status.color;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.08),
-        border: Border(
-          bottom: BorderSide(color: scheme.primary.withValues(alpha: 0.15)),
-        ),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar pasien
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: scheme.primaryContainer,
-            child: Text(
-              _initials(session.patientName),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: scheme.onPrimaryContainer,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  session.patientName,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${session.patientAge} th • ${session.patientGender} • '
-                  'Gol. Darah ${session.patientBloodType}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                ),
-                const SizedBox(height: 4),
-                // Alergi
-                if (session.patientAllergies.isNotEmpty)
-                  Wrap(
-                    spacing: 4,
-                    children: session.patientAllergies.map((a) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.shade200),
-                        ),
-                        child: Text(
-                          '⚠ Alergi: $a',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.red.shade700,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-              ],
-            ),
-          ),
-          // Status badge
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: scheme.primaryContainer.withValues(alpha: 0.6),
+                child: Text(
+                  _initials(session.patientName),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                    color: scheme.primary,
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (isOngoing)
-                      Container(
-                        width: 7,
-                        height: 7,
-                        margin: const EdgeInsets.only(right: 5),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: statusColor,
-                        ),
-                      ),
                     Text(
-                      session.status.label,
-                      style: TextStyle(
-                        color: statusColor,
+                      session.patientName,
+                      style: const TextStyle(
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        fontSize: 11,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${session.patientAge} th \u2022 ${session.patientGender}'
+                      ' \u2022 ${session.consultationType}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                session.consultationType,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  session.status.label,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
           ),
+          if (session.patientAllergies.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: session.patientAllergies.map((a) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'Alergi: $a',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.red.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
@@ -442,7 +426,10 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
 
   Widget _buildTabBar(ColorScheme scheme) {
     return Container(
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
       child: TabBar(
         controller: _tabController,
         isScrollable: true,
@@ -480,7 +467,7 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
 
   Widget _buildBottomBar(ColorScheme scheme) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -501,7 +488,7 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
               icon: const Icon(Icons.edit_note_rounded, size: 18),
               label: const Text('Tambah Catatan'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                minimumSize: const Size.fromHeight(48),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -516,7 +503,7 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
               label: const Text('Selesai Sesi'),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.green.shade600,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                minimumSize: const Size.fromHeight(48),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -530,7 +517,7 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
 
   Widget _buildStartBar() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -549,7 +536,7 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
           icon: const Icon(Icons.play_circle_outline, size: 18),
           label: const Text('Mulai Konsultasi'),
           style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            minimumSize: const Size.fromHeight(48),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
