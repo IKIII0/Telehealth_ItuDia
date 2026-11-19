@@ -416,15 +416,35 @@ class _DoctorCard extends StatelessWidget {
                     // Rating • Experience • Price
                     Row(
                       children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
-                        const SizedBox(width: 2),
-                        Text(
-                          doctor.rating.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
+                        if (doctor.rating > 0) ...[
+                          const Icon(Icons.star, color: Colors.amber, size: 16),
+                          const SizedBox(width: 2),
+                          Text(
+                            doctor.rating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
                           ),
-                        ),
+                        ] else
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Dokter baru',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: scheme.primary,
+                              ),
+                            ),
+                          ),
                         const SizedBox(width: 12),
                         Icon(
                           Icons.work_outline,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/chat_message.dart';
+import '../models/consultation_summary.dart';
 import '../models/conversation.dart';
 import '../models/doctor.dart';
 import '../models/medication.dart';
@@ -139,5 +140,28 @@ ChatMessage chatMessageFromRow(Map<String, dynamic> row) {
     text: row['body'] as String? ?? '',
     isMe: row['is_me'] as bool? ?? false,
     time: row['time_label'] as String? ?? '',
+  );
+}
+
+ConsultationSummary consultationSummaryFromRow(Map<String, dynamic> row) {
+  final rawPrescriptions = row['prescriptions'];
+  final prescriptions = rawPrescriptions is List
+      ? rawPrescriptions.map((e) => e.toString()).toList()
+      : <String>[];
+
+  return ConsultationSummary(
+    id: row['id'].toString(),
+    conversationId: row['conversation_id']?.toString(),
+    patientName: row['patient_name'] as String? ?? '',
+    doctorId: row['doctor_id']?.toString() ?? '',
+    doctorName: row['doctor_name'] as String? ?? '',
+    specialization: row['specialization'] as String? ?? '',
+    diagnosis: row['diagnosis'] as String? ?? '',
+    notes: row['notes'] as String? ?? '',
+    prescriptions: prescriptions,
+    advice: row['advice'] as String? ?? '',
+    createdAt:
+        DateTime.tryParse(row['created_at']?.toString() ?? '') ??
+        DateTime.now(),
   );
 }

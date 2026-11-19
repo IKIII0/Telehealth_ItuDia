@@ -1,3 +1,4 @@
+import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/chat_message.dart';
@@ -5,6 +6,7 @@ import 'package:Telehealth/data/models/conversation.dart';
 import 'package:Telehealth/data/repositories/chat_repository.dart';
 import 'package:Telehealth/data/repositories/conversation_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Ruang percakapan: menampilkan gelembung pesan antara pengguna
 /// dengan dokter atau keluarga.
@@ -147,9 +149,16 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       appBar: AppBar(
         backgroundColor: scheme.primary,
         elevation: 0,
-        shadowColor: Colors.black.withValues(alpha: 0.3),
         iconTheme: const IconThemeData(color: Colors.white),
         titleSpacing: 0,
+        actions: [
+          IconButton(
+            tooltip: 'Catatan medis',
+            icon: const Icon(Icons.description_outlined),
+            onPressed: () =>
+                context.pushNamed(AppRoutes.patientMedicalRecordsName),
+          ),
+        ],
         title: Row(
           children: [
             _HeaderAvatar(conversation: conversation),

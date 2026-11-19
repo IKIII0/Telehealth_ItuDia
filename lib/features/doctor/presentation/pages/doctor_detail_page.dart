@@ -186,12 +186,14 @@ class _DoctorDetailContent extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _HeaderChip(
-                            icon: Icons.star_rounded,
-                            label: doctor.rating.toStringAsFixed(1),
-                            iconColor: Colors.amber,
-                          ),
-                          const SizedBox(width: 8),
+                          if (doctor.rating > 0) ...[
+                            _HeaderChip(
+                              icon: Icons.star_rounded,
+                              label: doctor.rating.toStringAsFixed(1),
+                              iconColor: Colors.amber,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
                           _HeaderChip(
                             icon: Icons.circle,
                             label: doctor.available
