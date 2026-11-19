@@ -4,7 +4,7 @@
 -- Sebelumnya `chat_messages.is_me` hanya bermakna dari sudut pandang pasien.
 -- Untuk percakapan dua arah, arah pesan disimpan eksplisit di kolom `sender`.
 --
--- Jalankan setelah 01_medication_doctor_chat.sql.
+-- Jalankan sete  lah 01_medication_doctor_chat.sql.
 -- =============================================================================
 
 alter table public.chat_messages
