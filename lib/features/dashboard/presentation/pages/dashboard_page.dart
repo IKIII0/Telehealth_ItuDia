@@ -594,18 +594,17 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     if (_selectedChartCategoryId == 'cat1') {
+      const sysColor = Color(0xFFE05252);
+      const diaColor = Color(0xFF7A9BE8);
       // Grafik Tekanan Darah (Sistolik & Diastolik)
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              _chartLegendDot(scheme.primary, 'Sistolik'),
+              _chartLegendDot(sysColor, 'Sistolik'),
               const SizedBox(width: 14),
-              _chartLegendDot(
-                scheme.primary.withValues(alpha: 0.35),
-                'Diastolik',
-              ),
+              _chartLegendDot(diaColor, 'Diastolik'),
               const Spacer(),
               Text(
                 '7 pengukuran terakhir',
@@ -633,10 +632,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       children: [
                         Text(
                           '${sys.toInt()}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 8.5,
                             fontWeight: FontWeight.w600,
-                            color: scheme.primary,
+                            color: sysColor,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -648,7 +647,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               width: 7,
                               height: sysH,
                               decoration: BoxDecoration(
-                                color: scheme.primary,
+                                color: sysColor,
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(3),
                                 ),
@@ -659,7 +658,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               width: 7,
                               height: diaH,
                               decoration: BoxDecoration(
-                                color: scheme.primary.withValues(alpha: 0.35),
+                                color: diaColor,
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(3),
                                 ),
@@ -688,7 +687,9 @@ class _DashboardPageState extends State<DashboardPage> {
     } else {
       // Grafik Nilai Tunggal (Gula Darah / Berat Badan)
       final isSugar = _selectedChartCategoryId == 'cat2';
-      final chartColor = scheme.primary;
+      final chartColor = isSugar
+          ? const Color(0xFFD98E04)
+          : const Color(0xFF4C6EF5);
       final unitLabel = isSugar ? 'mg/dL' : 'kg';
       final vals = entries.map((e) => e.value).toList();
       final maxV = vals.reduce((a, b) => a > b ? a : b);
@@ -747,7 +748,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           width: 12,
                           height: barH,
                           decoration: BoxDecoration(
-                            color: chartColor.withValues(alpha: 0.85),
+                            color: chartColor,
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(4),
                             ),
