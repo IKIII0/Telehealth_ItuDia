@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 /// Status sesi konsultasi.
 enum ConsultationStatus {
+  requested,
   ongoing,
   completed,
   cancelled,
   scheduled;
 
   String get label => switch (this) {
+    ConsultationStatus.requested => 'Menunggu',
     ConsultationStatus.ongoing => 'Berlangsung',
     ConsultationStatus.completed => 'Selesai',
     ConsultationStatus.cancelled => 'Dibatalkan',
@@ -15,6 +17,7 @@ enum ConsultationStatus {
   };
 
   Color get color => switch (this) {
+    ConsultationStatus.requested => const Color(0xFFFB8C00),
     ConsultationStatus.ongoing => const Color(0xFF4CAF50),
     ConsultationStatus.completed => const Color(0xFF1E88E5),
     ConsultationStatus.cancelled => const Color(0xFFE53935),
@@ -41,6 +44,7 @@ class ConsultationSession {
     this.doctorNotes = '',
     this.diagnosisSummary = '',
     this.prescribedMedications = const [],
+    this.priority = '',
   });
 
   final String sessionId;
@@ -59,6 +63,13 @@ class ConsultationSession {
   final String doctorNotes;
   final String diagnosisSummary;
   final List<String> prescribedMedications;
+
+  /// Prioritas permintaan dari database (`routine` / `medium` / `high`).
+  /// Kosong untuk data simulasi lama.
+  final String priority;
+
+  /// `true` bila masih berupa permintaan yang belum ditanggapi dokter.
+  bool get isRequest => status == ConsultationStatus.requested;
 
   ConsultationSession copyWith({
     ConsultationStatus? status,
@@ -86,6 +97,7 @@ class ConsultationSession {
       diagnosisSummary: diagnosisSummary ?? this.diagnosisSummary,
       prescribedMedications:
           prescribedMedications ?? this.prescribedMedications,
+      priority: priority,
     );
   }
 }

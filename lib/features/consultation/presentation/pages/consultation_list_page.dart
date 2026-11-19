@@ -193,6 +193,7 @@ class _ConsultationCard extends StatelessWidget {
   String get _actionLabel => switch (session.status) {
     ConsultationStatus.ongoing => 'Lanjutkan',
     ConsultationStatus.scheduled => 'Mulai',
+    ConsultationStatus.requested => 'Tinjau',
     ConsultationStatus.completed => 'Lihat Detail',
     ConsultationStatus.cancelled => 'Lihat Detail',
   };
