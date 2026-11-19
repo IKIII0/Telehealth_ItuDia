@@ -22,6 +22,7 @@ import 'package:Telehealth/features/doctor/presentation/pages/doctor_detail_page
 import 'package:Telehealth/features/doctor/presentation/pages/doctor_list_page.dart';
 import 'package:Telehealth/features/consultation/presentation/pages/consultation_checkout_page.dart';
 import 'package:Telehealth/features/consultation/presentation/pages/consultation_list_page.dart';
+import 'package:Telehealth/features/consultation/presentation/pages/medical_records_page.dart';
 import 'package:Telehealth/features/consultation/presentation/pages/consultation_session_page.dart';
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_dashboard_page.dart';
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_profile_page.dart';
@@ -155,6 +156,11 @@ class AppRouter {
         name: AppRoutes.patientNotificationsName,
         path: AppRoutes.patientNotificationsPath,
         builder: (context, state) => const NotificationPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.patientMedicalRecordsName,
+        path: AppRoutes.patientMedicalRecordsPath,
+        builder: (context, state) => const MedicalRecordsPage(),
       ),
       GoRoute(
         name: AppRoutes.patientChatRoomName,
