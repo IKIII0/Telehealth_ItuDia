@@ -224,7 +224,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   }
 
   Widget _buildBody(ColorScheme scheme) {
-    if (_loading) {
+    // Realtime bisa mengirim pesan sebelum detail percakapan selesai dimuat.
+    if (_loading || _conversation == null) {
       return const LoadingView(message: 'Memuat percakapan...');
     }
     if (_error != null) {
