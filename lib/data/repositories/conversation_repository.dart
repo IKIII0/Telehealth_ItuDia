@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/supabase/supabase_config.dart';
 import '../models/conversation.dart';
 import '../models/doctor.dart';
+import 'auth_repository.dart';
 import 'simulated_api.dart';
 import 'supabase_mappers.dart';
 
@@ -128,12 +129,36 @@ class ConversationRepository {
     return row == null ? null : conversationFromRow(row);
   }
 
-  /// Mengambil atau membuat percakapan dengan dokter.
+  /// Id percakapan untuk pasangan dokter–pasien.
   ///
-  /// Dipakai setelah pembayaran konsultasi: chat langsung dibuka tanpa
-  /// perlu menjadwalkan janji temu.
+  /// Dipakai bersama oleh sisi pasien dan dokter agar keduanya membaca
+  /// thread yang sama di tabel `chat_messages`.
+  static String pairId(String doctorId, String patientId) =>
+      'conv_${doctorId}__$patientId';
+
+  /// Mengambil atau membuat percakapan dengan dokter (sisi pasien).
   Future<Conversation> ensureForDoctor(Doctor doctor) async {
-    final id = 'conv_${doctor.id}';
+    final patientId = AuthRepository.instance.currentUser?.id ?? 'patient';
+    return ensureForPair(
+      doctorId: doctor.id,
+      doctorName: doctor.name,
+      doctorInitials: doctor.initials,
+      doctorColor: doctor.avatarColor,
+      doctorOnline: doctor.available,
+      patientId: patientId,
+    );
+  }
+
+  /// Mengambil atau membuat percakapan untuk pasangan dokter–pasien.
+  Future<Conversation> ensureForPair({
+    required String doctorId,
+    required String doctorName,
+    required String doctorInitials,
+    required Color doctorColor,
+    required String patientId,
+    bool doctorOnline = false,
+  }) async {
+    final id = pairId(doctorId, patientId);
     final db = _db;
 
     if (db == null) {
@@ -143,15 +168,15 @@ class ConversationRepository {
         }
         final conversation = Conversation(
           id: id,
-          name: doctor.name,
+          name: doctorName,
           role: 'Dokter',
           type: 'dokter',
           lastMessage: 'Konsultasi baru dimulai',
           time: 'Baru',
           unreadCount: 0,
-          isOnline: doctor.available,
-          initials: doctor.initials,
-          color: doctor.avatarColor,
+          isOnline: doctorOnline,
+          initials: doctorInitials,
+          color: doctorColor,
         );
         _conversations.insert(0, conversation);
         return conversation;
@@ -169,15 +194,15 @@ class ConversationRepository {
         .from('conversations')
         .insert({
           'id': id,
-          'name': doctor.name,
+          'name': doctorName,
           'role': 'Dokter',
           'type': 'dokter',
           'last_message': 'Konsultasi baru dimulai',
           'time_label': 'Baru',
           'unread_count': 0,
-          'is_online': doctor.available,
-          'initials': doctor.initials,
-          'color': colorToDb(doctor.avatarColor),
+          'is_online': doctorOnline,
+          'initials': doctorInitials,
+          'color': colorToDb(doctorColor),
         })
         .select()
         .single();
