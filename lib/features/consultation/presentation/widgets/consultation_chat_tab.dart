@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:Telehealth/data/models/chat_message.dart';
@@ -32,6 +34,7 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
   bool _sending = false;
   bool _patientTyping = false;
   String? _error;
+  StreamSubscription<List<ChatMessage>>? _live;
 
   bool get _canSend =>
       widget.session.status == ConsultationStatus.ongoing && !_sending;
@@ -53,6 +56,7 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
 
   @override
   void dispose() {
+    _live?.cancel();
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -79,6 +83,7 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
         _error = null;
       });
       _scrollToEnd();
+      _listenLive();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -86,6 +91,21 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
         _error = 'Gagal memuat percakapan: $e';
       });
     }
+  }
+
+  /// Langganan realtime agar pesan pasien masuk tanpa refresh.
+  void _listenLive() {
+    _live?.cancel();
+    _live = ChatRepository.instance.watchMessages(_conversationId).listen((
+      messages,
+    ) {
+      if (!mounted) return;
+      setState(() {
+        _messages = messages.map(_toConsultationMessage).toList();
+        _loading = false;
+      });
+      _scrollToEnd();
+    });
   }
 
   ConsultationMessage _toConsultationMessage(ChatMessage message) {

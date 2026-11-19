@@ -27,6 +27,19 @@ alter table public.chat_messages
 create index if not exists chat_messages_conversation_created_idx
   on public.chat_messages (conversation_id, created_at);
 
+-- Aktifkan Supabase Realtime untuk tabel chat (idempoten).
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+     where pubname = 'supabase_realtime'
+       and schemaname = 'public'
+       and tablename = 'chat_messages'
+  ) then
+    alter publication supabase_realtime add table public.chat_messages;
+  end if;
+end $$;
+
 -- Verifikasi arah pesan per percakapan.
 select conversation_id, sender, count(*) as jumlah
   from public.chat_messages
