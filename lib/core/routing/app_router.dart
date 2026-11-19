@@ -30,6 +30,7 @@ import 'package:Telehealth/features/health_journal/presentation/pages/health_jou
 import 'package:Telehealth/features/hospital_admin/presentation/guards/hospital_admin_guard.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_dashboard_page.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_medication_verification_page.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_medicine_catalog_page.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_patient_monitoring_page.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/widgets/admin_shell_scaffold.dart';
 import 'package:Telehealth/features/medication/presentation/pages/medication_reminder_page.dart';
@@ -258,6 +259,15 @@ class AppRouter {
                 name: AppRoutes.hospitalAdminPatientsName,
                 path: AppRoutes.hospitalAdminPatientsPath,
                 builder: (context, state) => const AdminPatientMonitoringPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                name: AppRoutes.hospitalAdminCatalogName,
+                path: AppRoutes.hospitalAdminCatalogPath,
+                builder: (context, state) => const AdminMedicineCatalogPage(),
               ),
             ],
           ),
