@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
@@ -28,18 +30,36 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   bool _sending = false;
   Conversation? _conversation;
   List<ChatMessage> _messages = const [];
+  StreamSubscription<List<ChatMessage>>? _live;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _listenLive();
   }
 
   @override
   void dispose() {
+    _live?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Langganan realtime: pesan baru dari dokter muncul tanpa refresh.
+  void _listenLive() {
+    _live?.cancel();
+    _live = ChatRepository.instance.watchMessages(widget.conversationId).listen(
+      (messages) {
+        if (!mounted) return;
+        setState(() {
+          _messages = messages;
+          _loading = false;
+        });
+        _scrollToBottom();
+      },
+    );
   }
 
   Future<void> _load() async {
@@ -95,24 +115,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       });
       _controller.clear();
       _scrollToBottom();
-      _replyLater();
     } catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);
       showAppSnack(context, 'Gagal mengirim pesan', success: false);
-    }
-  }
-
-  Future<void> _replyLater() async {
-    try {
-      final reply = await ChatRepository.instance.autoReply(
-        widget.conversationId,
-      );
-      if (!mounted) return;
-      setState(() => _messages = [..._messages, reply]);
-      _scrollToBottom();
-    } catch (_) {
-      // Balasan otomatis diabaikan bila gagal.
     }
   }
 

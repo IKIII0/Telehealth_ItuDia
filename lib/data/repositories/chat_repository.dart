@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/supabase/supabase_config.dart';
@@ -35,7 +37,7 @@ class ChatRepository {
             id: _nextId(),
             conversationId: conversationId,
             text: text,
-            isMe: isMe,
+            sender: isMe ? ChatSender.patient : ChatSender.doctor,
             time: time,
           ),
         );
@@ -137,9 +139,15 @@ class ChatRepository {
     return rows.map(chatMessageFromRow).toList();
   }
 
-  /// Menyimpan pesan yang dikirim pengguna.
-  Future<ChatMessage> send(String conversationId, String text) async {
+  /// Menyimpan pesan baru. [sender] menentukan arah pesan
+  /// (`'patient'` atau `'doctor'`).
+  Future<ChatMessage> send(
+    String conversationId,
+    String text, {
+    String sender = 'patient',
+  }) async {
     final time = _now();
+    final direction = ChatMessage.parseSender(sender);
     final db = _db;
     if (db == null) {
       return SimulatedApi.run(() {
@@ -147,7 +155,7 @@ class ChatRepository {
           id: _nextId(),
           conversationId: conversationId,
           text: text,
-          isMe: true,
+          sender: direction,
           time: time,
         );
         _store.putIfAbsent(conversationId, () => <ChatMessage>[]).add(message);
@@ -160,11 +168,23 @@ class ChatRepository {
         .insert({
           'conversation_id': conversationId,
           'body': text,
-          'is_me': true,
+          'sender': direction.name,
+          'is_me': direction == ChatSender.patient,
           'time_label': time,
         })
         .select()
         .single();
+
+    // Jaga ringkasan daftar percakapan tetap terbaru.
+    try {
+      await db
+          .from('conversations')
+          .update({'last_message': text, 'time_label': time})
+          .eq('id', conversationId);
+    } catch (_) {
+      // Ringkasan gagal diperbarui tidak menghalangi pengiriman pesan.
+    }
+
     return chatMessageFromRow(row);
   }
 
@@ -181,7 +201,7 @@ class ChatRepository {
           id: _nextId(),
           conversationId: conversationId,
           text: body,
-          isMe: false,
+          sender: ChatSender.doctor,
           time: time,
         );
         _store.putIfAbsent(conversationId, () => <ChatMessage>[]).add(message);
@@ -194,12 +214,67 @@ class ChatRepository {
         .insert({
           'conversation_id': conversationId,
           'body': body,
+          'sender': 'doctor',
           'is_me': false,
           'time_label': time,
         })
         .select()
         .single();
     return chatMessageFromRow(row);
+  }
+
+  /// Stream pesan realtime untuk [conversationId].
+  ///
+  /// Memakai Supabase Realtime (tabel `chat_messages`). Bila Supabase tidak
+  /// aktif, stream kosong — UI tetap menampilkan pesan hasil kirim manual.
+  Stream<List<ChatMessage>> watchMessages(String conversationId) {
+    final db = _db;
+    if (db == null) return const Stream.empty();
+
+    late final StreamController<List<ChatMessage>> controller;
+    RealtimeChannel? channel;
+
+    Future<void> emitAll() async {
+      try {
+        final rows = await db
+            .from('chat_messages')
+            .select()
+            .eq('conversation_id', conversationId)
+            .order('created_at');
+        if (!controller.isClosed) {
+          controller.add(rows.map(chatMessageFromRow).toList());
+        }
+      } catch (_) {
+        // Biarkan data lama tetap tampil.
+      }
+    }
+
+    controller = StreamController<List<ChatMessage>>(
+      onListen: () {
+        channel = db
+            .channel('chat_$conversationId')
+            .onPostgresChanges(
+              event: PostgresChangeEvent.all,
+              schema: 'public',
+              table: 'chat_messages',
+              filter: PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: 'conversation_id',
+                value: conversationId,
+              ),
+              callback: (_) => emitAll(),
+            )
+            .subscribe();
+        emitAll();
+      },
+      onCancel: () async {
+        final active = channel;
+        channel = null;
+        if (active != null) await db.removeChannel(active);
+      },
+    );
+
+    return controller.stream;
   }
 
   String _cannedReply(String conversationId) {

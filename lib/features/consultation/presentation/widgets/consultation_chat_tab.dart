@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import 'package:Telehealth/data/models/chat_message.dart';
 import 'package:Telehealth/data/models/consultation_session.dart';
-import 'package:Telehealth/data/repositories/consultation_repository.dart';
+import 'package:Telehealth/data/repositories/auth_repository.dart';
+import 'package:Telehealth/data/repositories/chat_repository.dart';
+import 'package:Telehealth/data/repositories/conversation_repository.dart';
 
 /// Tab Percakapan: dokter berkirim pesan dengan pasien selama sesi.
 ///
@@ -29,9 +34,19 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
   bool _sending = false;
   bool _patientTyping = false;
   String? _error;
+  StreamSubscription<List<ChatMessage>>? _live;
 
   bool get _canSend =>
       widget.session.status == ConsultationStatus.ongoing && !_sending;
+
+  String get _doctorId {
+    final id = AuthRepository.instance.currentUser?.doctorProfile?.doctorId;
+    return (id == null || id.isEmpty) ? 'doc-me' : id;
+  }
+
+  /// Percakapan yang sama dengan yang dibaca pasien.
+  String get _conversationId =>
+      ConversationRepository.pairId(_doctorId, widget.session.patientId);
 
   @override
   void initState() {
@@ -41,6 +56,7 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
 
   @override
   void dispose() {
+    _live?.cancel();
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -48,16 +64,26 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
 
   Future<void> _load() async {
     try {
-      final messages = await ConsultationRepository.instance.getMessages(
-        widget.session.sessionId,
+      final user = AuthRepository.instance.currentUser;
+      await ConversationRepository.instance.ensureForPair(
+        doctorId: _doctorId,
+        doctorName: user?.name ?? 'Dokter',
+        doctorInitials: 'DR',
+        doctorColor: const Color(0xFF1E88E5),
+        patientId: widget.session.patientId,
+        doctorOnline: widget.session.status == ConsultationStatus.ongoing,
+      );
+      final messages = await ChatRepository.instance.fetchMessages(
+        _conversationId,
       );
       if (!mounted) return;
       setState(() {
-        _messages = messages;
+        _messages = messages.map(_toConsultationMessage).toList();
         _loading = false;
         _error = null;
       });
       _scrollToEnd();
+      _listenLive();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -65,6 +91,44 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
         _error = 'Gagal memuat percakapan: $e';
       });
     }
+  }
+
+  /// Langganan realtime agar pesan pasien masuk tanpa refresh.
+  void _listenLive() {
+    _live?.cancel();
+    _live = ChatRepository.instance.watchMessages(_conversationId).listen((
+      messages,
+    ) {
+      if (!mounted) return;
+      setState(() {
+        _messages = messages.map(_toConsultationMessage).toList();
+        _loading = false;
+      });
+      _scrollToEnd();
+    });
+  }
+
+  ConsultationMessage _toConsultationMessage(ChatMessage message) {
+    return ConsultationMessage(
+      id: message.id,
+      sessionId: widget.session.sessionId,
+      text: message.text,
+      fromDoctor: message.isFromDoctor,
+      sentAt: _parseTime(message.time),
+    );
+  }
+
+  DateTime _parseTime(String value) {
+    final parts = value.split(':');
+    final now = DateTime.now();
+    if (parts.length == 2) {
+      final hour = int.tryParse(parts[0]);
+      final minute = int.tryParse(parts[1]);
+      if (hour != null && minute != null) {
+        return DateTime(now.year, now.month, now.day, hour, minute);
+      }
+    }
+    return now;
   }
 
   void _scrollToEnd() {
@@ -82,28 +146,18 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
     final text = _inputCtrl.text.trim();
     if (text.isEmpty || !_canSend) return;
 
-    final sessionId = widget.session.sessionId;
     setState(() => _sending = true);
     _inputCtrl.clear();
     try {
-      final message = await ConsultationRepository.instance.sendDoctorMessage(
-        sessionId,
+      final message = await ChatRepository.instance.send(
+        _conversationId,
         text,
+        sender: 'doctor',
       );
       if (!mounted) return;
       setState(() {
-        _messages = [..._messages, message];
+        _messages = [..._messages, _toConsultationMessage(message)];
         _sending = false;
-        _patientTyping = true;
-      });
-      _scrollToEnd();
-
-      final reply = await ConsultationRepository.instance.simulatePatientReply(
-        sessionId,
-      );
-      if (!mounted) return;
-      setState(() {
-        if (reply != null) _messages = [..._messages, reply];
         _patientTyping = false;
       });
       _scrollToEnd();
