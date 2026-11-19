@@ -37,30 +37,6 @@ create policy demo_all_consultation_summaries
   on public.consultation_summaries
   for all to anon, authenticated using (true) with check (true);
 
--- ─── Seed contoh ─────────────────────────────────────────────────────────────
-insert into public.consultation_summaries
-  (conversation_id, patient_name, doctor_id, doctor_name, specialization,
-   diagnosis, notes, prescriptions, advice, created_at)
-select v.conversation_id, v.patient_name, v.doctor_id, v.doctor_name,
-       v.specialization, v.diagnosis, v.notes, v.prescriptions, v.advice,
-       v.created_at
-from (values
-  ('conv1', 'ItuDia', 'doc1', 'dr. Rifki Al Sauqy, Sp.JP', 'Spesialis Jantung',
-   'Hipertensi stadium 1',
-   'Tensi 140/90. Keluhan pusing ringan saat aktivitas berat. Tidak ada riwayat serangan jantung.',
-   array['Amlodipine 10 mg — 1x sehari malam', 'Paracetamol 500 mg — bila pusing'],
-   'Kurangi garam, kontrol tensi tiap pagi, kontrol ulang 1 minggu.',
-   timestamptz '2026-11-17 10:30:00+07'),
-  ('conv2', 'ItuDia', 'doc2', 'dr. Yehezkiel Sitanggang, Sp.A', 'Spesialis Anak',
-   'Demam viral, hasil laboratorium normal',
-   'Suhu 38,2°C selama 2 hari, hasil darah lengkap dalam batas normal.',
-   array['Paracetamol sirup — 3x sehari'],
-   'Cukup cairan dan istirahat, kembali bila demam lebih dari 3 hari.',
-   timestamptz '2026-11-14 09:15:00+07')
-) as v(conversation_id, patient_name, doctor_id, doctor_name, specialization,
-       diagnosis, notes, prescriptions, advice, created_at)
-where not exists (
-  select 1 from public.consultation_summaries s
-  where s.conversation_id = v.conversation_id
-    and s.created_at = v.created_at
-);
+-- Tidak ada seed: resume diisi dokter sungguhan setelah sesi konsultasi.
+-- Seed dokter/conversation contoh sudah dihapus (lihat 06_remove_dummy_doctors.sql)
+-- agar tidak ada data dokter dummy di database.
