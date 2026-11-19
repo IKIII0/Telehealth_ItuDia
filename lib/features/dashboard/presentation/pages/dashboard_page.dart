@@ -5,11 +5,12 @@ import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
-import 'package:Telehealth/data/models/appointment.dart';
 import 'package:Telehealth/data/models/doctor.dart';
+import 'package:Telehealth/data/models/conversation.dart';
 import 'package:Telehealth/data/models/journal.dart';
 import 'package:Telehealth/data/models/medication.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
+import 'package:Telehealth/data/repositories/conversation_repository.dart';
 import 'package:Telehealth/data/repositories/doctor_repository.dart';
 import 'package:Telehealth/data/repositories/journal_repository.dart';
 import 'package:Telehealth/data/repositories/medication_repository.dart';
@@ -37,38 +38,11 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  // ── Jadwal konsultasi contoh (data lokal) ───────────────────────────────────
-  static const List<Appointment> _appointments = [
-    Appointment(
-      id: 'apt1',
-      doctorId: 'doc1',
-      doctorName: 'Dr. Rifki Al Sauqy, Sp.JP',
-      specialization: 'Spesialis Jantung',
-      date: '28 Sep 2026',
-      time: '09:00',
-    ),
-    Appointment(
-      id: 'apt2',
-      doctorId: 'doc2',
-      doctorName: 'Dr. Yehezkiel Sitanggang, Sp.A',
-      specialization: 'Spesialis Anak',
-      date: '30 Sep 2026',
-      time: '14:30',
-    ),
-    Appointment(
-      id: 'apt3',
-      doctorId: 'doc5',
-      doctorName: 'Dr. Farhan Prasetyo, Sp.PD',
-      specialization: 'Spesialis Penyakit Dalam',
-      date: '02 Okt 2026',
-      time: '11:00',
-    ),
-  ];
-
   // ── Async state ─────────────────────────────────────────────────────────────
   bool _loading = true;
   String? _error;
   List<Doctor> _recommended = const [];
+  List<Conversation> _activeConsultations = const [];
   List<JournalEntry> _journalEntries = const [];
   List<JournalCategory> _journalCategories = const [];
   List<Medication> _medications = const [];
@@ -93,13 +67,21 @@ class _DashboardPageState extends State<DashboardPage> {
         JournalRepository.instance.fetchEntries(),
         JournalRepository.instance.fetchCategories(),
         MedicationRepository.instance.fetchAll(),
+        ConversationRepository.instance.fetchAll(),
       ]);
       if (!mounted) return;
+      final doctors = List<Doctor>.of(results[0] as List<Doctor>)
+        ..sort((a, b) => b.rating.compareTo(a.rating));
+      final consultations = (results[4] as List<Conversation>)
+          .where((c) => c.type == 'dokter')
+          .take(3)
+          .toList();
       setState(() {
-        _recommended = (results[0] as List<Doctor>).take(3).toList();
+        _recommended = doctors.take(3).toList();
         _journalEntries = results[1] as List<JournalEntry>;
         _journalCategories = results[2] as List<JournalCategory>;
         _medications = results[3] as List<Medication>;
+        _activeConsultations = consultations;
         _loading = false;
       });
     } catch (e) {
@@ -252,8 +234,8 @@ class _DashboardPageState extends State<DashboardPage> {
               _buildMedicationSection(scheme),
               // ── 3. Jadwal Konsultasi Dokter Mendatang ──────────────────
               _buildSectionHeader(
-                'Jadwal Konsultasi Mendatang',
-                onSeeAll: () => _go(AppRoutes.patientDoctorsName),
+                'Konsultasi Aktif',
+                onSeeAll: () => _go(AppRoutes.patientChatName),
               ),
               _buildScheduleList(scheme),
               // ── 4. Dokter Rekomendasi ───────────────────────────────────
@@ -1097,93 +1079,174 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // ── 3. Schedule list ────────────────────────────────────────────────────────
+  // ── 3. Active consultations ────────────────────────────────────────────────
   Widget _buildScheduleList(ColorScheme scheme) {
+    if (_loading) {
+      return const SizedBox(
+        height: 120,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+      );
+    }
+
+    if (_activeConsultations.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.forum_outlined, size: 18, color: scheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Belum ada konsultasi aktif. Mulai chat dengan dokter.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
-      height: 140,
+      height: 132,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
-        itemCount: _appointments.length,
+        itemCount: _activeConsultations.length,
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
-          final appointment = _appointments[i];
-          return Container(
-            width: 240,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: scheme.primary,
+          final conversation = _activeConsultations[i];
+          final color = conversation.color;
+
+          return SizedBox(
+            width: 236,
+            child: Material(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.primary.withValues(alpha: 0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => context.pushNamed(
+                  AppRoutes.patientChatRoomName,
+                  pathParameters: {'conversationId': conversation.id},
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Colors.white24,
-                      child: Icon(Icons.person, color: Colors.white, size: 20),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        appointment.doctorName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: color.withValues(alpha: 0.25)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 17,
+                                backgroundColor: color.withValues(alpha: 0.12),
+                                child: Text(
+                                  conversation.initials,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: color,
+                                  ),
+                                ),
+                              ),
+                              if (conversation.isOnline)
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 9,
+                                    height: 9,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF2E7D32),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 9),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  conversation.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 1),
+                                Text(
+                                  conversation.isOnline
+                                      ? 'Online'
+                                      : 'Terakhir ${conversation.time}',
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    color: conversation.isOnline
+                                        ? const Color(0xFF2E7D32)
+                                        : Colors.grey.shade500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  appointment.specialization,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      color: Colors.white70,
-                      size: 13,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        appointment.date,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
+                      const SizedBox(height: 10),
+                      Expanded(
+                        child: Text(
+                          conversation.lastMessage,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            height: 1.4,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Icon(
-                      Icons.access_time,
-                      color: Colors.white70,
-                      size: 13,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      appointment.time,
-                      style: const TextStyle(color: Colors.white, fontSize: 11),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Text(
+                            'Lanjutkan chat',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: color,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 13,
+                            color: color,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
           );
         },
