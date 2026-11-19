@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/doctor_nav_bar.dart';
+import 'package:Telehealth/data/models/consultation_session.dart';
 import 'package:Telehealth/data/models/doctor_profile.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
+import 'package:Telehealth/data/repositories/consultation_repository.dart';
 
 /// Model dummy permintaan konsultasi dari pasien.
 class _ConsultationRequest {
@@ -71,8 +73,87 @@ class DoctorDashboardPage extends StatefulWidget {
 class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
   bool _isOnline = true;
 
-  // ── Data dummy permintaan sesi konsultasi dari pasien ───────────────────────
-  final List<_ConsultationRequest> _requests = [
+  // ── Sumber data dashboard ──────────────────────────────────────────────────
+  final _repo = ConsultationRepository.instance;
+
+  /// Permintaan yang tampil. Diisi dari Supabase bila terhubung, selain itu
+  /// dari data simulasi di bawah.
+  List<_ConsultationRequest> _requests = [];
+
+  /// Sesi hari ini (terjadwal / berlangsung).
+  List<_DoctorAppointment> _confirmedAppointments = [];
+
+  int _completedTotal = 18;
+  int _queueFilled = 8;
+  int _dailyQuota = 12;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboard();
+  }
+
+  Future<void> _loadDashboard() async {
+    try {
+      final data = await _repo.getDashboardData();
+      if (!mounted) return;
+      setState(() {
+        _completedTotal = data.completedTotal;
+        _queueFilled = data.queueFilled;
+        _dailyQuota = data.dailyQuota;
+        _requests = data.isRemote
+            ? data.requests.map(_requestFromSession).toList()
+            : _demoRequests();
+        _confirmedAppointments = data.isRemote
+            ? data.todaySessions.map(_appointmentFromSession).toList()
+            : _demoAppointments();
+      });
+    } catch (error) {
+      if (!mounted) return;
+      showAppSnack(
+        context,
+        'Gagal memuat data dashboard: $error',
+        success: false,
+      );
+    }
+  }
+
+  _ConsultationRequest _requestFromSession(ConsultationSession session) {
+    return _ConsultationRequest(
+      id: session.sessionId,
+      patientName: session.patientName,
+      age: session.patientAge,
+      gender: session.patientGender,
+      complaint: session.complaint,
+      requestedTime: session.scheduledTime,
+      method: session.consultationType,
+      priority: switch (session.priority) {
+        'high' => 'Prioritas Tinggi',
+        'medium' => 'Prioritas Sedang',
+        _ => 'Rutin',
+      },
+    );
+  }
+
+  _DoctorAppointment _appointmentFromSession(ConsultationSession session) {
+    final parts = session.scheduledTime.split(', ');
+    return _DoctorAppointment(
+      id: session.sessionId,
+      patientName: session.patientAge > 0
+          ? '${session.patientName} (${session.patientAge} th)'
+          : session.patientName,
+      time: parts.length > 1 ? parts.last : session.scheduledTime,
+      date: parts.length > 1 ? parts.first : 'Hari ini',
+      consultationType: session.consultationType,
+      statusLabel: session.status == ConsultationStatus.ongoing
+          ? 'Sedang Berlangsung'
+          : 'Mendatang',
+      isActiveNow: session.status == ConsultationStatus.ongoing,
+    );
+  }
+
+  // ── Data simulasi (dipakai bila Supabase belum dikonfigurasi) ──────────────
+  List<_ConsultationRequest> _demoRequests() => [
     _ConsultationRequest(
       id: 'req-1',
       patientName: 'Budi Santoso',
@@ -119,8 +200,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     ),
   ];
 
-  // ── Data dummy jadwal konsultasi terkonfirmasi hari ini ──────────────────────
-  final List<_DoctorAppointment> _confirmedAppointments = [
+  List<_DoctorAppointment> _demoAppointments() => [
     const _DoctorAppointment(
       id: 'apt-d1',
       patientName: 'Ny. Ratna Dewi (42 th)',
@@ -150,20 +230,48 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     ),
   ];
 
-  void _acceptRequest(_ConsultationRequest request) {
-    setState(() {
-      request.status = _RequestStatus.accepted;
-    });
+  Future<void> _acceptRequest(_ConsultationRequest request) async {
+    if (_repo.isRemote) {
+      try {
+        await _repo.respondRequest(request.id, accept: true);
+        await _loadDashboard();
+      } catch (error) {
+        if (!mounted) return;
+        showAppSnack(
+          context,
+          'Gagal menerima permintaan: $error',
+          success: false,
+        );
+        return;
+      }
+    } else {
+      setState(() => request.status = _RequestStatus.accepted);
+    }
+    if (!mounted) return;
     showAppSnack(
       context,
       'Permintaan konsultasi dari ${request.patientName} diterima. Sesi telah dijadwalkan.',
     );
   }
 
-  void _rejectRequest(_ConsultationRequest request) {
-    setState(() {
-      request.status = _RequestStatus.rejected;
-    });
+  Future<void> _rejectRequest(_ConsultationRequest request) async {
+    if (_repo.isRemote) {
+      try {
+        await _repo.respondRequest(request.id, accept: false);
+        await _loadDashboard();
+      } catch (error) {
+        if (!mounted) return;
+        showAppSnack(
+          context,
+          'Gagal menolak permintaan: $error',
+          success: false,
+        );
+        return;
+      }
+    } else {
+      setState(() => request.status = _RequestStatus.rejected);
+    }
+    if (!mounted) return;
     showAppSnack(
       context,
       'Permintaan konsultasi dari ${request.patientName} ditolak.',
@@ -281,7 +389,8 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          setState(() {});
+          await _loadDashboard();
+          if (!mounted) return;
           showAppSnack(context, 'Data dashboard diperbarui');
         },
         child: SingleChildScrollView(
@@ -333,6 +442,10 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     String? name,
     DoctorProfile profile,
   ) {
+    final pendingCount = _requests
+        .where((r) => r.status == _RequestStatus.pending)
+        .length;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -405,17 +518,11 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
           // Baris Statistik Cepat
           Row(
             children: [
-              _buildStatCol(
-                'Permintaan',
-                '${_requests.where((r) => r.status == _RequestStatus.pending).length} Baru',
-              ),
+              _buildStatCol('Permintaan', '$pendingCount'),
               _buildStatDivider(),
-              _buildStatCol(
-                'Sesi Hari Ini',
-                '${_confirmedAppointments.length} Pasien',
-              ),
+              _buildStatCol('Hari Ini', '${_confirmedAppointments.length}'),
               _buildStatDivider(),
-              _buildStatCol('Selesai', '18 Sesi'),
+              _buildStatCol('Selesai', '$_completedTotal'),
               _buildStatDivider(),
               _buildStatCol('Rating', '4.9 ★'),
             ],
@@ -529,8 +636,8 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
   Widget _buildWorkScheduleCard(ColorScheme scheme, DoctorProfile profile) {
     final scheduleToday =
         profile.practiceSchedule['Senin - Jumat'] ?? '09:00 - 15:00';
-    const filled = 8;
-    const quota = 12;
+    final filled = _queueFilled;
+    final quota = _dailyQuota > 0 ? _dailyQuota : 12;
 
     return Container(
       width: double.infinity,
