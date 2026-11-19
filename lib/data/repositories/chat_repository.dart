@@ -35,7 +35,7 @@ class ChatRepository {
             id: _nextId(),
             conversationId: conversationId,
             text: text,
-            isMe: isMe,
+            sender: isMe ? ChatSender.patient : ChatSender.doctor,
             time: time,
           ),
         );
@@ -137,9 +137,15 @@ class ChatRepository {
     return rows.map(chatMessageFromRow).toList();
   }
 
-  /// Menyimpan pesan yang dikirim pengguna.
-  Future<ChatMessage> send(String conversationId, String text) async {
+  /// Menyimpan pesan baru. [sender] menentukan arah pesan
+  /// (`'patient'` atau `'doctor'`).
+  Future<ChatMessage> send(
+    String conversationId,
+    String text, {
+    String sender = 'patient',
+  }) async {
     final time = _now();
+    final direction = ChatMessage.parseSender(sender);
     final db = _db;
     if (db == null) {
       return SimulatedApi.run(() {
@@ -147,7 +153,7 @@ class ChatRepository {
           id: _nextId(),
           conversationId: conversationId,
           text: text,
-          isMe: true,
+          sender: direction,
           time: time,
         );
         _store.putIfAbsent(conversationId, () => <ChatMessage>[]).add(message);
@@ -160,7 +166,8 @@ class ChatRepository {
         .insert({
           'conversation_id': conversationId,
           'body': text,
-          'is_me': true,
+          'sender': direction.name,
+          'is_me': direction == ChatSender.patient,
           'time_label': time,
         })
         .select()
@@ -181,7 +188,7 @@ class ChatRepository {
           id: _nextId(),
           conversationId: conversationId,
           text: body,
-          isMe: false,
+          sender: ChatSender.doctor,
           time: time,
         );
         _store.putIfAbsent(conversationId, () => <ChatMessage>[]).add(message);
@@ -194,6 +201,7 @@ class ChatRepository {
         .insert({
           'conversation_id': conversationId,
           'body': body,
+          'sender': 'doctor',
           'is_me': false,
           'time_label': time,
         })

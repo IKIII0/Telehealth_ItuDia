@@ -138,7 +138,10 @@ ChatMessage chatMessageFromRow(Map<String, dynamic> row) {
     id: row['id'].toString(),
     conversationId: row['conversation_id'].toString(),
     text: row['body'] as String? ?? '',
-    isMe: row['is_me'] as bool? ?? false,
+    sender: ChatMessage.parseSender(
+      row['sender'] as String?,
+      fallbackIsMe: row['is_me'] as bool? ?? false,
+    ),
     time: row['time_label'] as String? ?? '',
   );
 }
