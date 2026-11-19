@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:Telehealth/data/models/hospital_admin.dart';
+import 'package:Telehealth/data/models/medicine_catalog.dart';
 import 'package:Telehealth/data/repositories/hospital_admin_repository.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/theme/admin_theme.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/widgets/medicine_dropdown_field.dart';
 
 /// Modal verifikasi resep.
 ///
@@ -648,6 +650,17 @@ class _DrugEditor extends StatelessWidget {
   final bool enabled;
   final VoidCallback onRemove;
 
+  /// Mengisi field obat dari nilai default katalog. Semua field tetap dapat
+  /// diedit admin untuk penyesuaian khusus.
+  void _applyCatalogDefaults(_DrugForm form, MedicineCatalogItem item) {
+    if (item.defaultDosage.isNotEmpty) {
+      form.dose.text = item.defaultDosage;
+    }
+    form.frequency.text = '${item.defaultFrequencyPerDay}';
+    form.duration.text = '${item.defaultDurationDays}';
+    form.instructions.text = item.defaultInstructions;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -683,17 +696,15 @@ class _DrugEditor extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: TextFormField(
+                child: MedicineDropdownField(
                   controller: form.name,
                   enabled: enabled,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama obat',
-                    hintText: 'mis. Furosemide',
-                  ),
+                  labelText: 'Nama obat',
+                  hintText: 'Pilih obat dari katalog…',
                   validator: (value) => (value ?? '').trim().isEmpty
                       ? 'Nama obat wajib diisi'
                       : null,
+                  onSelected: (item) => _applyCatalogDefaults(form, item),
                 ),
               ),
               if (canRemove) ...[

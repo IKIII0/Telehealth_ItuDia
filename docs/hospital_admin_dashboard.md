@@ -6,10 +6,12 @@ aplikasi mobile tidak diubah alurnya.
 | Bagian | Lokasi |
 |---|---|
 | Skema + RLS + RPC + seed | `supabase/03_hospital_admin_rbac.sql` |
+| Katalog obat + RLS + seed | `supabase/07_medicines_catalog.sql` |
 | Model data | `lib/data/models/hospital_admin.dart` |
+| Model & service katalog obat | `lib/data/models/medicine_catalog.dart`, `lib/data/services/medicine_service.dart` |
 | Repository (query & mutation) | `lib/data/repositories/hospital_admin_repository.dart` |
 | UI (sidebar, halaman, modal) | `lib/features/hospital_admin/` |
-| Route | `/hospital-admin/dashboard`, `/hospital-admin/medications`, `/hospital-admin/patients` |
+| Route | `/hospital-admin/dashboard`, `/hospital-admin/medications`, `/hospital-admin/patients`, `/hospital-admin/medicines-catalog` |
 | Guard | `lib/features/hospital_admin/presentation/guards/hospital_admin_guard.dart` |
 | Uji | `test/hospital_admin_test.dart` |
 
@@ -26,6 +28,11 @@ aplikasi mobile tidak diubah alurnya.
 2. **Verifikasi Obat**
    - Daftar resep dengan filter status: menunggu verifikasi, butuh klarifikasi,
      terverifikasi
+   - Input nama obat berupa **searchable dropdown** yang memuat daftar obat
+     aktif dari `medicines_catalog` (pencarian debounce 300 ms di dalam panel)
+   - **Auto-fill cerdas**: memilih obat mengisi dosis, frekuensi/hari, durasi,
+     dan instruksi dari nilai default katalog — semua tetap bisa diedit
+   - Opsi **Gunakan nama obat custom** untuk obat yang belum terdaftar
    - Modal verifikasi berisi form dinamis: nama obat, dosis, frekuensi harian,
      durasi hari, dan instruksi khusus
    - Aksi **Verifikasi & Terbitkan Jadwal** (status `verified`) dan
@@ -35,6 +42,10 @@ aplikasi mobile tidak diubah alurnya.
    - Indikator real-time untuk dosis terlewat dan keluhan pasien
      (Supabase Realtime + polling cadangan 30 detik)
    - Modal **Catat Tindak Lanjut**; laporan keluhan terkait otomatis ditutup
+4. **Katalog Obat**
+   - Daftar referensi obat dengan pencarian nama/zat aktif/kategori
+   - Tambah & ubah entri beserta nilai default dosis, frekuensi, durasi,
+     instruksi, dan status aktif
 
 ### Indikator warna
 
@@ -81,6 +92,25 @@ Jalankan berurutan di SQL Editor Supabase:
 1. `supabase/01_medication_doctor_chat.sql`
 2. `supabase/02_profiles_auth_sync.sql`
 3. `supabase/03_hospital_admin_rbac.sql`
+4. `supabase/07_medicines_catalog.sql` (katalog obat + seed)
+5. `supabase/08_medicines_catalog_anon_compat.sql` — **hanya jika** memakai
+   jalur kompatibilitas `anon` seperti `06_firebase_anon_compat.sql`.
+   Tanpa patch ini, dropdown obat menampilkan “Belum ada obat aktif di katalog”
+   karena policy `authenticated` tidak berlaku untuk role `anon`.
+   Rollback: `08_rollback_medicines_catalog_anon_compat.sql`.
+
+Setelah ketiga file dijalankan, verifikasi kesiapan tabel, policy RLS, RPC,
+dan data awal dengan `supabase/04_hospital_admin_readiness_check.sql`
+(read-only, tidak mengubah skema).
+
+Jika `auth context` menunjukkan `jwt_role: anon` dan dashboard membaca 0 baris,
+pilih salah satu:
+
+- **Direkomendasikan:** set custom claim `role: authenticated` pada akun
+  Firebase (lihat `scripts/README.md`), atau
+- **Sementara/demo:** jalankan `supabase/06_firebase_anon_compat.sql` untuk
+  menambahkan role `anon` ke policy admin. Rollback tersedia di
+  `supabase/06_rollback_firebase_anon_compat.sql`.
 
 File ketiga bersifat idempoten (`create table if not exists`, `drop policy if exists`,
 `on conflict do nothing`), sehingga aman dijalankan ulang.
@@ -91,6 +121,15 @@ Supabase Dashboard → **Authentication → Third-Party Auth → Add provider �
 lalu isi **Firebase Project ID**.
 
 Tanpa langkah ini semua policy akan menolak akses (anon tidak diberi izin).
+
+> **Penting — klaim `role` Firebase.**
+> Firebase ID token tidak memiliki klaim `role`, sehingga Supabase menjalankan
+> request sebagai Postgres role `anon` dan policy `to authenticated` tidak
+> berlaku. Solusi resmi: tambahkan custom claim `role: "authenticated"` ke
+> akun Firebase (lihat `scripts/README.md`). Untuk demo tanpa Admin SDK,
+> jalankan `supabase/06_firebase_anon_compat.sql` yang menambahkan role `anon`
+> ke policy; rollback tersedia di
+> `supabase/06_rollback_firebase_anon_compat.sql`.
 
 ### 3.3 Daftarkan admin
 
@@ -208,6 +247,8 @@ erDiagram
 | Verifikasi resep | RPC `hospital_verify_prescription(uuid, jsonb, text)` |
 | Minta klarifikasi | RPC `hospital_request_clarification(uuid, text)` |
 | Tindak lanjut | RPC `hospital_record_follow_up(uuid, text, text, uuid, uuid)` |
+| Pencarian obat | `medicines_catalog` (ILIKE pada nama & zat aktif) |
+| Katalog obat | `medicines_catalog` (list, insert, update) |
 | Realtime | `postgres_changes` pada `medication_adherence` & `patient_reports` (filter `hospital_id`) |
 
 ---
@@ -226,6 +267,7 @@ Semua policy memakai role `authenticated` (JWT Firebase valid).
 | `medication_adherence` | idem | idem |
 | `patient_reports` | idem | idem |
 | `admin_follow_ups` | idem | idem |
+| `medicines_catalog` | semua role terotentikasi | hanya `hospital_admin`/`super_admin` (insert/update) |
 
 `app.current_hospital_id()` adalah fungsi `SECURITY DEFINER` yang membaca
 `user_roles` berdasarkan `auth.jwt() ->> 'sub'`, sehingga tidak terjadi rekursi RLS.

@@ -76,6 +76,8 @@ class HospitalAdminRepository {
       );
     }
 
+    debugPrint('[HospitalAdminRepository] Firebase UID aktif: $uid');
+
     final row = await db
         .from('user_roles')
         .select('user_id, role, hospital_id, hospitals(name, city)')
@@ -85,6 +87,14 @@ class HospitalAdminRepository {
         .maybeSingle();
 
     if (row == null) {
+      debugPrint(
+        '[HospitalAdminRepository] user_roles tidak mengembalikan baris untuk '
+        'UID $uid. Periksa: (1) Third-Party Auth Firebase di Supabase, '
+        '(2) kecocokan UID dengan baris user_roles, (3) Supabase URL di .env.',
+      );
+      if (kDebugMode) {
+        await _logAuthContext(db);
+      }
       throw const HospitalAdminException(
         'Akun ini belum terdaftar sebagai admin rumah sakit. Hubungi '
         'super admin untuk menambahkan role hospital_admin.',
@@ -107,6 +117,21 @@ class HospitalAdminRepository {
       return FirebaseAuth.instance.currentUser?.uid;
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Diagnostik sementara: memanggil RPC `debug_auth_context` (lihat
+  /// `supabase/05_debug_auth_context.sql`) untuk melihat klaim JWT yang
+  /// benar-benar diterima Supabase. Aman dihapus setelah masalah RLS selesai.
+  Future<void> _logAuthContext(SupabaseClient db) async {
+    try {
+      final context = await db.rpc<dynamic>('debug_auth_context');
+      debugPrint('[HospitalAdminRepository] auth context: $context');
+    } catch (error) {
+      debugPrint(
+        '[HospitalAdminRepository] gagal membaca debug_auth_context '
+        '(jalankan supabase/05_debug_auth_context.sql): $error',
+      );
     }
   }
 

@@ -86,6 +86,10 @@ class AppRoutes {
   static const String hospitalAdminPatientsName = 'hospitalAdminPatients';
   static const String hospitalAdminPatientsPath = '/hospital-admin/patients';
 
+  static const String hospitalAdminCatalogName = 'hospitalAdminCatalog';
+  static const String hospitalAdminCatalogPath =
+      '/hospital-admin/medicines-catalog';
+
   /// Halaman utama sesuai role akun.
   static String homePathFor(UserRole role) => switch (role) {
     UserRole.patient => patientDashboardPath,

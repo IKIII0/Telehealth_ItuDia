@@ -50,12 +50,34 @@ class SupabaseConfig {
 
   /// Token yang dikirim ke Supabase. `getIdToken()` otomatis memperbarui
   /// token bila sudah kedaluwarsa.
+  ///
+  /// Request pertama setiap sesi memakai `getIdToken(true)` agar custom claim
+  /// Firebase (mis. `role: authenticated` untuk Supabase Third-Party Auth)
+  /// ikut terbaca setelah claim diubah dari Admin SDK.
+  static bool _forceTokenRefresh = true;
+
   static Future<String?> _firebaseIdToken() async {
     try {
-      if (Firebase.apps.isEmpty) return null;
+      if (Firebase.apps.isEmpty) {
+        debugPrint('[SupabaseConfig] Firebase belum siap; token null.');
+        return null;
+      }
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return null;
-      return await user.getIdToken();
+      if (user == null) {
+        debugPrint('[SupabaseConfig] Firebase user null; token null.');
+        return null;
+      }
+
+      final forceRefresh = _forceTokenRefresh;
+      _forceTokenRefresh = false;
+
+      try {
+        return await user.getIdToken(forceRefresh);
+      } catch (error) {
+        if (!forceRefresh) rethrow;
+        // Jika refresh paksa gagal (mis. offline), pakai token yang tersimpan.
+        return await user.getIdToken();
+      }
     } catch (error) {
       debugPrint('[SupabaseConfig] gagal mengambil Firebase ID token: $error');
       return null;

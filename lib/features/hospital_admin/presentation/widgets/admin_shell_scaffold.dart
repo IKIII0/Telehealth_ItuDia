@@ -31,6 +31,7 @@ class _HospitalAdminShellScaffoldState
     'Ringkasan Dashboard',
     'Verifikasi Obat',
     'Pemantauan Pasien',
+    'Katalog Obat',
   ];
 
   HospitalAdminProfile? _profile;
@@ -446,6 +447,13 @@ class _HospitalAdminShellScaffoldState
               label: 'Pemantauan Pasien',
               selected: currentIndex == 2,
               onTap: () => navigate(2),
+            ),
+            _SidebarItem(
+              icon: Icons.menu_book_outlined,
+              selectedIcon: Icons.menu_book_rounded,
+              label: 'Katalog Obat',
+              selected: currentIndex == 3,
+              onTap: () => navigate(3),
             ),
             const Spacer(),
             Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
