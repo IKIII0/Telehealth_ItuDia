@@ -178,6 +178,7 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
   String get _inputHint => switch (widget.session.status) {
+    ConsultationStatus.requested => 'Terima permintaan untuk membalas',
     ConsultationStatus.ongoing => 'Tulis pesan untuk pasien...',
     ConsultationStatus.scheduled => 'Mulai konsultasi untuk mengirim pesan',
     ConsultationStatus.completed => 'Sesi telah selesai',

@@ -15,6 +15,7 @@ class DoctorNotesTab extends StatefulWidget {
     super.key,
     required this.session,
     required this.onSaved,
+    this.onSubmitPrescription,
   });
 
   final ConsultationSession session;
@@ -23,6 +24,11 @@ class DoctorNotesTab extends StatefulWidget {
     required String notes,
     required List<String> medications,
   }) onSaved;
+
+  /// Kirim daftar obat ke admin RS (tabel `prescriptions`). `null` berarti
+  /// fitur tidak tersedia (mis. aplikasi belum terhubung ke Supabase).
+  final Future<void> Function(List<String> medications, String note)?
+  onSubmitPrescription;
 
   @override
   State<DoctorNotesTab> createState() => _DoctorNotesTabState();
@@ -41,6 +47,7 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
   final List<String> _medications = [];
   bool _saving = false;
   bool _isDirty = false;
+  bool _submitting = false;
 
   @override
   void initState() {
@@ -79,6 +86,18 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
       _medications.removeAt(index);
       _isDirty = true;
     });
+  }
+
+  Future<void> _submitPrescription() async {
+    final submit = widget.onSubmitPrescription;
+    if (submit == null || _medications.isEmpty) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() => _submitting = true);
+    try {
+      await submit(List.from(_medications), _notesCtrl.text.trim());
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   Future<void> _save() async {
@@ -361,6 +380,36 @@ class _DoctorNotesTabState extends State<DoctorNotesTab>
               ],
             ),
           ),
+          if (widget.onSubmitPrescription != null) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              key: const Key('submit_prescription_button'),
+              onPressed: (_medications.isEmpty || _submitting)
+                  ? null
+                  : _submitPrescription,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: _submitting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send_outlined, size: 18),
+              label: Text(
+                _submitting ? 'Mengirim...' : 'Serahkan Resep ke Admin',
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Resep akan muncul di halaman Verifikasi Obat admin rumah sakit.',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            ),
+          ],
           const SizedBox(height: 20),
 
           // ── Tombol Simpan ────────────────────────────────────────────────

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/supabase/supabase_config.dart';
 import '../models/consultation_session.dart';
+import 'auth_repository.dart';
 import 'simulated_api.dart';
+import 'supabase_mappers.dart';
 
-/// Repository sesi konsultasi dan rekam medis pasien (data simulasi).
+/// Repository sesi konsultasi dan rekam medis pasien.
 ///
-/// Menyediakan data sesi aktif, riwayat medis pasien (vital signs),
-/// riwayat obat, dan riwayat konsultasi dari dokter lain.
+/// Memakai tabel Supabase (`consultation_sessions`, `consultation_messages`,
+/// `patient_vital_records`) dan RPC dokter bila aplikasi terhubung ke Supabase.
+/// Tanpa koneksi, seluruh method memakai data simulasi lokal agar aplikasi tetap
+/// bisa dijalankan (dan diuji) tanpa backend.
 class ConsultationRepository {
   ConsultationRepository._() {
     _seed();
@@ -411,10 +417,44 @@ class ConsultationRepository {
     return message;
   }
 
+  // ── Sumber data: Supabase atau simulasi ────────────────────────────────────
+  /// Client Supabase dengan JWT Firebase (wajib untuk RLS & RPC dokter).
+  /// `null` berarti aplikasi memakai data simulasi lokal.
+  SupabaseClient? get _db =>
+      SupabaseConfig.firebaseAuthClient ?? SupabaseConfig.client;
+
+  /// `true` bila data konsultasi berasal dari tabel di Supabase.
+  bool get isRemote => _db != null;
+
+  List<Map<String, dynamic>> _rows(Object? data) {
+    if (data is! List) return const [];
+    return data
+        .map((row) => Map<String, dynamic>.from(row as Map))
+        .toList(growable: false);
+  }
+
+  Map<String, dynamic> _row(Object? data) =>
+      Map<String, dynamic>.from(data as Map);
+
+  String? get _currentUid => AuthRepository.instance.currentUser?.id;
+
   // ── API Publik ─────────────────────────────────────────────────────────────
 
   /// Mulai sesi terjadwal: status menjadi berlangsung dan waktu mulai dicatat.
-  Future<ConsultationSession> startSession(String sessionId) {
+  Future<ConsultationSession> startSession(String sessionId) async {
+    final db = _db;
+    if (db != null) {
+      await db.rpc<dynamic>(
+        'doctor_start_consultation',
+        params: {'p_session_id': sessionId},
+      );
+      final updated = await getSession(sessionId);
+      if (updated == null) {
+        throw StateError('Sesi tidak ditemukan: $sessionId');
+      }
+      return updated;
+    }
+
     return SimulatedApi.run(() {
       final idx = _sessions.indexWhere((s) => s.sessionId == sessionId);
       if (idx == -1) throw StateError('Sesi tidak ditemukan: $sessionId');
@@ -432,14 +472,49 @@ class ConsultationRepository {
   }
 
   /// Pesan chat sesi, urut dari yang terlama.
-  Future<List<ConsultationMessage>> getMessages(String sessionId) {
+  Future<List<ConsultationMessage>> getMessages(String sessionId) async {
+    final db = _db;
+    if (db != null) {
+      final data = await db
+          .from('consultation_messages')
+          .select()
+          .eq('session_id', sessionId)
+          .order('created_at');
+      return _rows(data).map(consultationMessageFromRow).toList();
+    }
+
     return SimulatedApi.run(
       () => List<ConsultationMessage>.of(_messages[sessionId] ?? const []),
     );
   }
 
   /// Kirim pesan dokter. Hanya diizinkan pada sesi yang sedang berlangsung.
-  Future<ConsultationMessage> sendDoctorMessage(String sessionId, String text) {
+  Future<ConsultationMessage> sendDoctorMessage(
+    String sessionId,
+    String text,
+  ) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) throw ArgumentError('Pesan tidak boleh kosong.');
+
+    final db = _db;
+    if (db != null) {
+      final uid = _currentUid;
+      if (uid == null) {
+        throw StateError('Sesi login tidak valid.');
+      }
+      final row = await db
+          .from('consultation_messages')
+          .insert({
+            'session_id': sessionId,
+            'sender_role': 'doctor',
+            'sender_user_id': uid,
+            'body': trimmed,
+          })
+          .select()
+          .single();
+      return consultationMessageFromRow(_row(row));
+    }
+
     return SimulatedApi.run(() {
       final session = _sessions
           .where((s) => s.sessionId == sessionId)
@@ -448,14 +523,14 @@ class ConsultationRepository {
       if (session.status != ConsultationStatus.ongoing) {
         throw StateError('Chat hanya dapat dikirim saat sesi berlangsung.');
       }
-      final trimmed = text.trim();
-      if (trimmed.isEmpty) throw ArgumentError('Pesan tidak boleh kosong.');
       return _addMessage(sessionId, trimmed, fromDoctor: true);
     });
   }
 
-  /// Balasan pasien otomatis (simulasi untuk demo).
-  Future<ConsultationMessage?> simulatePatientReply(String sessionId) {
+  /// Balasan pasien otomatis (hanya untuk data simulasi).
+  Future<ConsultationMessage?> simulatePatientReply(String sessionId) async {
+    if (_db != null) return null;
+
     return SimulatedApi.run(() {
       final session = _sessions
           .where((s) => s.sessionId == sessionId)
@@ -472,19 +547,167 @@ class ConsultationRepository {
   }
 
   /// Ambil sesi berdasarkan sessionId.
-  Future<ConsultationSession?> getSession(String sessionId) {
+  Future<ConsultationSession?> getSession(String sessionId) async {
+    final db = _db;
+    if (db != null) {
+      final data = await db
+          .from('consultation_sessions')
+          .select()
+          .eq('id', sessionId)
+          .maybeSingle();
+      return data == null ? null : consultationSessionFromRow(_row(data));
+    }
+
     return SimulatedApi.run(
       () => _sessions.where((s) => s.sessionId == sessionId).firstOrNull,
     );
   }
 
   /// Ambil semua sesi untuk tampilan daftar dokter.
-  Future<List<ConsultationSession>> getAllSessions() {
+  Future<List<ConsultationSession>> getAllSessions() async {
+    final db = _db;
+    if (db != null) {
+      final data = await db
+          .from('consultation_sessions')
+          .select()
+          .order('requested_at', ascending: false);
+      return _rows(data).map(consultationSessionFromRow).toList();
+    }
+
     return SimulatedApi.run(() => List.unmodifiable(_sessions));
   }
 
+  /// Tanggapi permintaan konsultasi (terima → terjadwal, tolak → ditolak).
+  Future<ConsultationSession?> respondRequest(
+    String sessionId, {
+    required bool accept,
+  }) async {
+    final db = _db;
+    if (db == null) return getSession(sessionId);
+
+    await db.rpc<dynamic>(
+      'doctor_respond_consultation',
+      params: {'p_session_id': sessionId, 'p_accept': accept},
+    );
+    return getSession(sessionId);
+  }
+
+  /// Buat permintaan konsultasi baru dari sisi pasien.
+  ///
+  /// Mengembalikan `null` bila aplikasi belum terhubung ke Supabase atau dokter
+  /// belum ditautkan ke akun Firebase-nya (`doctor_profiles.directory_doctor_id`).
+  Future<ConsultationSession?> createRequest({
+    required String doctorDirectoryId,
+    required String patientName,
+    required String patientRelation,
+    required String complaint,
+    required String consultationType,
+    int fee = 0,
+  }) async {
+    final db = _db;
+    final uid = _currentUid;
+    if (db == null || uid == null) return null;
+
+    final doctorRow = await db
+        .from('doctor_profiles')
+        .select('user_id')
+        .eq('directory_doctor_id', doctorDirectoryId)
+        .maybeSingle();
+    if (doctorRow == null) return null;
+    final doctorUid = doctorRow['user_id'].toString();
+
+    // Data profil pasien; kegagalan di sini tidak menghalangi pembuatan sesi.
+    int? age;
+    String? gender;
+    var bloodType = '-';
+    List<String> allergies = const [];
+    try {
+      final profile = await db
+          .from('profile_overview')
+          .select('birth_date, gender, blood_type, allergies')
+          .eq('id', uid)
+          .maybeSingle();
+      if (profile != null) {
+        final birth = DateTime.tryParse(profile['birth_date']?.toString() ?? '');
+        if (birth != null) {
+          final now = DateTime.now();
+          age = now.year -
+              birth.year -
+              ((now.month < birth.month ||
+                      (now.month == birth.month && now.day < birth.day))
+                  ? 1
+                  : 0);
+        }
+        gender = profile['gender']?.toString();
+        bloodType = profile['blood_type']?.toString() ?? '-';
+        final rawAllergies = profile['allergies'];
+        if (rawAllergies is List) {
+          allergies = rawAllergies.map((e) => e.toString()).toList();
+        }
+      }
+    } catch (_) {
+      // Abaikan: sesi tetap bisa dibuat dengan data minimal.
+    }
+
+    final row = await db
+        .from('consultation_sessions')
+        .insert({
+          'doctor_user_id': doctorUid,
+          'patient_user_id': uid,
+          'patient_name': patientName,
+          'patient_relation': patientRelation,
+          'patient_age': age,
+          'patient_gender': gender,
+          'patient_blood_type': bloodType,
+          'patient_allergies': allergies,
+          'complaint': complaint,
+          'consultation_type': consultationType == 'Video Call'
+              ? 'video'
+              : 'chat',
+          'priority': 'routine',
+          'status': 'requested',
+          'fee': fee,
+        })
+        .select()
+        .single();
+    return consultationSessionFromRow(_row(row));
+  }
+
+  /// Serahkan resep ke admin rumah sakit (tabel `prescriptions`).
+  Future<Map<String, dynamic>> submitPrescription({
+    required String sessionId,
+    required List<String> medications,
+    String note = '',
+  }) async {
+    final db = _db;
+    if (db == null) {
+      throw StateError(
+        'Resep ke admin membutuhkan koneksi Supabase yang aktif.',
+      );
+    }
+    final data = await db.rpc<dynamic>(
+      'doctor_submit_prescription',
+      params: {
+        'p_session_id': sessionId,
+        'p_items': medications,
+        'p_note': note,
+      },
+    );
+    return _row(data);
+  }
+
   /// Ambil vital records pasien, diurutkan terbaru dulu per metrik.
-  Future<List<PatientVitalRecord>> getVitalRecords(String patientId) {
+  Future<List<PatientVitalRecord>> getVitalRecords(String patientId) async {
+    final db = _db;
+    if (db != null) {
+      final data = await db
+          .from('patient_vital_records')
+          .select()
+          .eq('patient_user_id', patientId)
+          .order('recorded_at', ascending: false);
+      return _rows(data).map(vitalRecordFromRow).toList();
+    }
+
     return SimulatedApi.run(() {
       final records = _vitalRecords[patientId] ?? [];
       final sorted = List<PatientVitalRecord>.from(records)
@@ -494,7 +717,22 @@ class ConsultationRepository {
   }
 
   /// Ambil rekam obat pasien.
-  Future<List<PatientMedicationRecord>> getMedicationRecords(String patientId) {
+  Future<List<PatientMedicationRecord>> getMedicationRecords(
+    String patientId,
+  ) async {
+    final db = _db;
+    if (db != null) {
+      final data = await db.rpc<dynamic>(
+        'doctor_patient_medications',
+        params: {'p_patient_user_id': patientId},
+      );
+      final rows = _rows(data);
+      return [
+        for (var i = 0; i < rows.length; i++)
+          patientMedicationFromRow(rows[i], index: i),
+      ];
+    }
+
     return SimulatedApi.run(
       () => List.unmodifiable(_medicationRecords[patientId] ?? []),
     );
@@ -502,8 +740,21 @@ class ConsultationRepository {
 
   /// Ambil riwayat konsultasi pasien dengan dokter lain.
   Future<List<PastConsultationRecord>> getConsultationHistory(
-    String patientId,
-  ) {
+    String patientId, {
+    String? excludeSessionId,
+  }) async {
+    final db = _db;
+    if (db != null) {
+      final data = await db.rpc<dynamic>(
+        'doctor_patient_consultation_history',
+        params: {
+          'p_patient_user_id': patientId,
+          'p_exclude_session_id': excludeSessionId,
+        },
+      );
+      return _rows(data).map(pastConsultationFromRow).toList();
+    }
+
     return SimulatedApi.run(() {
       final records = _consultationHistory[patientId] ?? [];
       final sorted = List<PastConsultationRecord>.from(records)
@@ -513,13 +764,30 @@ class ConsultationRepository {
   }
 
   /// Simpan catatan dokter dan perbarui status sesi.
+  ///
+  /// Saat terhubung ke Supabase, daftar obat tidak ikut disimpan di sesi;
+  /// kirim lewat [submitPrescription] agar masuk ke alur verifikasi admin.
   Future<ConsultationSession> saveSessionNotes({
     required String sessionId,
     required String diagnosisSummary,
     required String doctorNotes,
     required List<String> prescribedMedications,
     bool complete = false,
-  }) {
+  }) async {
+    final db = _db;
+    if (db != null) {
+      final data = await db.rpc<dynamic>(
+        'doctor_save_consultation_notes',
+        params: {
+          'p_session_id': sessionId,
+          'p_diagnosis': diagnosisSummary,
+          'p_notes': doctorNotes,
+          'p_complete': complete,
+        },
+      );
+      return consultationSessionFromRow(_row(data));
+    }
+
     return SimulatedApi.run(() {
       final idx = _sessions.indexWhere((s) => s.sessionId == sessionId);
       if (idx == -1) throw StateError('Sesi tidak ditemukan: $sessionId');
@@ -536,7 +804,22 @@ class ConsultationRepository {
   }
 
   /// Hitung ringkasan vital terkini per metrik (nilai terakhir per nama metrik).
-  Future<Map<String, PatientVitalRecord>> getLatestVitals(String patientId) {
+  Future<Map<String, PatientVitalRecord>> getLatestVitals(
+    String patientId,
+  ) async {
+    final db = _db;
+    if (db != null) {
+      final data = await db
+          .from('patient_latest_vitals')
+          .select()
+          .eq('patient_user_id', patientId);
+      final latest = <String, PatientVitalRecord>{};
+      for (final record in _rows(data).map(vitalRecordFromRow)) {
+        latest[record.metricName] = record;
+      }
+      return Map.unmodifiable(latest);
+    }
+
     return SimulatedApi.run(() {
       final records = _vitalRecords[patientId] ?? [];
       final Map<String, PatientVitalRecord> latest = {};
@@ -549,4 +832,80 @@ class ConsultationRepository {
       return Map.unmodifiable(latest);
     });
   }
+
+  /// Data kartu dashboard dokter (permintaan baru, sesi hari ini, statistik).
+  Future<DoctorDashboardData> getDashboardData() async {
+    final db = _db;
+    if (db == null) {
+      return SimulatedApi.run(() {
+        final today = _sessions
+            .where(
+              (s) =>
+                  s.status == ConsultationStatus.scheduled ||
+                  s.status == ConsultationStatus.ongoing,
+            )
+            .toList();
+        return DoctorDashboardData(
+          isRemote: false,
+          requests: const [],
+          todaySessions: today,
+          completedTotal: 18,
+          queueFilled: 8,
+          dailyQuota: 12,
+          accepting: true,
+        );
+      });
+    }
+
+    final summary = _row(
+      await db.rpc<dynamic>('doctor_dashboard_summary'),
+    );
+    final sessions = await getAllSessions();
+
+    int asInt(String key, int fallback) =>
+        (summary[key] as num?)?.toInt() ?? fallback;
+
+    return DoctorDashboardData(
+      isRemote: true,
+      requests: sessions.where((s) => s.isRequest).toList(),
+      todaySessions: sessions
+          .where(
+            (s) =>
+                s.status == ConsultationStatus.scheduled ||
+                s.status == ConsultationStatus.ongoing,
+          )
+          .toList(),
+      completedTotal: asInt('completed_total', 0),
+      queueFilled: asInt('queue_filled', 0),
+      dailyQuota: asInt('daily_quota', 12),
+      accepting: summary['accepting_consultations'] as bool? ?? true,
+    );
+  }
+}
+
+/// Ringkasan data dashboard dokter.
+class DoctorDashboardData {
+  const DoctorDashboardData({
+    required this.isRemote,
+    required this.requests,
+    required this.todaySessions,
+    required this.completedTotal,
+    required this.queueFilled,
+    required this.dailyQuota,
+    required this.accepting,
+  });
+
+  /// `true` bila data berasal dari Supabase.
+  final bool isRemote;
+
+  /// Sesi berstatus `requested` (permintaan yang belum ditanggapi).
+  final List<ConsultationSession> requests;
+
+  /// Sesi `scheduled` atau `ongoing`.
+  final List<ConsultationSession> todaySessions;
+
+  final int completedTotal;
+  final int queueFilled;
+  final int dailyQuota;
+  final bool accepting;
 }

@@ -6,6 +6,7 @@ import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 import 'package:Telehealth/data/repositories/chat_repository.dart';
+import 'package:Telehealth/data/repositories/consultation_repository.dart';
 import 'package:Telehealth/data/repositories/conversation_repository.dart';
 import 'package:Telehealth/data/repositories/doctor_repository.dart';
 
@@ -37,6 +38,7 @@ class _ConsultationCheckoutPageState extends State<ConsultationCheckoutPage> {
 
   late final List<_PatientProfile> _profiles;
   late final List<_PaymentMethod> _methods;
+  final _complaintCtrl = TextEditingController();
 
   Doctor? _doctor;
   bool _loadingDoctor = false;
@@ -44,6 +46,12 @@ class _ConsultationCheckoutPageState extends State<ConsultationCheckoutPage> {
   int _selectedProfile = 0;
   int _selectedMethod = 0;
   bool _paying = false;
+
+  @override
+  void dispose() {
+    _complaintCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -116,6 +124,63 @@ class _ConsultationCheckoutPageState extends State<ConsultationCheckoutPage> {
     try {
       // Simulasi proses pembayaran.
       await Future<void>.delayed(const Duration(milliseconds: 900));
+
+      // Bila Supabase aktif, buat permintaan konsultasi sungguhan agar muncul
+      // di dashboard dokter. Tanpa itu, aplikasi memakai alur simulasi chat.
+      final repo = ConsultationRepository.instance;
+      if (repo.isRemote) {
+        final complaint = _complaintCtrl.text.trim();
+        if (complaint.isEmpty) {
+          if (!mounted) return;
+          setState(() => _paying = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Tuliskan keluhan Anda terlebih dahulu.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
+
+        final profile = _profiles[_selectedProfile];
+        final session = await repo.createRequest(
+          doctorDirectoryId: doctor.id,
+          patientName: profile.name,
+          patientRelation: profile.relation,
+          complaint: complaint,
+          consultationType: 'Chat Dokter',
+          fee: _total,
+        );
+        if (!mounted) return;
+        if (session == null) {
+          setState(() => _paying = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Dokter ini belum terhubung ke akun praktiknya. '
+                'Permintaan tidak dapat dikirim.',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
+
+        setState(() => _paying = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Permintaan konsultasi terkirim. Menunggu dokter.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.goNamed(AppRoutes.patientDashboardName);
+        }
+        return;
+      }
+
       final conversation = await ConversationRepository.instance
           .ensureForDoctor(doctor);
       // Beri pesan pembuka agar sesi tidak kosong saat pertama dibuka.
@@ -205,6 +270,10 @@ class _ConsultationCheckoutPageState extends State<ConsultationCheckoutPage> {
             (entry) => _buildProfileTile(entry.key, entry.value, scheme),
           ),
           const SizedBox(height: 20),
+          _sectionLabel('Keluhan yang dikonsultasikan'),
+          const SizedBox(height: 8),
+          _buildComplaintField(),
+          const SizedBox(height: 20),
           _sectionLabel('Metode pembayaran'),
           const SizedBox(height: 8),
           ..._methods.asMap().entries.map(
@@ -286,6 +355,30 @@ class _ConsultationCheckoutPageState extends State<ConsultationCheckoutPage> {
     return Text(
       text,
       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+    );
+  }
+
+  Widget _buildComplaintField() {
+    return TextField(
+      key: const Key('consultation_complaint_field'),
+      controller: _complaintCtrl,
+      maxLines: 3,
+      textInputAction: TextInputAction.newline,
+      decoration: InputDecoration(
+        hintText: 'Contoh: Demam 3 hari disertai nyeri tenggorokan.',
+        hintStyle: TextStyle(fontSize: 12, color: Colors.grey[500]),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.all(14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+      ),
     );
   }
 

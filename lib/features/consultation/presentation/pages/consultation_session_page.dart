@@ -173,6 +173,29 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
     showAppSnack(context, 'Catatan konsultasi berhasil disimpan');
   }
 
+  /// Kirim daftar obat sesi ini ke admin rumah sakit.
+  Future<void> _submitPrescription(
+    List<String> medications,
+    String note,
+  ) async {
+    try {
+      await ConsultationRepository.instance.submitPrescription(
+        sessionId: widget.sessionId,
+        medications: medications,
+        note: note,
+      );
+      if (!mounted) return;
+      showAppSnack(context, 'Resep dikirim ke admin rumah sakit.');
+    } catch (error) {
+      if (!mounted) return;
+      showAppSnack(
+        context,
+        'Gagal mengirim resep: $error',
+        success: false,
+      );
+    }
+  }
+
   // ── Build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -242,7 +265,14 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
                 MedicalRecordsTab(patientId: session.patientId),
                 MedicationHistoryTab(patientId: session.patientId),
                 ConsultationHistoryTab(patientId: session.patientId),
-                DoctorNotesTab(session: session, onSaved: _onNotesSaved),
+                DoctorNotesTab(
+                  session: session,
+                  onSaved: _onNotesSaved,
+                  onSubmitPrescription:
+                      ConsultationRepository.instance.isRemote
+                      ? _submitPrescription
+                      : null,
+                ),
               ],
             ),
           ),
