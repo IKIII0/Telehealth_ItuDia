@@ -317,7 +317,7 @@ class _DashboardPageState extends State<DashboardPage> {
               icon: Icons.chat_bubble_rounded,
               title: 'Chat Dokter',
               subtitle: 'Tanya dokter',
-              color: scheme.primary,
+              color: const Color(0xFF00897B),
               onTap: () => _go(AppRoutes.patientDoctorsName),
             ),
           ),
@@ -348,21 +348,41 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(
-                child: Column(
+              Expanded(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Jurnal Kesehatan',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59F00).withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(9),
+                      ),
+                      child: const Icon(
+                        Icons.show_chart_rounded,
+                        color: Color(0xFFF59F00),
+                        size: 18,
                       ),
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Grafik rekam medis & kondisi fisik',
-                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    const SizedBox(width: 9),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Jurnal Kesehatan',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Grafik rekam medis & kondisi fisik',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -422,28 +442,28 @@ class _DashboardPageState extends State<DashboardPage> {
                         value: bpValue,
                         unit: 'mmHg',
                         icon: Icons.favorite_rounded,
-                        color: scheme.primary,
+                        color: const Color(0xFFE05252),
                       ),
                       _buildVitalMetric(
                         label: 'Gula Darah',
                         value: bsValue,
                         unit: 'mg/dL',
                         icon: Icons.water_drop_outlined,
-                        color: scheme.primary,
+                        color: const Color(0xFFD98E04),
                       ),
                       _buildVitalMetric(
                         label: 'Detak',
                         value: '75',
                         unit: 'bpm',
                         icon: Icons.monitor_heart_outlined,
-                        color: scheme.primary,
+                        color: const Color(0xFFD6336C),
                       ),
                       _buildVitalMetric(
                         label: 'Berat',
                         value: weightValue,
                         unit: 'kg',
                         icon: Icons.monitor_weight_outlined,
-                        color: scheme.primary,
+                        color: const Color(0xFF4C6EF5),
                       ),
                     ],
                   ),
@@ -796,21 +816,41 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(
-                child: Column(
+              Expanded(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Pengingat Obat',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF7E57C2).withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(9),
+                      ),
+                      child: const Icon(
+                        Icons.medication_rounded,
+                        color: Color(0xFF7E57C2),
+                        size: 18,
                       ),
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Jadwal konsumsi terdekat & kepatuhan',
-                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    const SizedBox(width: 9),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Pengingat Obat',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Jadwal konsumsi terdekat & kepatuhan',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -1342,10 +1382,11 @@ class _QuickActionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
           decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [
