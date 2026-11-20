@@ -125,11 +125,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
+      // List dibalik (reverse: true), sehingga pesan terbaru berada di 0.
+      _scrollController.jumpTo(0);
     });
   }
 
@@ -240,10 +237,11 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     }
     return ListView.builder(
       controller: _scrollController,
+      reverse: true,
       padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
       itemCount: _messages.length,
       itemBuilder: (context, index) => _MessageBubble(
-        message: _messages[index],
+        message: _messages[_messages.length - 1 - index],
         conversation: _conversation!,
       ),
     );
