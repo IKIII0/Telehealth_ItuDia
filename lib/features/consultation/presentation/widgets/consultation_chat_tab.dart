@@ -134,11 +134,8 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
   void _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollCtrl.hasClients) return;
-      _scrollCtrl.animateTo(
-        _scrollCtrl.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
+      // List dibalik (reverse: true), pesan terbaru berada di 0.
+      _scrollCtrl.jumpTo(0);
     });
   }
 
@@ -222,10 +219,12 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
               : ListView.builder(
                   key: const Key('consultation_chat_list'),
                   controller: _scrollCtrl,
+                  reverse: true,
                   padding: const EdgeInsets.all(16),
                   itemCount: _messages.length + (_patientTyping ? 1 : 0),
                   itemBuilder: (context, i) {
-                    if (i == _messages.length) {
+                    final hasTyping = _patientTyping;
+                    if (hasTyping && i == 0) {
                       return Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
@@ -238,9 +237,11 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
                         ),
                       );
                     }
+                    final messageIndex =
+                        _messages.length - 1 - (i - (hasTyping ? 1 : 0));
                     return _Bubble(
-                      message: _messages[i],
-                      time: _formatTime(_messages[i].sentAt),
+                      message: _messages[messageIndex],
+                      time: _formatTime(_messages[messageIndex].sentAt),
                       scheme: scheme,
                     );
                   },
