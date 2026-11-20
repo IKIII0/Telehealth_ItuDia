@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/core/widgets/notification_bell.dart';
 import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
 import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/doctor.dart';
@@ -184,72 +185,59 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
         actions: [
+          NotificationBell(
+            onTap: () => _go(AppRoutes.patientNotificationsName),
+          ),
           const RoleBadge.patient(size: 26),
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined, size: 28),
-                onPressed: () => _go(AppRoutes.patientNotificationsName),
-              ),
-              Positioned(
-                right: 10,
-                top: 10,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: scheme.error,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () => context.goNamed(AppRoutes.patientProfileName),
-              child: const CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.white24,
-                child: Icon(Icons.person, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
         ],
       ),
       bottomNavigationBar: widget.showNavBar
           ? const PatientNavBar(currentIndex: 0)
           : null,
-      body: RefreshIndicator(
-        onRefresh: _loadDashboardData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSearchBar(),
-              _buildQuickActions(scheme),
-              // ── 1. Ringkasan Jurnal Kesehatan & Grafik Rekam Medis ──────
-              _buildJournalSection(scheme),
-              // ── 2. Ringkasan Pengingat Obat & Jadwal Terdekat ──────────
-              _buildMedicationSection(scheme),
-              // ── 3. Jadwal Konsultasi Dokter Mendatang ──────────────────
-              _buildSectionHeader(
-                'Konsultasi Aktif',
-                onSeeAll: () => _go(AppRoutes.patientChatName),
+      body: Stack(
+        children: [
+          // Latar ilustrasi medis, dibuat samar agar konten tetap terbaca.
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Image.asset(
+                'assets/icons/BG.jpg',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                opacity: const AlwaysStoppedAnimation<double>(0.2),
               ),
-              _buildScheduleList(scheme),
-              // ── 4. Dokter Rekomendasi ───────────────────────────────────
-              _buildSectionHeader(
-                'Dokter Rekomendasi',
-                onSeeAll: () => _go(AppRoutes.patientDoctorsName),
-              ),
-              _buildRecommendations(scheme),
-              const SizedBox(height: 28),
-            ],
+            ),
           ),
-        ),
+          RefreshIndicator(
+            onRefresh: _loadDashboardData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSearchBar(),
+                  _buildQuickActions(scheme),
+                  // ── 1. Ringkasan Jurnal Kesehatan & Grafik Rekam Medis ──
+                  _buildJournalSection(scheme),
+                  // ── 2. Ringkasan Pengingat Obat & Jadwal Terdekat ──────
+                  _buildMedicationSection(scheme),
+                  // ── 3. Konsultasi Aktif ──────────────────────────────
+                  _buildSectionHeader(
+                    'Konsultasi Aktif',
+                    onSeeAll: () => _go(AppRoutes.patientChatName),
+                  ),
+                  _buildScheduleList(scheme),
+                  // ── 4. Dokter Rekomendasi ─────────────────────────────
+                  _buildSectionHeader(
+                    'Dokter Rekomendasi',
+                    onSeeAll: () => _go(AppRoutes.patientDoctorsName),
+                  ),
+                  _buildRecommendations(scheme),
+                  const SizedBox(height: 28),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

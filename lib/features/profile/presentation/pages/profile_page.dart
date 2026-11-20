@@ -86,15 +86,17 @@ class _ProfilePageState extends State<ProfilePage> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 36),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            scheme.primary,
-            Color.lerp(scheme.primary, Colors.black, 0.25)!,
-          ],
-        ),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+        image: DecorationImage(
+          image: const AssetImage('assets/icons/BG.jpg'),
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          // Lapisan warna tema agar teks putih tetap terbaca.
+          colorFilter: ColorFilter.mode(
+            scheme.primary.withValues(alpha: 0.78),
+            BlendMode.srcOver,
+          ),
+        ),
       ),
       child: Column(
         children: [
