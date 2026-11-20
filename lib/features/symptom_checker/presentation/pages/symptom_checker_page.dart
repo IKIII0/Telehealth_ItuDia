@@ -5,6 +5,7 @@ import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/repositories/simulated_api.dart';
 
 class SymptomCheckerPage extends StatefulWidget {
@@ -188,8 +189,9 @@ class _SymptomCheckerPageState extends State<SymptomCheckerPage> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      bottomNavigationBar:
-          widget.showNavBar ? const PatientNavBar(currentIndex: 1) : null,
+      bottomNavigationBar: widget.showNavBar
+          ? const PatientNavBar(currentIndex: 1)
+          : null,
       appBar: AppBar(
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
@@ -197,6 +199,7 @@ class _SymptomCheckerPageState extends State<SymptomCheckerPage> {
           'Cek Gejala',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        actions: const [RoleBadge.patient()],
       ),
       body: Column(
         children: [

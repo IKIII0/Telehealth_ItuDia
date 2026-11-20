@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/doctor_nav_bar.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/consultation_session.dart';
 import 'package:Telehealth/data/repositories/consultation_repository.dart';
 
@@ -93,6 +94,7 @@ class _ConsultationListPageState extends State<ConsultationListPage> {
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
         actions: [
+          const RoleBadge.doctor(),
           IconButton(
             tooltip: 'Muat ulang',
             icon: const Icon(Icons.refresh),

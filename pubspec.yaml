@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   cloud_firestore: ^7.1.0
+  cupertino_icons: ^1.0.8
   dio: ^5.10.0
   equatable: ^2.1.0
   firebase_auth: ^7.0.1
@@ -40,4 +41,5 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/icons/
     - .env

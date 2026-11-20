@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/core/widgets/notification_bell.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/repositories/doctor_repository.dart';
 
@@ -115,11 +117,11 @@ class _DoctorListPageState extends State<DoctorListPage> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-            onPressed: () =>
-                context.pushNamed(AppRoutes.patientNotificationsName),
+          NotificationBell(
+            size: 26,
+            onTap: () => context.pushNamed(AppRoutes.patientNotificationsName),
           ),
+          const RoleBadge.patient(),
         ],
       ),
       body: Column(
@@ -309,8 +311,14 @@ class _DoctorCard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 36,
-                    backgroundColor: avatarColor.withOpacity(0.15),
-                    child: Icon(Icons.person, size: 38, color: avatarColor),
+                    backgroundColor: avatarColor.withValues(alpha: 0.15),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Image.asset(
+                        RoleBadge.doctorIcon,
+                        filterQuality: FilterQuality.high,
+                      ),
+                    ),
                   ),
                   Positioned(
                     right: 2,

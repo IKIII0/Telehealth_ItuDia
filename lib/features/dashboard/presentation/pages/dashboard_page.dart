@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/core/widgets/notification_bell.dart';
 import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/models/conversation.dart';
 import 'package:Telehealth/data/models/journal.dart';
@@ -183,71 +185,59 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
         actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined, size: 28),
-                onPressed: () => _go(AppRoutes.patientNotificationsName),
-              ),
-              Positioned(
-                right: 10,
-                top: 10,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: scheme.error,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
+          NotificationBell(
+            onTap: () => _go(AppRoutes.patientNotificationsName),
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () => context.goNamed(AppRoutes.patientProfileName),
-              child: const CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.white24,
-                child: Icon(Icons.person, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
+          const RoleBadge.patient(size: 26),
         ],
       ),
       bottomNavigationBar: widget.showNavBar
           ? const PatientNavBar(currentIndex: 0)
           : null,
-      body: RefreshIndicator(
-        onRefresh: _loadDashboardData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSearchBar(),
-              _buildQuickActions(scheme),
-              // ── 1. Ringkasan Jurnal Kesehatan & Grafik Rekam Medis ──────
-              _buildJournalSection(scheme),
-              // ── 2. Ringkasan Pengingat Obat & Jadwal Terdekat ──────────
-              _buildMedicationSection(scheme),
-              // ── 3. Jadwal Konsultasi Dokter Mendatang ──────────────────
-              _buildSectionHeader(
-                'Konsultasi Aktif',
-                onSeeAll: () => _go(AppRoutes.patientChatName),
+      body: Stack(
+        children: [
+          // Latar ilustrasi medis, dibuat samar agar konten tetap terbaca.
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Image.asset(
+                'assets/icons/BG.jpg',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                opacity: const AlwaysStoppedAnimation<double>(0.2),
               ),
-              _buildScheduleList(scheme),
-              // ── 4. Dokter Rekomendasi ───────────────────────────────────
-              _buildSectionHeader(
-                'Dokter Rekomendasi',
-                onSeeAll: () => _go(AppRoutes.patientDoctorsName),
-              ),
-              _buildRecommendations(scheme),
-              const SizedBox(height: 28),
-            ],
+            ),
           ),
-        ),
+          RefreshIndicator(
+            onRefresh: _loadDashboardData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSearchBar(),
+                  _buildQuickActions(scheme),
+                  // ── 1. Ringkasan Jurnal Kesehatan & Grafik Rekam Medis ──
+                  _buildJournalSection(scheme),
+                  // ── 2. Ringkasan Pengingat Obat & Jadwal Terdekat ──────
+                  _buildMedicationSection(scheme),
+                  // ── 3. Konsultasi Aktif ──────────────────────────────
+                  _buildSectionHeader(
+                    'Konsultasi Aktif',
+                    onSeeAll: () => _go(AppRoutes.patientChatName),
+                  ),
+                  _buildScheduleList(scheme),
+                  // ── 4. Dokter Rekomendasi ─────────────────────────────
+                  _buildSectionHeader(
+                    'Dokter Rekomendasi',
+                    onSeeAll: () => _go(AppRoutes.patientDoctorsName),
+                  ),
+                  _buildRecommendations(scheme),
+                  const SizedBox(height: 28),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -285,7 +275,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Expanded(
             child: _QuickActionCard(
               cardKey: const Key('symptom_checker_button'),
-              icon: Icons.medical_services_rounded,
+              iconAsset: 'assets/icons/Cek Gejala.png',
               title: 'Cek Gejala',
               subtitle: 'Periksa gejala',
               color: scheme.primary,
@@ -296,7 +286,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Expanded(
             child: _QuickActionCard(
               cardKey: const Key('chat_doctor_button'),
-              icon: Icons.chat_bubble_rounded,
+              iconAsset: 'assets/icons/Chat.png',
               title: 'Chat Dokter',
               subtitle: 'Tanya dokter',
               color: const Color(0xFF00897B),
@@ -340,10 +330,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         color: const Color(0xFFF59F00).withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: const Icon(
-                        Icons.show_chart_rounded,
-                        color: Color(0xFFF59F00),
-                        size: 18,
+                      child: Image.asset(
+                        'assets/icons/Jurnal Kesehatan.png',
+                        width: 18,
+                        height: 18,
+                        filterQuality: FilterQuality.high,
                       ),
                     ),
                     const SizedBox(width: 9),
@@ -423,28 +414,28 @@ class _DashboardPageState extends State<DashboardPage> {
                         label: 'Tensi',
                         value: bpValue,
                         unit: 'mmHg',
-                        icon: Icons.favorite_rounded,
+                        assetPath: 'assets/icons/Tensi.png',
                         color: const Color(0xFFE05252),
                       ),
                       _buildVitalMetric(
                         label: 'Gula Darah',
                         value: bsValue,
                         unit: 'mg/dL',
-                        icon: Icons.water_drop_outlined,
+                        assetPath: 'assets/icons/Gula Darah.png',
                         color: const Color(0xFFD98E04),
                       ),
                       _buildVitalMetric(
                         label: 'Detak',
                         value: '75',
                         unit: 'bpm',
-                        icon: Icons.monitor_heart_outlined,
+                        assetPath: 'assets/icons/Detak.png',
                         color: const Color(0xFFD6336C),
                       ),
                       _buildVitalMetric(
                         label: 'Berat',
                         value: weightValue,
                         unit: 'kg',
-                        icon: Icons.monitor_weight_outlined,
+                        assetPath: 'assets/icons/Berat Badan.png',
                         color: const Color(0xFF4C6EF5),
                       ),
                     ],
@@ -485,20 +476,23 @@ class _DashboardPageState extends State<DashboardPage> {
     required String label,
     required String value,
     required String unit,
-    required IconData icon,
+    required String assetPath,
     required Color color,
   }) {
     return Expanded(
       child: Column(
         children: [
           Container(
-            width: 26,
-            height: 26,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 15),
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Image.asset(assetPath, filterQuality: FilterQuality.high),
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -809,10 +803,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         color: const Color(0xFF7E57C2).withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: const Icon(
-                        Icons.medication_rounded,
-                        color: Color(0xFF7E57C2),
-                        size: 18,
+                      child: Image.asset(
+                        'assets/icons/Pengingat Obat.png',
+                        width: 18,
+                        height: 18,
+                        filterQuality: FilterQuality.high,
                       ),
                     ),
                     const SizedBox(width: 9),
@@ -1422,7 +1417,7 @@ class _DashboardPageState extends State<DashboardPage> {
 class _QuickActionCard extends StatelessWidget {
   const _QuickActionCard({
     required this.cardKey,
-    required this.icon,
+    required this.iconAsset,
     required this.title,
     required this.subtitle,
     required this.color,
@@ -1430,7 +1425,7 @@ class _QuickActionCard extends StatelessWidget {
   });
 
   final Key cardKey;
-  final IconData icon;
+  final String iconAsset;
   final String title;
   final String subtitle;
   final Color color;
@@ -1460,7 +1455,12 @@ class _QuickActionCard extends StatelessWidget {
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: color, size: 19),
+                child: Image.asset(
+                  iconAsset,
+                  width: 22,
+                  height: 22,
+                  filterQuality: FilterQuality.high,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(

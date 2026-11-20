@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/consultation_session.dart';
 import 'package:Telehealth/data/repositories/consultation_repository.dart';
 import '../widgets/consultation_chat_tab.dart';
@@ -188,11 +189,7 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
       showAppSnack(context, 'Resep dikirim ke admin rumah sakit.');
     } catch (error) {
       if (!mounted) return;
-      showAppSnack(
-        context,
-        'Gagal mengirim resep: $error',
-        success: false,
-      );
+      showAppSnack(context, 'Gagal mengirim resep: $error', success: false);
     }
   }
 
@@ -268,8 +265,7 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
                 DoctorNotesTab(
                   session: session,
                   onSaved: _onNotesSaved,
-                  onSubmitPrescription:
-                      ConsultationRepository.instance.isRemote
+                  onSubmitPrescription: ConsultationRepository.instance.isRemote
                       ? _submitPrescription
                       : null,
                 ),
@@ -313,6 +309,7 @@ class _ConsultationSessionPageState extends State<ConsultationSessionPage>
         ],
       ),
       actions: [
+        const RoleBadge.doctor(),
         if (isOngoing)
           Container(
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),

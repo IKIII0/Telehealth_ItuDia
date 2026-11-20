@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/doctor_nav_bar.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/doctor_profile.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 
@@ -92,6 +93,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
         actions: [
+          const RoleBadge.doctor(),
           IconButton(
             key: const Key('appbar_edit_doctor_button'),
             icon: const Icon(Icons.edit),
@@ -402,11 +404,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     final rows = [
       (Icons.local_hospital_outlined, 'Rumah Sakit Praktik', _hospital),
       (Icons.workspace_premium_outlined, 'Spesialisasi', _specialization),
-      (
-        Icons.badge_outlined,
-        'Nomor STR (Surat Tanda Registrasi)',
-        _strNumber,
-      ),
+      (Icons.badge_outlined, 'Nomor STR (Surat Tanda Registrasi)', _strNumber),
       (
         Icons.history_edu_outlined,
         'Pengalaman Praktik Klinis',
@@ -836,10 +834,7 @@ InputDecoration _dialogDecoration({
 }
 
 ButtonStyle _dialogButtonShape(
-  ButtonStyle Function({
-    EdgeInsetsGeometry? padding,
-    OutlinedBorder? shape,
-  })
+  ButtonStyle Function({EdgeInsetsGeometry? padding, OutlinedBorder? shape})
   factory,
 ) {
   return factory(
@@ -1122,7 +1117,11 @@ class _EditDoctorScheduleDialogState extends State<_EditDoctorScheduleDialog> {
       titlePadding: const EdgeInsets.fromLTRB(28, 28, 28, 8),
       contentPadding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
       actionsPadding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
-      title: _dialogTitle(context, 'Atur Jadwal Praktik Dokter', Icons.schedule),
+      title: _dialogTitle(
+        context,
+        'Atur Jadwal Praktik Dokter',
+        Icons.schedule,
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -54,6 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
         actions: [
+          const RoleBadge.patient(),
           IconButton(
             icon: const Icon(Icons.edit),
             tooltip: 'Edit profil',
@@ -84,15 +86,17 @@ class _ProfilePageState extends State<ProfilePage> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 36),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            scheme.primary,
-            Color.lerp(scheme.primary, Colors.black, 0.25)!,
-          ],
-        ),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+        image: DecorationImage(
+          image: const AssetImage('assets/icons/BG.jpg'),
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          // Lapisan warna tema agar teks putih tetap terbaca.
+          colorFilter: ColorFilter.mode(
+            scheme.primary.withValues(alpha: 0.78),
+            BlendMode.srcOver,
+          ),
+        ),
       ),
       child: Column(
         children: [
@@ -112,7 +116,13 @@ class _ProfilePageState extends State<ProfilePage> {
             child: CircleAvatar(
               radius: 52,
               backgroundColor: scheme.primaryContainer,
-              child: Icon(Icons.person, size: 58, color: scheme.primary),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Image.asset(
+                  RoleBadge.patientIcon,
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 20),

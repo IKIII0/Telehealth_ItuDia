@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/core/widgets/doctor_nav_bar.dart';
 import 'package:Telehealth/data/models/consultation_session.dart';
 import 'package:Telehealth/data/models/doctor_profile.dart';
@@ -316,6 +317,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
           ],
         ),
         actions: [
+          const RoleBadge.doctor(size: 26),
           // Toggle Online Status
           Container(
             margin: const EdgeInsets.symmetric(vertical: 10),

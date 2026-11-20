@@ -1,11 +1,14 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/app_notification.dart';
 import 'simulated_api.dart';
 
 /// Repository notifikasi (data lokal per sesi aplikasi).
 ///
 /// Status "sudah dibaca" disimpan di memori sehingga bertahan selama
-/// aplikasi berjalan.
-class NotificationRepository {
+/// aplikasi berjalan. Sebagai [ChangeNotifier], ikon lonceng dapat
+/// menampilkan penanda hanya saat ada notifikasi belum dibaca.
+class NotificationRepository extends ChangeNotifier {
   NotificationRepository._();
   static final NotificationRepository instance = NotificationRepository._();
 
@@ -73,6 +76,7 @@ class NotificationRepository {
       final index = _notifications.indexWhere((n) => n.id == id);
       if (index == -1) return;
       _notifications[index] = _notifications[index].copyWith(isRead: true);
+      notifyListeners();
     });
   }
 
@@ -81,6 +85,7 @@ class NotificationRepository {
       for (var i = 0; i < _notifications.length; i++) {
         _notifications[i] = _notifications[i].copyWith(isRead: true);
       }
+      notifyListeners();
     });
   }
 }

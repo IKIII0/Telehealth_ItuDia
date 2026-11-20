@@ -1,3 +1,8 @@
+// Flutter's plugin loader memakai rootProject.ext.kotlin_version untuk
+// subproject plugin (firebase_core dkk). Samakan dengan versi plugin di
+// settings.gradle.kts agar metadata Kotlin tidak bentrok.
+extra["kotlin_version"] = "2.4.21"
+
 allprojects {
     repositories {
         google()

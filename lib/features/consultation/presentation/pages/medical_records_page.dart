@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/consultation_summary.dart';
 import 'package:Telehealth/data/repositories/consultation_summary_repository.dart';
 
@@ -61,6 +62,7 @@ class _MedicalRecordsPageState extends State<MedicalRecordsPage> {
           'Catatan Medis',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
+        actions: const [RoleBadge.patient()],
       ),
       body: _buildBody(scheme),
     );
