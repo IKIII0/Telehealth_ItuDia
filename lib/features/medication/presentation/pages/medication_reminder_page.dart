@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/doctor.dart';
@@ -179,6 +180,7 @@ class _MedicationReminderPageState extends State<MedicationReminderPage>
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          const RoleBadge.patient(),
           IconButton(
             icon: const Icon(
               Icons.notifications_active_outlined,

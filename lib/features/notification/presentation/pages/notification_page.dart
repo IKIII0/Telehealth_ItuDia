@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/app_notification.dart';
 import 'package:Telehealth/data/repositories/notification_repository.dart';
 
@@ -86,6 +87,7 @@ class _NotificationPageState extends State<NotificationPage> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          const RoleBadge.patient(),
           if (_hasUnread)
             TextButton(
               onPressed: _markAllRead,

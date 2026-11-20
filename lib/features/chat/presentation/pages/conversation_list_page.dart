@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
@@ -125,6 +126,7 @@ class _ConversationListPageState extends State<ConversationListPage>
         backgroundColor: scheme.primary,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: const [RoleBadge.patient()],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(108),
           child: Column(

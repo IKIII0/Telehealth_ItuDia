@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/repositories/doctor_repository.dart';
 
@@ -123,6 +124,7 @@ class _DoctorDetailContent extends StatelessWidget {
             backgroundColor: scheme.primary,
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
+              const RoleBadge.patient(),
               IconButton(
                 icon: const Icon(Icons.share_outlined, color: Colors.white),
                 onPressed: () {},
@@ -152,10 +154,12 @@ class _DoctorDetailContent extends StatelessWidget {
                         child: CircleAvatar(
                           radius: 42,
                           backgroundColor: Colors.white.withValues(alpha: 0.18),
-                          child: const Icon(
-                            Icons.person,
-                            size: 46,
-                            color: Colors.white,
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Image.asset(
+                              RoleBadge.doctorIcon,
+                              filterQuality: FilterQuality.high,
+                            ),
                           ),
                         ),
                       ),

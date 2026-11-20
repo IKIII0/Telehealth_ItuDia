@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -54,6 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
         actions: [
+          const RoleBadge.patient(),
           IconButton(
             icon: const Icon(Icons.edit),
             tooltip: 'Edit profil',
@@ -112,7 +114,13 @@ class _ProfilePageState extends State<ProfilePage> {
             child: CircleAvatar(
               radius: 52,
               backgroundColor: scheme.primaryContainer,
-              child: Icon(Icons.person, size: 58, color: scheme.primary),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Image.asset(
+                  RoleBadge.patientIcon,
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 20),

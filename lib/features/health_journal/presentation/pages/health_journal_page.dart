@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/journal.dart';
 import 'package:Telehealth/data/repositories/journal_repository.dart';
 
@@ -116,6 +117,7 @@ class _HealthJournalPageState extends State<HealthJournalPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Jurnal Kesehatan'),
+        actions: const [RoleBadge.patient()],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: scheme.onPrimary,
