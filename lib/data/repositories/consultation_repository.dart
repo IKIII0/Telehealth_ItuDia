@@ -668,9 +668,53 @@ class ConsultationRepository {
         .select('user_id')
         .eq('directory_doctor_id', doctorDirectoryId)
         .maybeSingle();
-    if (doctorRow == null) return null;
+    if (doctorRow == null) {
+      // Dokter hasil pendaftaran belum punya directory_doctor_id; id direktori
+      // mereka berbentuk `acc_<firebase_uid>` (lihat 05_doctor_directory_sync).
+      if (doctorDirectoryId.startsWith('acc_')) {
+        final uidFromDirectory = doctorDirectoryId.substring(4);
+        final fallback = await db
+            .from('doctor_profiles')
+            .select('user_id')
+            .eq('user_id', uidFromDirectory)
+            .maybeSingle();
+        if (fallback == null) return null;
+        return _createRequestFor(
+          db: db,
+          uid: uid,
+          doctorUid: fallback['user_id'].toString(),
+          patientName: patientName,
+          patientRelation: patientRelation,
+          complaint: complaint,
+          consultationType: consultationType,
+          fee: fee,
+        );
+      }
+      return null;
+    }
     final doctorUid = doctorRow['user_id'].toString();
+    return _createRequestFor(
+      db: db,
+      uid: uid,
+      doctorUid: doctorUid,
+      patientName: patientName,
+      patientRelation: patientRelation,
+      complaint: complaint,
+      consultationType: consultationType,
+      fee: fee,
+    );
+  }
 
+  Future<ConsultationSession?> _createRequestFor({
+    required SupabaseClient db,
+    required String uid,
+    required String doctorUid,
+    required String patientName,
+    required String patientRelation,
+    required String complaint,
+    required String consultationType,
+    required int fee,
+  }) async {
     // Data profil pasien; kegagalan di sini tidak menghalangi pembuatan sesi.
     int? age;
     String? gender;

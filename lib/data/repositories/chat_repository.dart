@@ -135,7 +135,8 @@ class ChatRepository {
         .from('chat_messages')
         .select()
         .eq('conversation_id', conversationId)
-        .order('created_at');
+        .order('created_at')
+        .order('id');
     return rows.map(chatMessageFromRow).toList();
   }
 
@@ -240,7 +241,8 @@ class ChatRepository {
             .from('chat_messages')
             .select()
             .eq('conversation_id', conversationId)
-            .order('created_at');
+            .order('created_at')
+            .order('id');
         if (!controller.isClosed) {
           controller.add(rows.map(chatMessageFromRow).toList());
         }
