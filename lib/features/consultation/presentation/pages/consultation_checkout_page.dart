@@ -173,11 +173,10 @@ class _ConsultationCheckoutPageState extends State<ConsultationCheckoutPage> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.goNamed(AppRoutes.patientDashboardName);
-        }
+        context.pushReplacementNamed(
+          AppRoutes.patientConsultationRoomName,
+          pathParameters: {'sessionId': session.sessionId},
+        );
         return;
       }
 

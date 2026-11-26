@@ -7,6 +7,7 @@ import 'package:Telehealth/core/widgets/doctor_nav_bar.dart';
 import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/doctor_profile.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
+import 'package:Telehealth/data/repositories/doctor_profile_repository.dart';
 
 /// Halaman profil dokter.
 ///
@@ -47,6 +48,48 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   }
 
   void _loadDoctorData() {
+    _applyLocalProfile();
+    _loadRemoteProfile();
+  }
+
+  /// Muat profil & preferensi dari Supabase bila tersedia.
+  Future<void> _loadRemoteProfile() async {
+    final repo = DoctorProfileRepository.instance;
+    if (!repo.isRemote) return;
+
+    try {
+      final remote = await repo.fetchMine();
+      final settings = await repo.fetchSettings();
+      if (!mounted) return;
+      setState(() {
+        if (remote != null) {
+          if (remote.specialization.isNotEmpty) {
+            _specialization = remote.specialization;
+          }
+          if (remote.strNumber.isNotEmpty) _strNumber = remote.strNumber;
+          if (remote.hospital.isNotEmpty) _hospital = remote.hospital;
+          if (remote.experienceYears > 0) {
+            _experienceYears = remote.experienceYears;
+          }
+          if (remote.bio.isNotEmpty) _bio = remote.bio;
+          if (remote.practiceSchedule.isNotEmpty) {
+            _schedule = Map.from(remote.practiceSchedule);
+          }
+          _verified = remote.verified;
+        }
+        if (settings != null) {
+          _acceptingConsultations = settings.acceptingConsultations;
+          _notifNewPatient = settings.notifyNewRequest;
+          _notifChatMessage = settings.notifyChatMessage;
+          _autoSummarize = settings.autoSummarize;
+        }
+      });
+    } catch (error) {
+      debugPrint('[DoctorProfilePage] gagal memuat profil dokter: $error');
+    }
+  }
+
+  void _applyLocalProfile() {
     final user = AuthRepository.instance.currentUser;
     final profile = user?.doctorProfile ?? DoctorProfile.simulatedDefault();
 
@@ -721,7 +764,15 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         _bio = updatedBio;
       });
 
-      showAppSnack(context, 'Data profil dokter berhasil diperbarui');
+      final saved = await _persistProfile();
+      if (!mounted) return;
+      showAppSnack(
+        context,
+        saved
+            ? 'Data profil dokter berhasil diperbarui'
+            : 'Profil tersimpan lokal, gagal sinkron database',
+        success: saved,
+      );
     }
   }
 
@@ -739,6 +790,20 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         _schedule = result;
       });
 
+      try {
+        await DoctorProfileRepository.instance.saveSchedule(result);
+      } catch (error) {
+        if (mounted) {
+          showAppSnack(
+            context,
+            'Jadwal tersimpan lokal, gagal sinkron database: $error',
+            success: false,
+          );
+        }
+        return;
+      }
+
+      if (!mounted) return;
       showAppSnack(context, 'Jadwal praktik dokter berhasil diperbarui');
     }
   }
@@ -795,9 +860,55 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  void _updatePreference(VoidCallback apply, String message) {
+  Future<void> _updatePreference(VoidCallback apply, String message) async {
     setState(apply);
-    showAppSnack(context, message);
+    final saved = await _saveSettings();
+    if (!mounted) return;
+    showAppSnack(
+      context,
+      saved ? message : 'Preferensi tersimpan lokal, gagal sinkron database',
+      success: saved,
+    );
+  }
+
+  Future<bool> _saveSettings() async {
+    final repo = DoctorProfileRepository.instance;
+    if (!repo.isRemote) return true;
+    try {
+      await repo.saveSettings(
+        acceptingConsultations: _acceptingConsultations,
+        notifyNewRequest: _notifNewPatient,
+        notifyChatMessage: _notifChatMessage,
+        autoSummarize: _autoSummarize,
+        dailyQuota: 12,
+      );
+      return true;
+    } catch (error) {
+      debugPrint('[DoctorProfilePage] gagal menyimpan preferensi: $error');
+      return false;
+    }
+  }
+
+  /// Simpan profil dokter ke Supabase (bila terhubung).
+  Future<bool> _persistProfile() async {
+    final repo = DoctorProfileRepository.instance;
+    if (!repo.isRemote) return true;
+    try {
+      await repo.saveProfile(
+        name: _name,
+        phone: _phone,
+        specialization: _specialization,
+        strNumber: _strNumber,
+        hospital: _hospital,
+        experienceYears: _experienceYears,
+        bio: _bio,
+        practiceSchedule: _schedule,
+      );
+      return true;
+    } catch (error) {
+      debugPrint('[DoctorProfilePage] gagal menyimpan profil: $error');
+      return false;
+    }
   }
 
   Future<void> _confirmLogout() async {

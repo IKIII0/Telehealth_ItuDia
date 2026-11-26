@@ -186,8 +186,7 @@ const Map<String, String> _vitalStatusLabels = {
   'critical': 'Kritis',
 };
 
-String vitalMetricName(String metric) =>
-    _vitalMetricNames[metric] ?? metric;
+String vitalMetricName(String metric) => _vitalMetricNames[metric] ?? metric;
 
 String vitalMetricToDb(String name) {
   for (final entry in _vitalMetricNames.entries) {
@@ -267,6 +266,8 @@ ConsultationSession consultationSessionFromRow(Map<String, dynamic> row) {
     doctorNotes: row['doctor_notes']?.toString() ?? '',
     diagnosisSummary: row['diagnosis']?.toString() ?? '',
     priority: row['priority']?.toString() ?? '',
+    doctorName: row['doctor_name']?.toString() ?? '',
+    doctorSpecialization: row['doctor_specialization']?.toString() ?? '',
   );
 }
 

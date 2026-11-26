@@ -24,6 +24,7 @@ import 'package:Telehealth/features/consultation/presentation/pages/consultation
 import 'package:Telehealth/features/consultation/presentation/pages/consultation_list_page.dart';
 import 'package:Telehealth/features/consultation/presentation/pages/medical_records_page.dart';
 import 'package:Telehealth/features/consultation/presentation/pages/consultation_session_page.dart';
+import 'package:Telehealth/features/consultation/presentation/pages/patient_consultation_page.dart';
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_dashboard_page.dart';
 import 'package:Telehealth/features/doctor_dashboard/presentation/pages/doctor_profile_page.dart';
 import 'package:Telehealth/features/health_journal/presentation/pages/add_journal_entry_page.dart';
@@ -130,6 +131,18 @@ class AppRouter {
       ),
 
       // ── Pasien: halaman detail (tanpa navbar shell) ──────────────────────────
+      GoRoute(
+        name: AppRoutes.patientConsultationsName,
+        path: AppRoutes.patientConsultationsPath,
+        builder: (context, state) => const PatientConsultationListPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.patientConsultationRoomName,
+        path: AppRoutes.patientConsultationRoomPath,
+        builder: (context, state) => PatientConsultationRoomPage(
+          sessionId: state.pathParameters['sessionId']!,
+        ),
+      ),
       GoRoute(
         name: AppRoutes.patientDoctorsName,
         path: AppRoutes.patientDoctorsPath,

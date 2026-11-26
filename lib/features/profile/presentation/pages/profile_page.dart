@@ -354,10 +354,12 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           _menuItem(
             scheme,
-            Icons.edit_outlined,
-            'Edit Profil',
-            onTap: _openEditProfile,
+            Icons.forum_outlined,
+            'Konsultasi Saya',
+            onTap: () => context.pushNamed(AppRoutes.patientConsultationsName),
           ),
+          _divider(),
+          _menuItem(scheme, Icons.edit, 'Edit Profil', onTap: _openEditProfile),
           _divider(),
           _menuItem(
             scheme,

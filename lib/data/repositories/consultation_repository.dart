@@ -563,6 +563,61 @@ class ConsultationRepository {
     );
   }
 
+  /// Sesi milik pasien yang sedang login (RLS membatasi ke dirinya).
+  Future<List<ConsultationSession>> getMySessions() async {
+    final db = _db;
+    if (db == null) return const [];
+
+    final data = await db
+        .from('consultation_sessions')
+        .select()
+        .order('requested_at', ascending: false);
+    return _rows(data).map(consultationSessionFromRow).toList();
+  }
+
+  /// Batalkan permintaan konsultasi yang belum ditanggapi dokter.
+  Future<ConsultationSession?> cancelRequest(String sessionId) async {
+    final db = _db;
+    if (db == null) return null;
+
+    final data = await db
+        .from('consultation_sessions')
+        .update({'status': 'cancelled'})
+        .eq('id', sessionId)
+        .select()
+        .maybeSingle();
+    return data == null ? null : consultationSessionFromRow(_row(data));
+  }
+
+  /// Kirim pesan dari sisi pasien. Hanya saat sesi berlangsung.
+  Future<ConsultationMessage> sendPatientMessage(
+    String sessionId,
+    String text,
+  ) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) throw ArgumentError('Pesan tidak boleh kosong.');
+
+    final db = _db;
+    if (db == null) {
+      throw StateError('Chat pasien membutuhkan koneksi Supabase.');
+    }
+    final uid = _currentUid;
+    if (uid == null) {
+      throw StateError('Sesi login tidak valid.');
+    }
+    final row = await db
+        .from('consultation_messages')
+        .insert({
+          'session_id': sessionId,
+          'sender_role': 'patient',
+          'sender_user_id': uid,
+          'body': trimmed,
+        })
+        .select()
+        .single();
+    return consultationMessageFromRow(_row(row));
+  }
+
   /// Ambil semua sesi untuk tampilan daftar dokter.
   Future<List<ConsultationSession>> getAllSessions() async {
     final db = _db;
@@ -628,10 +683,13 @@ class ConsultationRepository {
           .eq('id', uid)
           .maybeSingle();
       if (profile != null) {
-        final birth = DateTime.tryParse(profile['birth_date']?.toString() ?? '');
+        final birth = DateTime.tryParse(
+          profile['birth_date']?.toString() ?? '',
+        );
         if (birth != null) {
           final now = DateTime.now();
-          age = now.year -
+          age =
+              now.year -
               birth.year -
               ((now.month < birth.month ||
                       (now.month == birth.month && now.day < birth.day))
@@ -857,9 +915,7 @@ class ConsultationRepository {
       });
     }
 
-    final summary = _row(
-      await db.rpc<dynamic>('doctor_dashboard_summary'),
-    );
+    final summary = _row(await db.rpc<dynamic>('doctor_dashboard_summary'));
     final sessions = await getAllSessions();
 
     int asInt(String key, int fallback) =>
