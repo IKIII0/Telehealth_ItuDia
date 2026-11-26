@@ -356,7 +356,8 @@ class _PatientConsultationRoomPageState
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollCtrl.hasClients) return;
-      _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
+      // List dibalik (reverse: true), pesan terbaru berada di 0.
+      _scrollCtrl.jumpTo(0);
     });
   }
 
@@ -506,10 +507,11 @@ class _PatientConsultationRoomPageState
                 )
               : ListView.builder(
                   controller: _scrollCtrl,
+                  reverse: true,
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   itemCount: _messages.length,
                   itemBuilder: (_, index) {
-                    final message = _messages[index];
+                    final message = _messages[_messages.length - 1 - index];
                     return _MessageBubble(message: message, scheme: scheme);
                   },
                 ),
