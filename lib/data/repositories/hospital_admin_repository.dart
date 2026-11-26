@@ -19,6 +19,28 @@ class HospitalAdminException implements Exception {
   String toString() => message;
 }
 
+/// Hasil pengiriman notifikasi tindak lanjut dari dashboard admin.
+class NotificationDispatch {
+  const NotificationDispatch({
+    this.logId,
+    this.status = 'sent',
+    this.pushDelivered = false,
+    required this.sentAt,
+  });
+
+  /// ID baris `patient_notifications` (null bila mode demo).
+  final String? logId;
+
+  /// `sent` | `delivered` | `failed`.
+  final String status;
+
+  /// `true` bila Edge Function FCM berhasil dipanggil.
+  final bool pushDelivered;
+
+  /// Waktu kirim yang dipakai untuk badge "Sudah Diingatkan".
+  final DateTime sentAt;
+}
+
 /// Repository Web Dashboard Admin Rumah Sakit.
 ///
 /// Semua query memakai [SupabaseConfig.firebaseAuthClient] sehingga RLS
@@ -441,6 +463,210 @@ class HospitalAdminRepository {
     }
   }
 
+  // ─── Notifikasi tindak lanjut (pasien + keluarga) ───────────────────────────
+
+  /// Simpan log notifikasi tindak lanjut ke `patient_notifications` lalu picu
+  /// push notification FCM (best-effort) lewat Edge Function
+  /// `send-patient-notification` bila tersedia.
+  ///
+  /// Tanpa Edge Function, notifikasi tetap tercatat dan aplikasi mobile dapat
+  /// menangkapnya lewat Supabase Realtime. RLS tabel log sengaja dimatikan.
+  Future<NotificationDispatch> sendPatientNotification({
+    required String patientUid,
+    required String alertReferenceId,
+    required String recipientTarget,
+    required String deliveryChannel,
+    required String title,
+    required String message,
+    bool sendPush = true,
+  }) async {
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) {
+      throw const HospitalAdminException('Isi pesan pengingat wajib diisi.');
+    }
+
+    final db = _db;
+    if (db == null) {
+      final at = DateTime.now();
+      _demoNotificationLogs[alertReferenceId] = at;
+      return NotificationDispatch(
+        status: 'delivered',
+        pushDelivered: sendPush,
+        sentAt: at,
+      );
+    }
+
+    final adminUid =
+        AuthRepository.instance.currentUser?.id ?? _firebaseUid() ?? '';
+    final payload = <String, dynamic>{
+      'patient_uid': patientUid,
+      'alert_reference_id': alertReferenceId,
+      'sent_by_admin_uid': adminUid,
+      'recipient_target': recipientTarget,
+      'delivery_channel': deliveryChannel,
+      'title': title,
+      'message': trimmed,
+      'status': 'sent',
+    };
+
+    try {
+      final inserted = await db
+          .from('patient_notifications')
+          .insert(payload)
+          .select('id')
+          .maybeSingle();
+      final logId = inserted?['id']?.toString();
+
+      var pushDelivered = false;
+      if (sendPush) {
+        pushDelivered = await _invokePushFunction(
+          db,
+          logId: logId,
+          patientUid: patientUid,
+          recipientTarget: recipientTarget,
+          title: title,
+          message: trimmed,
+        );
+        if (pushDelivered && logId != null) {
+          try {
+            await db
+                .from('patient_notifications')
+                .update({'status': 'delivered'})
+                .eq('id', logId);
+          } catch (error) {
+            debugPrint(
+              '[HospitalAdminRepository] gagal menandai notifikasi terkirim: '
+              '$error',
+            );
+          }
+        }
+      }
+
+      return NotificationDispatch(
+        logId: logId,
+        status: 'sent',
+        pushDelivered: pushDelivered,
+        sentAt: DateTime.now(),
+      );
+    } on PostgrestException catch (error) {
+      throw HospitalAdminException(_readableError(error));
+    } catch (error) {
+      throw HospitalAdminException(_readableError(error));
+    }
+  }
+
+  /// Panggil Edge Function FCM. Kegagalan tidak dilempar ke UI karena log
+  /// notifikasi + Realtime sudah cukup sebagai jalur pengiriman dasar.
+  Future<bool> _invokePushFunction(
+    SupabaseClient db, {
+    required String? logId,
+    required String patientUid,
+    required String recipientTarget,
+    required String title,
+    required String message,
+  }) async {
+    if (logId == null) return false;
+    try {
+      final response = await db.functions.invoke(
+        'send-patient-notification',
+        body: {
+          'notification_id': logId,
+          'patient_uid': patientUid,
+          'recipient_target': recipientTarget,
+          'title': title,
+          'message': message,
+        },
+      );
+      return response.status >= 200 && response.status < 300;
+    } catch (error) {
+      debugPrint(
+        '[HospitalAdminRepository] Edge Function FCM belum tersedia / gagal: '
+        '$error',
+      );
+      return false;
+    }
+  }
+
+  /// Waktu kirim notifikasi terakhir per `alert_reference_id`, dipakai untuk
+  /// menampilkan badge "Sudah Diingatkan" setelah halaman dimuat ulang.
+  Future<Map<String, DateTime>> fetchNotificationLogs({
+    required Iterable<String> alertIds,
+  }) async {
+    final ids = alertIds.where((id) => id.isNotEmpty).toSet().toList();
+    if (ids.isEmpty) return const {};
+
+    final db = _db;
+    if (db == null) {
+      return {
+        for (final id in ids)
+          if (_demoNotificationLogs[id] != null) id: _demoNotificationLogs[id]!,
+      };
+    }
+
+    try {
+      final rows = await db
+          .from('patient_notifications')
+          .select('alert_reference_id, created_at')
+          .inFilter('alert_reference_id', ids)
+          .order('created_at', ascending: false);
+
+      final result = <String, DateTime>{};
+      for (final row in rows) {
+        final key = row['alert_reference_id']?.toString();
+        if (key == null || key.isEmpty) continue;
+        final at = DateTime.tryParse(row['created_at']?.toString() ?? '');
+        if (at == null) continue;
+        final existing = result[key];
+        if (existing == null || at.isAfter(existing)) result[key] = at;
+      }
+      return result;
+    } catch (error) {
+      debugPrint(
+        '[HospitalAdminRepository] gagal membaca log notifikasi: $error',
+      );
+      return const {};
+    }
+  }
+
+  /// Nama obat dari resep terverifikasi terbaru pasien, untuk mengisi template
+  /// pengingat dosis terlewat. Mengembalikan list kosong bila tidak tersedia.
+  Future<List<String>> fetchActiveMedicationNames(String patientId) async {
+    final db = _db;
+    if (db == null) {
+      for (final prescription in _demoPrescriptions) {
+        if (prescription.patientId == patientId &&
+            prescription.drugs.isNotEmpty) {
+          return prescription.drugs.map((drug) => drug.name).toList();
+        }
+      }
+      return const [];
+    }
+
+    try {
+      final rows = await db
+          .from('prescriptions')
+          .select('prescription_items(medication_name), created_at')
+          .eq('hospital_patient_id', patientId)
+          .eq('status', 'verified')
+          .order('created_at', ascending: false)
+          .limit(1);
+      if (rows.isEmpty) return const [];
+
+      final items = rows.first['prescription_items'];
+      if (items is! List) return const [];
+      return [
+        for (final item in items.whereType<Map<String, dynamic>>())
+          if ((item['medication_name']?.toString() ?? '').trim().isNotEmpty)
+            item['medication_name'].toString().trim(),
+      ];
+    } catch (error) {
+      debugPrint(
+        '[HospitalAdminRepository] gagal memuat nama obat pasien: $error',
+      );
+      return const [];
+    }
+  }
+
   // ─── Helper ─────────────────────────────────────────────────────────────────
 
   List<MonitoredPatient> _sortedPatients(List<MonitoredPatient> source) {
@@ -492,6 +718,7 @@ class HospitalAdminRepository {
     const MonitoredPatient(
       id: 'a2000000-0000-4000-8000-000000000001',
       name: 'Budi Santoso',
+      patientUid: 'firebase-patient-budi',
       medicalRecordNo: 'RM-2024-0117',
       doctorName: 'dr. Rifki Al Sauqy, Sp.JP',
       diagnosis: 'Gagal jantung kongestif (NYHA II)',
@@ -500,10 +727,13 @@ class HospitalAdminRepository {
       missedDosesToday: 2,
       openReports: 1,
       pendingPrescriptions: 1,
+      familyName: 'Sri Santoso (Istri)',
+      familyPhone: '081234567890',
     ),
     const MonitoredPatient(
       id: 'a2000000-0000-4000-8000-000000000002',
       name: 'Siti Aminah',
+      patientUid: 'firebase-patient-siti',
       medicalRecordNo: 'RM-2024-0118',
       doctorName: 'dr. Daffa Afdhillah, Sp.PD',
       diagnosis: 'Diabetes melitus tipe 2',
@@ -511,6 +741,8 @@ class HospitalAdminRepository {
       adherenceScore: 68,
       missedDosesToday: 1,
       pendingPrescriptions: 1,
+      familyName: 'Hasan Basri (Anak)',
+      familyPhone: '081298765432',
     ),
     const MonitoredPatient(
       id: 'a2000000-0000-4000-8000-000000000005',
@@ -680,6 +912,9 @@ class HospitalAdminRepository {
 
   late List<AdherenceAlert> _demoAlerts = _seedDemoAlerts();
 
+  /// Waktu kirim notifikasi terakhir per id peringatan (mode demo).
+  final Map<String, DateTime> _demoNotificationLogs = {};
+
   List<AdherenceAlert> _seedDemoAlerts() => [
     AdherenceAlert(
       id: 'alert-1',
@@ -724,6 +959,7 @@ class HospitalAdminRepository {
   void resetDemoData() {
     _demoPrescriptions = _seedDemoPrescriptions();
     _demoAlerts = _seedDemoAlerts();
+    _demoNotificationLogs.clear();
     _profileFuture = null;
     _hospitalId = null;
   }

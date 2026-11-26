@@ -9,6 +9,8 @@ import 'package:Telehealth/features/hospital_admin/presentation/guards/hospital_
 import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_dashboard_page.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_medication_verification_page.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/pages/admin_patient_monitoring_page.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/widgets/notification_follow_up_dialog.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/widgets/prescription_dialogs.dart';
 
 void main() {
   group('RBAC role hospital_admin', () {
@@ -92,6 +94,27 @@ void main() {
         'Obat B',
       ]);
       expect(prescription.drugs.first.summary, contains('10 mg'));
+    });
+
+    test('PrescriptionDrug membawa scheduled_times dari database', () {
+      final drug = PrescriptionDrug.fromRow({
+        'medication_name': 'Furosemide',
+        'dose': '40 mg',
+        'frequency_per_day': 3,
+        'duration_days': 30,
+        'scheduled_times': ['07:00', '15:00', '23:00'],
+      });
+
+      expect(drug.frequencyPerDay, 3);
+      expect(drug.scheduledTimes, ['07:00', '15:00', '23:00']);
+      expect(drug.toRow()['scheduled_times'], ['07:00', '15:00', '23:00']);
+    });
+
+    test('defaultScheduledTimes mengikuti frekuensi/hari', () {
+      expect(defaultScheduledTimes(1), ['08:00']);
+      expect(defaultScheduledTimes(2), ['07:00', '19:00']);
+      expect(defaultScheduledTimes(3), ['07:00', '15:00', '23:00']);
+      expect(defaultScheduledTimes(4).length, 4);
     });
 
     test('MonitoredPatient.fromRow menghitung indikator tindak lanjut', () {
@@ -214,6 +237,33 @@ void main() {
       final alerts = await HospitalAdminRepository.instance.watchAlerts().first;
       expect(alerts, isNotEmpty);
     });
+
+    test('notifikasi tindak lanjut tercatat dan badge terisi', () async {
+      final repository = HospitalAdminRepository.instance;
+      final alerts = await repository.fetchAlerts();
+      final alert = alerts.first;
+
+      final dispatch = await repository.sendPatientNotification(
+        patientUid: 'firebase-patient-budi',
+        alertReferenceId: alert.id,
+        recipientTarget: 'both',
+        deliveryChannel: 'push_notification',
+        title: 'Pengingat',
+        message: 'Mohon minum obat sesuai jadwal.',
+      );
+
+      expect(dispatch.pushDelivered, isTrue);
+
+      final logs = await repository.fetchNotificationLogs(alertIds: [alert.id]);
+      expect(logs.containsKey(alert.id), isTrue);
+    });
+
+    test('fetchActiveMedicationNames mengembalikan obat resep demo', () async {
+      final names = await HospitalAdminRepository.instance
+          .fetchActiveMedicationNames('a2000000-0000-4000-8000-000000000001');
+      expect(names, isNotEmpty);
+      expect(names, contains('Furosemide'));
+    });
   });
 
   group('Widget dashboard admin', () {
@@ -291,6 +341,111 @@ void main() {
       expect(find.text('Peringatan Real-time'), findsOneWidget);
       expect(find.text('Budi Santoso'), findsWidgets);
       expect(find.text('Tindak Lanjut'), findsWidgets);
+    });
+
+    testWidgets('dialog notifikasi menampilkan pilihan target dan template', (
+      tester,
+    ) async {
+      final alert = AdherenceAlert(
+        id: 'alert-test',
+        patientId: 'patient-test',
+        patientName: 'Budi Santoso',
+        type: AlertType.missedDose,
+        severity: RiskLevel.high,
+        message: 'Melewatkan 2 dari 3 dosis pada hari ini.',
+        createdAt: DateTime.now(),
+      );
+      const patient = MonitoredPatient(
+        id: 'patient-test',
+        name: 'Budi Santoso',
+        patientUid: 'firebase-patient-budi',
+        familyName: 'Sri Santoso',
+        familyPhone: '081234567890',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: NotificationFollowUpDialog(alert: alert, patient: patient),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tindak Lanjut & Kirim Pengingat'), findsOneWidget);
+      expect(find.text('Kirim ke HP Pasien'), findsOneWidget);
+      expect(find.text('Kirim ke HP Keluarga / Wali Pasien'), findsOneWidget);
+      expect(find.text('Kirim Notifikasi Aplikasi'), findsOneWidget);
+      expect(find.text('Kirim via WhatsApp Keluarga'), findsOneWidget);
+    });
+
+    testWidgets('modal verifikasi menyembunyikan jam sampai frekuensi dipilih', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: PrescriptionVerificationDialog(
+              prescription: AdminPrescription(
+                id: 'rx-empty',
+                patientId: 'patient-test',
+                patientName: 'Budi Santoso',
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Frekuensi minum'), findsOneWidget);
+      expect(find.text('Jadwal minum obat'), findsNothing);
+      expect(
+        find.text(
+          'Pilih frekuensi minum terlebih dahulu untuk mengatur jam minum obat.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('modal verifikasi menampilkan slot jam sesuai frekuensi', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: PrescriptionVerificationDialog(
+              prescription: AdminPrescription(
+                id: 'rx-test',
+                patientId: 'patient-test',
+                patientName: 'Budi Santoso',
+                drugs: [
+                  PrescriptionDrug(
+                    name: 'Furosemide',
+                    dose: '40 mg',
+                    frequencyPerDay: 2,
+                    durationDays: 30,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Verifikasi Resep'), findsOneWidget);
+      expect(find.text('Jadwal minum obat'), findsOneWidget);
+      expect(find.text('2 slot'), findsOneWidget);
+      expect(find.text('07:00'), findsOneWidget);
+      expect(find.text('19:00'), findsOneWidget);
     });
   });
 }
