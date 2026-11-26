@@ -572,7 +572,45 @@ class ConsultationRepository {
         .from('consultation_sessions')
         .select()
         .order('requested_at', ascending: false);
-    return _rows(data).map(consultationSessionFromRow).toList();
+    final sessions = _rows(data).map(consultationSessionFromRow).toList();
+    debugPrint(
+      '[ConsultationRepository] getMySessions uid=$_currentUid '
+      'rows=${sessions.length}',
+    );
+    return sessions;
+  }
+
+  /// Nama dokter untuk setiap sesi pasien, dipakai daftar Chat.
+  ///
+  /// Kunci: `sessionId`, nilai: nama dokter dari tabel `profiles`.
+  Future<Map<String, String>> sessionDoctorNames() async {
+    final db = _db;
+    if (db == null) return const {};
+
+    final rows = await db
+        .from('consultation_sessions')
+        .select('id, doctor_user_id');
+    if (rows.isEmpty) return const {};
+
+    final doctorIds = rows
+        .map((r) => r['doctor_user_id'].toString())
+        .toSet()
+        .toList();
+    final profiles = await db
+        .from('profiles')
+        .select('id, full_name')
+        .inFilter('id', doctorIds);
+
+    final nameById = {
+      for (final p in profiles)
+        p['id'].toString(): (p['full_name'] ?? '').toString(),
+    };
+
+    return {
+      for (final r in rows)
+        r['id'].toString():
+            nameById[r['doctor_user_id'].toString()] ?? 'Dokter',
+    };
   }
 
   /// Batalkan permintaan konsultasi yang belum ditanggapi dokter.
