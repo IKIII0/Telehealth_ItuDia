@@ -7,11 +7,13 @@ import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/core/widgets/notification_bell.dart';
 import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
 import 'package:Telehealth/core/widgets/role_badge.dart';
+import 'package:Telehealth/data/models/consultation_session.dart';
 import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/models/conversation.dart';
 import 'package:Telehealth/data/models/journal.dart';
 import 'package:Telehealth/data/models/medication.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
+import 'package:Telehealth/data/repositories/consultation_repository.dart';
 import 'package:Telehealth/data/repositories/conversation_repository.dart';
 import 'package:Telehealth/data/repositories/doctor_repository.dart';
 import 'package:Telehealth/data/repositories/journal_repository.dart';
@@ -49,6 +51,13 @@ class _DashboardPageState extends State<DashboardPage> {
   List<JournalCategory> _journalCategories = const [];
   List<Medication> _medications = const [];
 
+  /// Konsultasi pasien ke dokter (dari Supabase; kosong pada mode simulasi).
+  List<ConsultationSession> _doctorConsultations = const [];
+
+  /// `true` bila tab Chat & daftar konsultasi memakai tabel Supabase, sehingga
+  /// daftar percakapan simulasi tidak perlu ditampilkan lagi.
+  bool get _useConsultationDb => ConsultationRepository.instance.isRemote;
+
   /// Kategori grafik rekam medis yang sedang dipilih ('cat1', 'cat2', atau 'cat3')
   String _selectedChartCategoryId = 'cat1';
 
@@ -70,6 +79,7 @@ class _DashboardPageState extends State<DashboardPage> {
         JournalRepository.instance.fetchCategories(),
         MedicationRepository.instance.fetchAll(),
         ConversationRepository.instance.fetchAll(),
+        ConsultationRepository.instance.getMySessions(),
       ]);
       if (!mounted) return;
       final doctors = List<Doctor>.of(results[0] as List<Doctor>)
@@ -84,6 +94,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _journalCategories = results[2] as List<JournalCategory>;
         _medications = results[3] as List<Medication>;
         _activeConsultations = consultations;
+        _doctorConsultations = results[5] as List<ConsultationSession>;
         _loading = false;
       });
     } catch (e) {
@@ -220,12 +231,21 @@ class _DashboardPageState extends State<DashboardPage> {
                   _buildJournalSection(scheme),
                   // ── 2. Ringkasan Pengingat Obat & Jadwal Terdekat ──────
                   _buildMedicationSection(scheme),
-                  // ── 3. Konsultasi Aktif ──────────────────────────────
-                  _buildSectionHeader(
-                    'Konsultasi Aktif',
-                    onSeeAll: () => _go(AppRoutes.patientChatName),
-                  ),
-                  _buildScheduleList(scheme),
+                  if (_doctorConsultations.isNotEmpty) ...[
+                    _buildSectionHeader(
+                      'Konsultasi dengan Dokter',
+                      onSeeAll: () => _go(AppRoutes.patientConsultationsName),
+                    ),
+                    _buildDoctorConsultationList(scheme),
+                  ],
+                  // ── 3. Konsultasi Aktif (mode simulasi) ──────────────
+                  if (!_useConsultationDb) ...[
+                    _buildSectionHeader(
+                      'Konsultasi Aktif',
+                      onSeeAll: () => _go(AppRoutes.patientChatName),
+                    ),
+                    _buildScheduleList(scheme),
+                  ],
                   // ── 4. Dokter Rekomendasi ─────────────────────────────
                   _buildSectionHeader(
                     'Dokter Rekomendasi',
@@ -1375,6 +1395,98 @@ class _DashboardPageState extends State<DashboardPage> {
           }).toList(),
         ),
       ),
+    );
+  }
+
+  // ── Konsultasi dengan dokter (data Supabase) ────────────────────────────────
+  Widget _buildDoctorConsultationList(ColorScheme scheme) {
+    final sessions = _doctorConsultations.take(3).toList();
+    return Column(
+      children: [
+        for (final session in sessions)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => context.pushNamed(
+                  AppRoutes.patientConsultationRoomName,
+                  pathParameters: {'sessionId': session.sessionId},
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: scheme.primaryContainer,
+                        child: Icon(
+                          Icons.medical_services_outlined,
+                          color: scheme.primary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              session.doctorName.isEmpty
+                                  ? 'Dokter'
+                                  : session.doctorName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              session.complaint,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: session.status.color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          session.status.label,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: session.status.color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
