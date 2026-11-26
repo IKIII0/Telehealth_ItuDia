@@ -9,6 +9,7 @@ import 'package:Telehealth/data/repositories/hospital_admin_repository.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/theme/admin_theme.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/widgets/admin_widgets.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/widgets/follow_up_dialog.dart';
+import 'package:Telehealth/features/hospital_admin/presentation/widgets/notification_follow_up_dialog.dart';
 
 /// Halaman 3 — Pemantauan Kepatuhan Pasien.
 ///
@@ -29,6 +30,9 @@ class _AdminPatientMonitoringPageState
 
   List<MonitoredPatient> _patients = const [];
   List<AdherenceAlert> _alerts = const [];
+
+  /// Waktu kirim notifikasi terakhir per id peringatan (badge "Sudah Diingatkan").
+  final Map<String, DateTime> _alertNotifiedAt = {};
   RiskLevel? _riskFilter;
   bool _onlyAttention = false;
   bool _liveConnected = false;
@@ -87,6 +91,7 @@ class _AdminPatientMonitoringPageState
           _alerts = alerts;
           _liveConnected = true;
         });
+        unawaited(_loadNotificationLogs(alerts));
         // Indikator dosis terlewat/keluhan di tabel ikut diperbarui tanpa
         // menampilkan loading.
         unawaited(_loadPatients(silent: true));
@@ -99,6 +104,46 @@ class _AdminPatientMonitoringPageState
   }
 
   Future<void> _refresh() => _loadPatients();
+
+  /// Muat riwayat notifikasi agar badge "Sudah Diingatkan" tetap tampil
+  /// setelah halaman dimuat ulang.
+  Future<void> _loadNotificationLogs(List<AdherenceAlert> alerts) async {
+    final ids = alerts.map((alert) => alert.id).where((id) => id.isNotEmpty);
+    final logs = await HospitalAdminRepository.instance.fetchNotificationLogs(
+      alertIds: ids,
+    );
+    if (!mounted || logs.isEmpty) return;
+    setState(() => _alertNotifiedAt.addAll(logs));
+  }
+
+  Future<void> _openNotificationDialog(AdherenceAlert alert) async {
+    final patient = _findPatient(alert.patientId);
+    if (patient == null) {
+      showAppSnack(context, 'Data pasien tidak ditemukan.', success: false);
+      return;
+    }
+
+    final outcome = await NotificationFollowUpDialog.show(
+      context,
+      alert: alert,
+      patient: patient,
+      loadMedications: () => HospitalAdminRepository.instance
+          .fetchActiveMedicationNames(patient.id),
+    );
+    if (!mounted || outcome == null) return;
+
+    setState(() => _alertNotifiedAt[alert.id] = outcome.sentAt);
+    if (outcome.whatsappOpened) {
+      showAppSnack(context, 'WhatsApp keluarga ${patient.name} dibuka');
+    } else if (outcome.pushDelivered) {
+      showAppSnack(context, 'Notifikasi pengingat terkirim ke ${patient.name}');
+    } else {
+      showAppSnack(
+        context,
+        'Notifikasi tercatat. Pengingat dikirim saat aplikasi menerima data.',
+      );
+    }
+  }
 
   Future<void> _openFollowUp(
     MonitoredPatient patient, {
@@ -165,22 +210,9 @@ class _AdminPatientMonitoringPageState
               const SizedBox(height: 18),
               _AlertsPanel(
                 alerts: _alerts,
+                notifiedAt: _alertNotifiedAt,
                 onFollowUp: (alert) async {
-                  final patient = _findPatient(alert.patientId);
-                  if (patient == null) {
-                    showAppSnack(
-                      context,
-                      'Data pasien tidak ditemukan.',
-                      success: false,
-                    );
-                    return;
-                  }
-                  await _openFollowUp(
-                    patient,
-                    reportId: alert.type == AlertType.complaint
-                        ? alert.id
-                        : null,
-                  );
+                  await _openNotificationDialog(alert);
                 },
               ),
               const SizedBox(height: 18),
@@ -358,20 +390,38 @@ class _LiveStatusChip extends StatelessWidget {
 }
 
 class _AlertsPanel extends StatelessWidget {
-  const _AlertsPanel({required this.alerts, required this.onFollowUp});
+  const _AlertsPanel({
+    required this.alerts,
+    required this.notifiedAt,
+    required this.onFollowUp,
+  });
 
   final List<AdherenceAlert> alerts;
+  final Map<String, DateTime> notifiedAt;
   final ValueChanged<AdherenceAlert> onFollowUp;
 
   @override
   Widget build(BuildContext context) {
+    final pending = alerts
+        .where((alert) => !notifiedAt.containsKey(alert.id))
+        .length;
+
+    final String subtitle;
+    if (alerts.isEmpty) {
+      subtitle = 'Belum ada dosis terlewat atau keluhan baru';
+    } else if (pending == 0) {
+      subtitle = 'Semua peringatan sudah ditindaklanjuti';
+    } else {
+      subtitle = '$pending peringatan perlu ditindaklanjuti';
+    }
+
     return AdminPanel(
       title: 'Peringatan Real-time',
-      subtitle: alerts.isEmpty
-          ? 'Belum ada dosis terlewat atau keluhan baru'
-          : '${alerts.length} peringatan perlu ditindaklanjuti',
+      subtitle: subtitle,
       trailing: AdminLiveDot(
-        color: alerts.isEmpty ? AdminColors.success : AdminColors.danger,
+        color: alerts.isEmpty || pending == 0
+            ? AdminColors.success
+            : AdminColors.danger,
       ),
       child: alerts.isEmpty
           ? const AdminEmptyState(
@@ -386,6 +436,7 @@ class _AlertsPanel extends StatelessWidget {
                 for (var index = 0; index < alerts.length; index++) ...[
                   _AlertRow(
                     alert: alerts[index],
+                    notifiedAt: notifiedAt[alerts[index].id],
                     onFollowUp: () => onFollowUp(alerts[index]),
                   ),
                   if (index != alerts.length - 1)
@@ -398,21 +449,30 @@ class _AlertsPanel extends StatelessWidget {
 }
 
 class _AlertRow extends StatelessWidget {
-  const _AlertRow({required this.alert, required this.onFollowUp});
+  const _AlertRow({
+    required this.alert,
+    required this.onFollowUp,
+    this.notifiedAt,
+  });
 
   final AdherenceAlert alert;
   final VoidCallback onFollowUp;
+  final DateTime? notifiedAt;
 
   @override
   Widget build(BuildContext context) {
     final color = colorForRisk(alert.severity);
+    final isNotified = notifiedAt != null;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 5),
-          child: AdminLiveDot(color: color, size: 8),
+          child: AdminLiveDot(
+            color: isNotified ? AdminColors.success : color,
+            size: 8,
+          ),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -438,8 +498,16 @@ class _AlertRow extends StatelessWidget {
                         ? AdminBadgeTone.danger
                         : AdminBadgeTone.warning,
                   ),
+                  if (isNotified)
+                    const AdminStatusBadge(
+                      label: 'Sudah Diingatkan',
+                      tone: AdminBadgeTone.success,
+                      icon: Icons.mark_email_read_rounded,
+                    ),
                   Text(
-                    adminRelativeTime(alert.createdAt),
+                    isNotified
+                        ? 'Diingatkan ${adminRelativeTime(notifiedAt)}'
+                        : adminRelativeTime(alert.createdAt),
                     style: const TextStyle(
                       fontSize: 10.5,
                       color: AdminColors.textMuted,
@@ -460,7 +528,10 @@ class _AlertRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        TextButton(onPressed: onFollowUp, child: const Text('Tindak lanjut')),
+        TextButton(
+          onPressed: onFollowUp,
+          child: Text(isNotified ? 'Ingatkan Lagi' : 'Tindak lanjut'),
+        ),
       ],
     );
   }

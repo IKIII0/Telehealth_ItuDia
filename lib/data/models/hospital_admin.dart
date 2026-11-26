@@ -165,6 +165,7 @@ class PrescriptionDrug {
     this.frequencyPerDay = 1,
     this.durationDays = 1,
     this.instructions = '',
+    this.scheduledTimes = const [],
   });
 
   factory PrescriptionDrug.fromRow(Map<String, dynamic> row) {
@@ -174,6 +175,7 @@ class PrescriptionDrug {
       frequencyPerDay: _asInt(row['frequency_per_day'], fallback: 1),
       durationDays: _asInt(row['duration_days'], fallback: 1),
       instructions: _asString(row['special_instructions']),
+      scheduledTimes: _asStringList(row['scheduled_times']),
     );
   }
 
@@ -182,6 +184,9 @@ class PrescriptionDrug {
   final int frequencyPerDay;
   final int durationDays;
   final String instructions;
+
+  /// Jam minum obat, mis. `['07:00', '15:00', '23:00']`.
+  final List<String> scheduledTimes;
 
   /// Ringkasan singkat untuk chip di tabel, mis. `500 mg • 3x sehari`.
   String get summary {
@@ -199,6 +204,7 @@ class PrescriptionDrug {
     'frequency_per_day': frequencyPerDay,
     'duration_days': durationDays,
     'special_instructions': instructions,
+    'scheduled_times': scheduledTimes,
   };
 
   PrescriptionDrug copyWith({
@@ -207,6 +213,7 @@ class PrescriptionDrug {
     int? frequencyPerDay,
     int? durationDays,
     String? instructions,
+    List<String>? scheduledTimes,
   }) {
     return PrescriptionDrug(
       name: name ?? this.name,
@@ -214,6 +221,7 @@ class PrescriptionDrug {
       frequencyPerDay: frequencyPerDay ?? this.frequencyPerDay,
       durationDays: durationDays ?? this.durationDays,
       instructions: instructions ?? this.instructions,
+      scheduledTimes: scheduledTimes ?? this.scheduledTimes,
     );
   }
 }
@@ -317,6 +325,7 @@ class MonitoredPatient {
   const MonitoredPatient({
     required this.id,
     required this.name,
+    this.patientUid = '',
     this.medicalRecordNo = '',
     this.doctorName = '',
     this.diagnosis = '',
@@ -328,12 +337,15 @@ class MonitoredPatient {
     this.dischargeDate,
     this.lastAdherenceDate,
     this.isActive = true,
+    this.familyName = '',
+    this.familyPhone = '',
   });
 
   factory MonitoredPatient.fromRow(Map<String, dynamic> row) {
     return MonitoredPatient(
       id: _asString(row['id']),
       name: _asString(row['full_name'], fallback: 'Pasien'),
+      patientUid: _asString(row['patient_user_id']),
       medicalRecordNo: _asString(row['medical_record_no']),
       doctorName: _asString(
         row['attending_doctor_name'],
@@ -348,11 +360,16 @@ class MonitoredPatient {
       dischargeDate: _asDate(row['discharge_date']),
       lastAdherenceDate: _asDate(row['last_adherence_date']),
       isActive: row['is_active'] as bool? ?? true,
+      familyName: _asString(row['family_name']),
+      familyPhone: _asString(row['family_phone']),
     );
   }
 
   final String id;
   final String name;
+
+  /// Firebase UID pasien (kolom `hospital_patients.patient_user_id`).
+  final String patientUid;
   final String medicalRecordNo;
   final String doctorName;
   final String diagnosis;
@@ -364,6 +381,15 @@ class MonitoredPatient {
   final DateTime? dischargeDate;
   final DateTime? lastAdherenceDate;
   final bool isActive;
+
+  /// Nama wali/keluarga pendamping.
+  final String familyName;
+
+  /// Nomor WhatsApp/telepon keluarga pendamping.
+  final String familyPhone;
+
+  /// `true` bila minimal ada satu jalur kontak keluarga yang terdaftar.
+  bool get hasFamilyContact => familyPhone.isNotEmpty || familyName.isNotEmpty;
 
   bool get hasMissedDose => missedDosesToday > 0;
 
@@ -451,4 +477,14 @@ DateTime? _asDate(Object? value) {
   if (value is DateTime) return value;
   if (value is String) return DateTime.tryParse(value);
   return null;
+}
+
+List<String> _asStringList(Object? value) {
+  if (value is List) {
+    return [
+      for (final item in value)
+        if (item?.toString().trim().isNotEmpty ?? false) item.toString().trim(),
+    ];
+  }
+  return const [];
 }
