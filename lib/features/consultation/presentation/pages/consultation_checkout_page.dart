@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:Telehealth/core/events/app_events.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/data/models/doctor.dart';
@@ -167,6 +168,7 @@ class _ConsultationCheckoutPageState extends State<ConsultationCheckoutPage> {
         }
 
         setState(() => _paying = false);
+        AppEvents.instance.consultationsChanged();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Permintaan konsultasi terkirim. Menunggu dokter.'),
