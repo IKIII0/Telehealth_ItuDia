@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:Telehealth/core/events/app_events.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
+import 'package:Telehealth/core/supabase/supabase_config.dart';
 import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
@@ -40,6 +42,8 @@ class _ConversationListPageState extends State<ConversationListPage>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _load();
+    // Muat ulang saat sesi konsultasi baru dibuat di tempat lain.
+    AppEvents.instance.addListener(_load);
   }
 
   Future<void> _load() async {
@@ -49,6 +53,11 @@ class _ConversationListPageState extends State<ConversationListPage>
     });
     try {
       _remote = ConsultationRepository.instance.isRemote;
+      debugPrint(
+        '[ChatList] remote=$_remote '
+        'client=${SupabaseConfig.client != null} '
+        'firebaseClient=${SupabaseConfig.firebaseAuthClient != null}',
+      );
       if (_remote) {
         final sessions = await ConsultationRepository.instance.getMySessions();
         if (!mounted) return;
@@ -143,6 +152,7 @@ class _ConversationListPageState extends State<ConversationListPage>
 
   @override
   void dispose() {
+    AppEvents.instance.removeListener(_load);
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
