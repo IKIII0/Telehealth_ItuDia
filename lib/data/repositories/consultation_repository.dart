@@ -647,6 +647,21 @@ class ConsultationRepository {
     return getSession(sessionId);
   }
 
+  /// Sesi aktif pasien (requested/scheduled/ongoing), bila ada.
+  ///
+  /// Dipakai untuk memastikan pasien hanya memiliki satu konsultasi aktif.
+  Future<ConsultationSession?> findActiveSession() async {
+    final sessions = await getMySessions();
+    for (final session in sessions) {
+      if (session.status == ConsultationStatus.requested ||
+          session.status == ConsultationStatus.scheduled ||
+          session.status == ConsultationStatus.ongoing) {
+        return session;
+      }
+    }
+    return null;
+  }
+
   /// Buat permintaan konsultasi baru dari sisi pasien.
   ///
   /// Mengembalikan `null` bila aplikasi belum terhubung ke Supabase atau dokter
@@ -662,6 +677,15 @@ class ConsultationRepository {
     final db = _db;
     final uid = _currentUid;
     if (db == null || uid == null) return null;
+
+    // Satu konsultasi aktif per pasien: harus diselesaikan/dibatalkan dulu.
+    final active = await findActiveSession();
+    if (active != null) {
+      throw StateError(
+        'Anda masih memiliki konsultasi berstatus ${active.status.label}. '
+        'Selesaikan atau batalkan konsultasi tersebut sebelum memulai yang baru.',
+      );
+    }
 
     final doctorRow = await db
         .from('doctor_profiles')

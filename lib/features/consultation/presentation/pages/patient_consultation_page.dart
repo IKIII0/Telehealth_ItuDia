@@ -632,14 +632,15 @@ class _StatusBanner extends StatelessWidget {
               ),
             ],
           ),
-          if (session.status == ConsultationStatus.requested) ...[
+          if (session.status == ConsultationStatus.requested ||
+              session.status == ConsultationStatus.scheduled) ...[
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: onCancel,
                 child: Text(
-                  'Batalkan permintaan',
+                  'Batalkan konsultasi',
                   style: TextStyle(color: scheme.error),
                 ),
               ),

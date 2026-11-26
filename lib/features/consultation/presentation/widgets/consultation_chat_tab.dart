@@ -2,17 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:Telehealth/data/models/chat_message.dart';
 import 'package:Telehealth/data/models/consultation_session.dart';
-import 'package:Telehealth/data/repositories/auth_repository.dart';
-import 'package:Telehealth/data/repositories/chat_repository.dart';
-import 'package:Telehealth/data/repositories/conversation_repository.dart';
-import 'package:Telehealth/data/repositories/doctor_repository.dart';
+import 'package:Telehealth/data/repositories/consultation_repository.dart';
 
 /// Tab Percakapan: dokter berkirim pesan dengan pasien selama sesi.
 ///
-/// Pesan baru hanya bisa dikirim saat sesi berstatus berlangsung. Pada sesi
-/// terjadwal atau selesai, riwayat chat tetap tampil tetapi input dinonaktifkan.
+/// Pesan disimpan pada `consultation_messages` (tabel yang sama dengan yang
+/// dipakai pasien), sehingga kedua pihak melihat percakapan yang sama.
+/// Pesan baru hanya bisa dikirim saat sesi berstatus berlangsung.
 class ConsultationChatTab extends StatefulWidget {
   const ConsultationChatTab({super.key, required this.session});
 
@@ -35,29 +32,12 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
   bool _sending = false;
   bool _patientTyping = false;
   String? _error;
-  StreamSubscription<List<ChatMessage>>? _live;
-
-  /// Id percakapan yang dipakai bersama pasien.
-  String _conversationId = '';
+  Timer? _poll;
 
   bool get _canSend =>
       widget.session.status == ConsultationStatus.ongoing && !_sending;
 
-  /// Id direktori dokter untuk akun yang sedang login.
-  ///
-  /// Akun dokter yang baru mendaftar belum punya `directory_doctor_id`, jadi
-  /// id direktori mereka adalah `acc_<uid>` (dibuat oleh trigger
-  /// 05_doctor_directory_sync.sql). Tanpa fallback ini, sisi dokter dan pasien
-  /// memakai id percakapan berbeda.
-  Future<String> _resolveDoctorId() async {
-    final user = AuthRepository.instance.currentUser;
-    final fromProfile = user?.doctorProfile?.doctorId ?? '';
-    final fallback = 'acc_${user?.id ?? 'doctor'}';
-    if (fromProfile.isEmpty) return fallback;
-
-    final doctor = await DoctorRepository.instance.findById(fromProfile);
-    return doctor == null ? fallback : fromProfile;
-  }
+  ConsultationRepository get _repo => ConsultationRepository.instance;
 
   @override
   void initState() {
@@ -66,8 +46,16 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
   }
 
   @override
+  void didUpdateWidget(covariant ConsultationChatTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.session.status != widget.session.status) {
+      _syncPolling();
+    }
+  }
+
+  @override
   void dispose() {
-    _live?.cancel();
+    _poll?.cancel();
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -75,31 +63,15 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
 
   Future<void> _load() async {
     try {
-      final user = AuthRepository.instance.currentUser;
-      final doctorId = await _resolveDoctorId();
-      _conversationId = ConversationRepository.pairId(
-        doctorId,
-        widget.session.patientId,
-      );
-      await ConversationRepository.instance.ensureForPair(
-        doctorId: doctorId,
-        doctorName: user?.name ?? 'Dokter',
-        doctorInitials: 'DR',
-        doctorColor: const Color(0xFF1E88E5),
-        patientId: widget.session.patientId,
-        doctorOnline: widget.session.status == ConsultationStatus.ongoing,
-      );
-      final messages = await ChatRepository.instance.fetchMessages(
-        _conversationId,
-      );
+      final messages = await _repo.getMessages(widget.session.sessionId);
       if (!mounted) return;
       setState(() {
-        _messages = messages.map(_toConsultationMessage).toList();
+        _messages = messages;
         _loading = false;
         _error = null;
       });
       _scrollToEnd();
-      _listenLive();
+      _syncPolling();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -109,42 +81,14 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
     }
   }
 
-  /// Langganan realtime agar pesan pasien masuk tanpa refresh.
-  void _listenLive() {
-    _live?.cancel();
-    _live = ChatRepository.instance.watchMessages(_conversationId).listen((
-      messages,
-    ) {
-      if (!mounted) return;
-      setState(() {
-        _messages = messages.map(_toConsultationMessage).toList();
-        _loading = false;
-      });
-      _scrollToEnd();
-    });
-  }
-
-  ConsultationMessage _toConsultationMessage(ChatMessage message) {
-    return ConsultationMessage(
-      id: message.id,
-      sessionId: widget.session.sessionId,
-      text: message.text,
-      fromDoctor: message.isFromDoctor,
-      sentAt: _parseTime(message.time),
-    );
-  }
-
-  DateTime _parseTime(String value) {
-    final parts = value.split(':');
-    final now = DateTime.now();
-    if (parts.length == 2) {
-      final hour = int.tryParse(parts[0]);
-      final minute = int.tryParse(parts[1]);
-      if (hour != null && minute != null) {
-        return DateTime(now.year, now.month, now.day, hour, minute);
-      }
+  /// Pesan pasien masuk tanpa refresh saat sesi berlangsung.
+  void _syncPolling() {
+    if (_repo.isRemote && widget.session.status == ConsultationStatus.ongoing) {
+      _poll ??= Timer.periodic(const Duration(seconds: 5), (_) => _load());
+    } else {
+      _poll?.cancel();
+      _poll = null;
     }
-    return now;
   }
 
   void _scrollToEnd() {
@@ -162,18 +106,35 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
     setState(() => _sending = true);
     _inputCtrl.clear();
     try {
-      final message = await ChatRepository.instance.send(
-        _conversationId,
+      final sent = await _repo.sendDoctorMessage(
+        widget.session.sessionId,
         text,
-        sender: 'doctor',
       );
       if (!mounted) return;
       setState(() {
-        _messages = [..._messages, _toConsultationMessage(message)];
+        _messages = [..._messages, sent];
         _sending = false;
-        _patientTyping = false;
       });
       _scrollToEnd();
+
+      // Mode simulasi: tiru balasan pasien agar demo tetap hidup.
+      if (!_repo.isRemote) {
+        setState(() => _patientTyping = true);
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        final reply = await _repo.simulatePatientReply(
+          widget.session.sessionId,
+        );
+        if (!mounted) return;
+        setState(() {
+          _patientTyping = false;
+          if (reply != null) _messages = [..._messages, reply];
+        });
+        _scrollToEnd();
+        return;
+      }
+
+      // Pesan pasien dari perangkat lain langsung disegarkan.
+      await _load();
     } catch (e) {
       if (!mounted) return;
       setState(() {
