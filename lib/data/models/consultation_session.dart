@@ -45,6 +45,8 @@ class ConsultationSession {
     this.diagnosisSummary = '',
     this.prescribedMedications = const [],
     this.priority = '',
+    this.doctorName = '',
+    this.doctorSpecialization = '',
   });
 
   final String sessionId;
@@ -67,6 +69,10 @@ class ConsultationSession {
   /// Prioritas permintaan dari database (`routine` / `medium` / `high`).
   /// Kosong untuk data simulasi lama.
   final String priority;
+
+  /// Nama & spesialisasi dokter (snapshot dari database).
+  final String doctorName;
+  final String doctorSpecialization;
 
   /// `true` bila masih berupa permintaan yang belum ditanggapi dokter.
   bool get isRequest => status == ConsultationStatus.requested;
@@ -98,6 +104,8 @@ class ConsultationSession {
       prescribedMedications:
           prescribedMedications ?? this.prescribedMedications,
       priority: priority,
+      doctorName: doctorName,
+      doctorSpecialization: doctorSpecialization,
     );
   }
 }
