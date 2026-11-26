@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/routing/app_routes.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
+import 'package:Telehealth/data/models/consultation_session.dart';
 import 'package:Telehealth/data/models/doctor.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 import 'package:Telehealth/data/repositories/chat_repository.dart';
@@ -143,14 +144,37 @@ class _ConsultationCheckoutPageState extends State<ConsultationCheckoutPage> {
         }
 
         final profile = _profiles[_selectedProfile];
-        final session = await repo.createRequest(
-          doctorDirectoryId: doctor.id,
-          patientName: profile.name,
-          patientRelation: profile.relation,
-          complaint: complaint,
-          consultationType: 'Chat Dokter',
-          fee: _total,
-        );
+
+        // Satu konsultasi aktif per pasien.
+        final active = await repo.findActiveSession();
+        if (!mounted) return;
+        if (active != null) {
+          setState(() => _paying = false);
+          await _showActiveSessionDialog(active);
+          return;
+        }
+
+        ConsultationSession? session;
+        try {
+          session = await repo.createRequest(
+            doctorDirectoryId: doctor.id,
+            patientName: profile.name,
+            patientRelation: profile.relation,
+            complaint: complaint,
+            consultationType: 'Chat Dokter',
+            fee: _total,
+          );
+        } on StateError catch (error) {
+          if (!mounted) return;
+          setState(() => _paying = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.message),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
         if (!mounted) return;
         if (session == null) {
           setState(() => _paying = false);
@@ -209,6 +233,38 @@ class _ConsultationCheckoutPageState extends State<ConsultationCheckoutPage> {
         ),
       );
     }
+  }
+
+  /// Beri tahu pasien bahwa masih ada konsultasi aktif dan tawarkan
+  /// membuka sesi tersebut.
+  Future<void> _showActiveSessionDialog(ConsultationSession session) async {
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Masih ada konsultasi aktif'),
+        content: Text(
+          'Anda masih memiliki konsultasi berstatus ${session.status.label} '
+          'dengan ${session.doctorName.isEmpty ? 'dokter' : session.doctorName}. '
+          'Selesaikan konsultasi tersebut sebelum memulai yang baru.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Tutup'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Lihat Konsultasi'),
+          ),
+        ],
+      ),
+    );
+
+    if (open != true || !mounted) return;
+    context.pushReplacementNamed(
+      AppRoutes.patientConsultationRoomName,
+      pathParameters: {'sessionId': session.sessionId},
+    );
   }
 
   String _formatPrice(int value) {
