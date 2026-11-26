@@ -7,6 +7,42 @@ import 'package:Telehealth/data/repositories/hospital_admin_repository.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/theme/admin_theme.dart';
 import 'package:Telehealth/features/hospital_admin/presentation/widgets/medicine_dropdown_field.dart';
 
+/// Jam default proporsional sesuai jumlah frekuensi per hari.
+///
+/// Samakan dengan `app.default_scheduled_times(int)` di SQL agar jadwal awal
+/// konsisten antara UI dan database.
+List<String> defaultScheduledTimes(int frequency) {
+  final freq = frequency.clamp(1, 12);
+  if (freq == 1) return ['08:00'];
+  if (freq == 2) return ['07:00', '19:00'];
+  if (freq == 3) return ['07:00', '15:00', '23:00'];
+
+  // >= 4: sebarkan merata mulai 07:00 dengan interval 24/jumlah jam.
+  final step = 1440 ~/ freq;
+  return List<String>.generate(freq, (index) {
+    final minutes = (7 * 60 + index * step) % 1440;
+    final hour = (minutes ~/ 60).toString().padLeft(2, '0');
+    final minute = (minutes % 60).toString().padLeft(2, '0');
+    return '$hour:$minute';
+  });
+}
+
+String _formatTimeOfDay(TimeOfDay time) {
+  final hour = time.hour.toString().padLeft(2, '0');
+  final minute = time.minute.toString().padLeft(2, '0');
+  return '$hour:$minute';
+}
+
+TimeOfDay? _parseTimeOfDay(String raw) {
+  final match = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(raw.trim());
+  if (match == null) return null;
+  final hour = int.tryParse(match.group(1)!);
+  final minute = int.tryParse(match.group(2)!);
+  if (hour == null || minute == null) return null;
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+  return TimeOfDay(hour: hour, minute: minute);
+}
+
 /// Modal verifikasi resep.
 ///
 /// Admin dapat memperbaiki rincian obat dari dokter, lalu menekan
@@ -79,6 +115,18 @@ class _PrescriptionVerificationDialogState
   Future<void> _submit() async {
     if (_submitting) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    // Pastikan seluruh slot jam minum obat terisi sebelum diproses.
+    for (var index = 0; index < _drugs.length; index++) {
+      if (!_drugs[index].hasCompleteSchedules) {
+        setState(() {
+          _error =
+              'Lengkapi jam minum obat obat nomor ${index + 1} sesuai jumlah '
+              'frekuensi per hari.';
+        });
+        return;
+      }
+    }
 
     setState(() {
       _submitting = true;
@@ -635,7 +683,7 @@ class _ErrorBox extends StatelessWidget {
   }
 }
 
-class _DrugEditor extends StatelessWidget {
+class _DrugEditor extends StatefulWidget {
   const _DrugEditor({
     required this.index,
     required this.form,
@@ -650,19 +698,61 @@ class _DrugEditor extends StatelessWidget {
   final bool enabled;
   final VoidCallback onRemove;
 
+  @override
+  State<_DrugEditor> createState() => _DrugEditorState();
+}
+
+class _DrugEditorState extends State<_DrugEditor> {
+  /// Dipanggil saat admin memilih frekuensi dari dropdown.
+  void _changeFrequency(int? value) {
+    setState(() {
+      widget.form.frequencyCount = value;
+      widget.form.syncScheduledTimes();
+    });
+  }
+
   /// Mengisi field obat dari nilai default katalog. Semua field tetap dapat
   /// diedit admin untuk penyesuaian khusus.
   void _applyCatalogDefaults(_DrugForm form, MedicineCatalogItem item) {
     if (item.defaultDosage.isNotEmpty) {
       form.dose.text = item.defaultDosage;
     }
-    form.frequency.text = '${item.defaultFrequencyPerDay}';
+    form.frequencyCount = item.defaultFrequencyPerDay.clamp(1, 12);
     form.duration.text = '${item.defaultDurationDays}';
     form.instructions.text = item.defaultInstructions;
+    form.regenerateScheduledTimes();
+    setState(() {});
+  }
+
+  Future<void> _pickTime(int slot) async {
+    final form = widget.form;
+    if (slot >= form.scheduledTimes.length) return;
+
+    final initial =
+        _parseTimeOfDay(form.scheduledTimes[slot]) ??
+        const TimeOfDay(hour: 8, minute: 0);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+      helpText: 'Pilih jam minum obat',
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() {
+      form.scheduledTimes[slot] = _formatTimeOfDay(picked);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final form = widget.form;
+    final enabled = widget.enabled;
+    final slots = form.scheduledTimes;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -686,7 +776,7 @@ class _DrugEditor extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '${index + 1}',
+                  '${widget.index + 1}',
                   style: const TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
@@ -707,13 +797,13 @@ class _DrugEditor extends StatelessWidget {
                   onSelected: (item) => _applyCatalogDefaults(form, item),
                 ),
               ),
-              if (canRemove) ...[
+              if (widget.canRemove) ...[
                 const SizedBox(width: 4),
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: IconButton(
                     tooltip: 'Hapus obat',
-                    onPressed: enabled ? onRemove : null,
+                    onPressed: enabled ? widget.onRemove : null,
                     icon: const Icon(
                       Icons.delete_outline_rounded,
                       size: 19,
@@ -744,23 +834,31 @@ class _DrugEditor extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 152,
-                child: TextFormField(
-                  controller: form.frequency,
-                  enabled: enabled,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                width: 190,
+                child: DropdownButtonFormField<int>(
+                  key: ValueKey<String>('freq-${form.frequencyCount}'),
+                  initialValue: form.frequencyCount,
+                  isExpanded: true,
                   decoration: const InputDecoration(
-                    labelText: 'Frekuensi/hari',
-                    hintText: '3',
-                    suffixText: '×',
+                    labelText: 'Frekuensi minum',
                   ),
-                  validator: (value) {
-                    final parsed = int.tryParse((value ?? '').trim());
-                    if (parsed == null) return 'Wajib diisi';
-                    if (parsed < 1 || parsed > 12) return '1–12';
-                    return null;
-                  },
+                  hint: const Text(
+                    'Pilih frekuensi',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  items: [
+                    for (var value = 1; value <= 12; value++)
+                      DropdownMenuItem<int>(
+                        value: value,
+                        child: Text(
+                          '$value kali sehari',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                  ],
+                  onChanged: enabled ? _changeFrequency : null,
+                  validator: (value) =>
+                      value == null ? 'Pilih frekuensi' : null,
                 ),
               ),
               SizedBox(
@@ -785,6 +883,68 @@ class _DrugEditor extends StatelessWidget {
               ),
             ],
           ),
+          if (form.frequencyCount != null) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                const Icon(
+                  Icons.schedule_rounded,
+                  size: 15,
+                  color: AdminColors.primary,
+                ),
+                const SizedBox(width: 6),
+                const Text(
+                  'Jadwal minum obat',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: AdminColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${slots.length} slot',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AdminColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            const Text(
+              'Ketuk jam untuk menyesuaikan dengan anjuran dokter '
+              '(mis. sebelum makan).',
+              style: TextStyle(
+                fontSize: 11,
+                height: 1.4,
+                color: AdminColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (var slot = 0; slot < slots.length; slot++)
+                  _TimeSlotButton(
+                    label: slots[slot],
+                    enabled: enabled,
+                    onTap: () => _pickTime(slot),
+                  ),
+              ],
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            const Text(
+              'Pilih frekuensi minum terlebih dahulu untuk mengatur jam minum obat.',
+              style: TextStyle(
+                fontSize: 11,
+                height: 1.4,
+                color: AdminColors.textMuted,
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           TextFormField(
             controller: form.instructions,
@@ -800,51 +960,120 @@ class _DrugEditor extends StatelessWidget {
   }
 }
 
+/// Tombol jam minum obat yang membuka TimePicker saat diketuk.
+class _TimeSlotButton extends StatelessWidget {
+  const _TimeSlotButton({
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: enabled ? onTap : null,
+      icon: const Icon(Icons.access_time_rounded, size: 16),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      ),
+    );
+  }
+}
+
 class _DrugForm {
   _DrugForm({
     required this.name,
     required this.dose,
-    required this.frequency,
     required this.duration,
     required this.instructions,
-  });
+    this.frequencyCount,
+    List<String>? scheduledTimes,
+  }) : scheduledTimes = List<String>.from(scheduledTimes ?? const []);
 
   factory _DrugForm.empty() => _DrugForm(
     name: TextEditingController(),
     dose: TextEditingController(),
-    frequency: TextEditingController(text: '1'),
     duration: TextEditingController(text: '1'),
     instructions: TextEditingController(),
   );
 
-  factory _DrugForm.fromDrug(PrescriptionDrug drug) => _DrugForm(
-    name: TextEditingController(text: drug.name),
-    dose: TextEditingController(text: drug.dose),
-    frequency: TextEditingController(text: '${drug.frequencyPerDay}'),
-    duration: TextEditingController(text: '${drug.durationDays}'),
-    instructions: TextEditingController(text: drug.instructions),
-  );
+  factory _DrugForm.fromDrug(PrescriptionDrug drug) {
+    final count = (drug.frequencyPerDay >= 1 && drug.frequencyPerDay <= 12)
+        ? drug.frequencyPerDay
+        : 1;
+    return _DrugForm(
+      name: TextEditingController(text: drug.name),
+      dose: TextEditingController(text: drug.dose),
+      duration: TextEditingController(text: '${drug.durationDays}'),
+      instructions: TextEditingController(text: drug.instructions),
+      frequencyCount: count,
+      scheduledTimes: drug.scheduledTimes.isNotEmpty
+          ? drug.scheduledTimes
+          : defaultScheduledTimes(count),
+    );
+  }
 
   final TextEditingController name;
   final TextEditingController dose;
-  final TextEditingController frequency;
   final TextEditingController duration;
   final TextEditingController instructions;
+
+  /// Frekuensi minum per hari (1–12). `null` = admin belum memilih.
+  int? frequencyCount;
+
+  /// Jam minum obat; panjangnya mengikuti [frequencyCount].
+  List<String> scheduledTimes;
+
+  /// Sesuaikan jumlah slot tanpa menghapus jam yang sudah diatur admin.
+  void syncScheduledTimes() {
+    final count = frequencyCount;
+    if (count == null) {
+      scheduledTimes = [];
+      return;
+    }
+    final defaults = defaultScheduledTimes(count);
+    final previous = List<String>.of(scheduledTimes);
+    scheduledTimes = List<String>.generate(count, (index) {
+      if (index < previous.length && previous[index].trim().isNotEmpty) {
+        return previous[index];
+      }
+      return defaults[index];
+    });
+  }
+
+  /// Reset seluruh slot ke jam default (mis. setelah memilih katalog obat).
+  void regenerateScheduledTimes() {
+    final count = frequencyCount;
+    scheduledTimes = count == null ? [] : defaultScheduledTimes(count);
+  }
+
+  /// `true` bila frekuensi sudah dipilih, jumlah slot sama, dan jamnya valid.
+  bool get hasCompleteSchedules {
+    final count = frequencyCount;
+    if (count == null || count < 1) return false;
+    if (scheduledTimes.length != count) return false;
+    return scheduledTimes.every((time) => _parseTimeOfDay(time) != null);
+  }
 
   PrescriptionDrug toDrug() {
     return PrescriptionDrug(
       name: name.text.trim(),
       dose: dose.text.trim(),
-      frequencyPerDay: int.tryParse(frequency.text.trim()) ?? 1,
+      frequencyPerDay: frequencyCount ?? 1,
       durationDays: int.tryParse(duration.text.trim()) ?? 1,
       instructions: instructions.text.trim(),
+      scheduledTimes: List<String>.of(scheduledTimes),
     );
   }
 
   void dispose() {
     name.dispose();
     dose.dispose();
-    frequency.dispose();
     duration.dispose();
     instructions.dispose();
   }
