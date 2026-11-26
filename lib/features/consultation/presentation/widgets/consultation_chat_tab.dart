@@ -7,6 +7,7 @@ import 'package:Telehealth/data/models/consultation_session.dart';
 import 'package:Telehealth/data/repositories/auth_repository.dart';
 import 'package:Telehealth/data/repositories/chat_repository.dart';
 import 'package:Telehealth/data/repositories/conversation_repository.dart';
+import 'package:Telehealth/data/repositories/doctor_repository.dart';
 
 /// Tab Percakapan: dokter berkirim pesan dengan pasien selama sesi.
 ///
@@ -36,17 +37,27 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
   String? _error;
   StreamSubscription<List<ChatMessage>>? _live;
 
+  /// Id percakapan yang dipakai bersama pasien.
+  String _conversationId = '';
+
   bool get _canSend =>
       widget.session.status == ConsultationStatus.ongoing && !_sending;
 
-  String get _doctorId {
-    final id = AuthRepository.instance.currentUser?.doctorProfile?.doctorId;
-    return (id == null || id.isEmpty) ? 'doc-me' : id;
-  }
+  /// Id direktori dokter untuk akun yang sedang login.
+  ///
+  /// Akun dokter yang baru mendaftar belum punya `directory_doctor_id`, jadi
+  /// id direktori mereka adalah `acc_<uid>` (dibuat oleh trigger
+  /// 05_doctor_directory_sync.sql). Tanpa fallback ini, sisi dokter dan pasien
+  /// memakai id percakapan berbeda.
+  Future<String> _resolveDoctorId() async {
+    final user = AuthRepository.instance.currentUser;
+    final fromProfile = user?.doctorProfile?.doctorId ?? '';
+    final fallback = 'acc_${user?.id ?? 'doctor'}';
+    if (fromProfile.isEmpty) return fallback;
 
-  /// Percakapan yang sama dengan yang dibaca pasien.
-  String get _conversationId =>
-      ConversationRepository.pairId(_doctorId, widget.session.patientId);
+    final doctor = await DoctorRepository.instance.findById(fromProfile);
+    return doctor == null ? fallback : fromProfile;
+  }
 
   @override
   void initState() {
@@ -65,8 +76,13 @@ class _ConsultationChatTabState extends State<ConsultationChatTab>
   Future<void> _load() async {
     try {
       final user = AuthRepository.instance.currentUser;
+      final doctorId = await _resolveDoctorId();
+      _conversationId = ConversationRepository.pairId(
+        doctorId,
+        widget.session.patientId,
+      );
       await ConversationRepository.instance.ensureForPair(
-        doctorId: _doctorId,
+        doctorId: doctorId,
         doctorName: user?.name ?? 'Dokter',
         doctorInitials: 'DR',
         doctorColor: const Color(0xFF1E88E5),
