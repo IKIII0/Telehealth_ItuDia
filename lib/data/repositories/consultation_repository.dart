@@ -433,6 +433,19 @@ class ConsultationRepository {
         .toList(growable: false);
   }
 
+  /// Urutan chat selalu dari pesan terlama ke terbaru, apa pun urutan
+  /// yang dikembalikan server. `id` menjadi penentu saat waktu sama.
+  List<ConsultationMessage> _sortedMessages(
+    Iterable<ConsultationMessage> items,
+  ) {
+    final list = items.toList();
+    list.sort((a, b) {
+      final byTime = a.sentAt.compareTo(b.sentAt);
+      return byTime != 0 ? byTime : a.id.compareTo(b.id);
+    });
+    return list;
+  }
+
   Map<String, dynamic> _row(Object? data) =>
       Map<String, dynamic>.from(data as Map);
 
@@ -479,12 +492,13 @@ class ConsultationRepository {
           .from('consultation_messages')
           .select()
           .eq('session_id', sessionId)
-          .order('created_at');
-      return _rows(data).map(consultationMessageFromRow).toList();
+          .order('created_at')
+          .order('id');
+      return _sortedMessages(_rows(data).map(consultationMessageFromRow));
     }
 
     return SimulatedApi.run(
-      () => List<ConsultationMessage>.of(_messages[sessionId] ?? const []),
+      () => _sortedMessages(_messages[sessionId] ?? const []),
     );
   }
 
@@ -572,12 +586,7 @@ class ConsultationRepository {
         .from('consultation_sessions')
         .select()
         .order('requested_at', ascending: false);
-    final sessions = _rows(data).map(consultationSessionFromRow).toList();
-    debugPrint(
-      '[ConsultationRepository] getMySessions uid=$_currentUid '
-      'rows=${sessions.length}',
-    );
-    return sessions;
+    return _rows(data).map(consultationSessionFromRow).toList();
   }
 
   /// Nama dokter untuk setiap sesi pasien, dipakai daftar Chat.
