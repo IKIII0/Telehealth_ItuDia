@@ -3,11 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Telehealth/core/events/app_events.dart';
 import 'package:Telehealth/core/routing/app_routes.dart';
-import 'package:Telehealth/core/supabase/supabase_config.dart';
-import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/core/widgets/app_dialogs.dart';
 import 'package:Telehealth/core/widgets/async_state.dart';
 import 'package:Telehealth/core/widgets/patient_nav_bar.dart';
+import 'package:Telehealth/core/widgets/role_badge.dart';
 import 'package:Telehealth/data/models/consultation_session.dart';
 import 'package:Telehealth/data/models/conversation.dart';
 import 'package:Telehealth/data/repositories/consultation_repository.dart';
@@ -53,11 +52,6 @@ class _ConversationListPageState extends State<ConversationListPage>
     });
     try {
       _remote = ConsultationRepository.instance.isRemote;
-      debugPrint(
-        '[ChatList] remote=$_remote '
-        'client=${SupabaseConfig.client != null} '
-        'firebaseClient=${SupabaseConfig.firebaseAuthClient != null}',
-      );
       if (_remote) {
         final sessions = await ConsultationRepository.instance.getMySessions();
         if (!mounted) return;
